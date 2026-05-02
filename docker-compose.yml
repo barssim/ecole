@@ -1,0 +1,163 @@
+services:
+  mysql-user:
+    image: mysql:8
+    container_name: mysql-user
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: userDB
+    ports:
+      - "3309:3306"
+    healthcheck:
+      test: [ "CMD-SHELL", "mysqladmin ping -h localhost -p${DB_PASSWORD} --silent" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    networks:
+      - ecole
+
+
+  usermanagement:
+    build: ./usermanagement
+    container_name: usermanagement
+    ports:
+      - "8091:8091"
+    depends_on:
+      mysql-user:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-user:3306/userDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - ecole
+
+  mysql-fin:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: finDB
+    container_name: mysql-fin
+    ports:
+      - "3307:3306"
+#    volumes:
+#      - mysql_data:/var/lib/mysql
+    networks:
+      - ecole
+#  mysql-ai:
+#    image: mysql:8
+#    environment:
+#      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+#      MYSQL_DATABASE: aiDB
+#    container_name: mysql-ai
+#    ports:
+#      - "3308:3306"
+#  #    volumes:
+#  #      - mysql_data:/var/lib/mysql
+#    networks:
+#      - ecole
+
+  finance-manager:
+    build: ./finance-manager
+    container_name: finance_manager
+    ports:
+      - "8094:8094"
+    depends_on:
+      - mysql-fin
+    networks:
+      - ecole
+
+  ecole-portal:
+    build: ./ecole-portal
+    container_name: ecole-portal
+    ports:
+      - "3000:3000"
+    command: npm run start
+    networks:
+      - ecole
+
+  # ------------------------------
+  # React app - development
+  # ------------------------------
+  ecole-portal-dev:
+    build:
+      context: ./ecole-portal
+      target: dev
+    container_name: ecole-portal-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./ecole-portal:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - NODE_ENV=development
+      - REACT_APP_API_GATEWAY_URL=http://localhost:8085
+    depends_on:
+      - solide-api-gateway
+    networks:
+      - ecole
+  # ------------------------------
+  # React app - tes mock
+  # ------------------------------
+  ecole-portal-test:
+    build:
+      context: ./ecole-portal
+      target: test
+    container_name: ecole-portal-test
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./ecole-portal:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - NODE_ENV=test
+      - REACT_APP_API_GATEWAY_URL=http://localhost:8888/mock-api
+    depends_on:
+      - solide-api-gateway
+    networks:
+      - ecole
+
+
+  # ------------------------------
+  # React app - production
+  # ------------------------------
+  ecole-portal-prod:
+    build:
+      context: ./ecole-portal
+      target: prod
+    container_name: ecole-portal-prod
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+      - REACT_APP_API_GATEWAY_URL=http://localhost:8085
+    depends_on:
+      - solide-api-gateway
+    networks:
+      - ecole
+
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - ecole
+
+  solide-api-gateway:
+    build: ./solide-api-gateway
+    container_name: solide-api-gateway
+    ports:
+      - "8085:8085"
+    depends_on:
+      - usermanagement
+      - finance-manager
+    networks:
+      - ecole
+
+networks:
+  ecole:
+    name: ecole
+    driver: bridge

@@ -1,0 +1,23 @@
+{
+  "home": "Home",
+  "contact": "Contact",
+  "contactUs": "Contact us:",
+  "submit": "Send",
+  "enter": "Enter",
+  "thankForContact": "Thank you for contacting us!",
+  "companyAdresse": "Avenue Zarbia, Building 19, Sala El Jadida",
+  "about": "About",
+  "group_gardinia": "Gardinia Group",
+  "login": "Log in",
+  "inscription": "Register",
+  "email": "Your email",
+  "name": "Your name",
+  "message": "Your message",
+  "adresse": "Address",
+  "password": "Password",
+  "register": "Register",
+  "confirmPassword": "Confirm password",
+  "surname": "Last name",
+  "firstname": "First name",
+  "logout": "Log out"
+}

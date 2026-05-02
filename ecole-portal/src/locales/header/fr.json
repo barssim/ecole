@@ -1,0 +1,23 @@
+{
+  "home": "Home",
+  "contact": "Contact",
+  "contactUs": "Contacter nous:",
+  "submit": "envoyer",
+  "enter": "entrer",
+  "thankForContact": "Thank you for contacting us!",
+  "companyAdresse": "Avenue Zarbia Imb.19 Sala El Jadida",
+  "about": "Apropos",
+  "group_gardinia": "Groupe Gardinia",
+  "login": "Se connecter",
+  "inscription": "Enregistrer",
+  "email": "votre Email",
+  "name" : "Votre nom",
+  "message": "Votre message",
+  "adresse": "Adresse",
+  "password": "Mot de pass",
+  "register": "register",
+  "confirmPassword": "Confirmez le mot de passe",
+  "surname": "nom de famille",
+  "firstname": "Prénom",
+  "logout": "Se deconnecter"
+}

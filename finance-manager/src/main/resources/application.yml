@@ -1,0 +1,34 @@
+server:
+  address: 0.0.0.0
+  port: 8094
+
+spring:
+  profiles:
+    active: dev
+  datasource:
+    url: jdbc:mysql://mysql-fin:3306/finDB
+    username: root
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari.connection-timeout: 30000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
+  application:
+    name: financeservice
+    Desc: responsible for all finance operations
+
+  main:
+    web-application-type: servlet
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

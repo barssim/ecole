@@ -1,0 +1,54 @@
+server:
+  port: 8085
+  address: 0.0.0.0
+
+spring:
+  profiles:
+    active: prod   # change to production
+
+  main:
+    web-application-type: reactive
+
+  cloud:
+    gateway:
+
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:80"
+              - "http://ecole-portal-prod"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+
+      httpclient:
+        wiretap: false  # disable wiretap in prod
+
+      routes:
+
+        - id: usermanagement
+          uri: "http://usermanagement:8091"
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+
+        - id: finance-manager
+          uri: "http://finance-manager:8094"
+          predicates:
+            - Path=/api/facture/**
+          filters:
+            - StripPrefix=1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

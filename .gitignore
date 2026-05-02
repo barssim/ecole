@@ -1,0 +1,17 @@
+# IntelliJ
+.idea/
+*.iml
+
+# Node
+node_modules/
+
+# Java
+target/
+
+# Env files
+.env
+
+# Logs
+*.log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
+
+aichatservice/

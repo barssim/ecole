@@ -1,0 +1,258 @@
+.row {
+	display: flex;
+}
+
+.col {
+	flex: 1;
+}
+
+.marquee {
+	overflow: hidden;
+	white-space: nowrap;
+	animation: scroll 10s linear infinite;
+}
+
+.scroll-images img {
+	display: inline-block;
+	margin: 0 10px;
+	width: 100px;
+}
+
+.search-link {
+	display: inline-block;
+	padding: 10px 20px;
+	background-color: #99ddff;
+	color: black;
+	text-decoration: none;
+	font-size: 16px;
+	margin-right: 10px;
+	border-radius: 5px;
+}
+
+.search-link:hover {
+	background-color: #77ccff;
+}
+
+@keyframes scroll {
+	from {
+		transform: translateX(100%);
+	}
+
+	to {
+		transform: translateX(-100%);
+	}
+}
+
+.row {
+	display: flex;
+}
+
+.col {
+	flex: 1;
+}
+
+.marquee {
+	overflow: hidden;
+	white-space: nowrap;
+	animation: scroll 10s linear infinite;
+}
+
+.buttonStyle {
+	background-color: #007bff;
+	color: #fff;
+	padding: 10px 15px;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: bold;
+	transition: background-color 0.3s ease;
+}
+
+.buttonStyle-inactive {
+	background-color: #F0F0F0;
+	color: #999;
+	padding: 10px 15px;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: bold;
+	transition: background-color 0.3s ease;
+}
+
+
+.linkStyle {
+	text-decoration: none;
+	color: #007bff;
+	font-size: 16px;
+	font-weight: bold;
+}
+
+.scroll-images img {
+	display: inline-block;
+	margin: 0 10px;
+	width: 100px;
+}
+
+.search-link {
+	display: inline-block;
+	padding: 10px 20px;
+	background-color: #99ddff;
+	color: black;
+	text-decoration: none;
+	font-size: 16px;
+	margin-right: 10px;
+	border-radius: 5px;
+}
+
+.search-link:hover {
+	background-color: #77ccff;
+}
+
+@keyframes scroll {
+	from {
+		transform: translateX(100%);
+	}
+
+	to {
+		transform: translateX(-100%);
+	}
+}
+
+.width-30 {
+	width: 30%;
+}
+
+.side-menu {
+	position: fixed;
+	top: 50%;
+	/* Center vertically */
+	left: 0;
+	/* Stick to the left side */
+	transform: translateY(-50%);
+	/* Adjust for centering */
+	background-color: #ffffff;
+	/* Background color for the menu */
+	padding: 10px;
+	border-right: 2px solid #ccc;
+	z-index: 1000;
+	/* Ensure it stays above other elements */
+}
+
+.menu-item-active {
+	display: block;
+	/* Ensure links are on separate lines */
+	margin: 20px 0;
+	padding: 12px;
+	color: #000;
+	text-decoration: none;
+	font-size: 18px;
+	border-radius: 5px;
+	text-align: center;
+	width: 200px;
+	height: 40px;
+	  background-color: #00BBFF;
+      color: #fff;
+}
+
+.menu-item-inactive {
+	display: block;
+	/* Ensure links are on separate lines */
+	margin: 20px 0;
+	padding: 12px;
+	color: #000;
+	text-decoration: none;
+	font-size: 18px;
+	background-color: #80DFFF;
+	border-radius: 5px;
+	text-align: center;
+	width: 200px;
+	height: 40px;
+	background-color: #F0F0F0;
+      color: #999;
+}
+
+.menu-item:hover {
+	background-color: #d5d5d5;
+}
+
+.new-piece {
+	background-color: #007bff;
+	color: white;
+}
+
+.used-piece {
+	background-color: #007bff;
+	color: white;
+}
+
+.new-piece:hover {
+	background-color: #45a049;
+}
+
+.used-piece:hover {
+	background-color: #e53935;
+}
+
+
+.footer {
+	background-color: #007bff;
+	text-align: center;
+	padding: 20px;
+	width: 100%;
+	position: relative;
+	bottom: 0;
+	margin-top: auto;
+}
+.form-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+/* App.css */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.left-panel, .right-panel {
+  background-color: #80DFFF;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.center-content {
+  display: inline-block;       /* or block, depending on layout */
+  width: auto;                 /* allow width to follow content */
+  height: auto;                /* allow height to follow content */
+  padding: 1rem;               /* optional internal spacing */
+  max-width: 100%;             /* avoids overflow on large content */
+  box-sizing: border-box;      /* includes padding in total size */
+}
+
+.bounce-container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.bounce-content {
+  display: inline-block;
+  animation: bounce 3s ease-in-out infinite alternate;
+  position: relative;
+}
+
+@keyframes bounce {
+  0% {
+    left: 0;
+  }
+  100% {
+    left: calc(100% - 200px); /* Adjust based on content width */
+  }
+}
+
