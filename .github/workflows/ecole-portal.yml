@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'ecole-portal/**'
-      - '.github/workflows/ecole-portal.yml'
+      - '.github/workflows/main.yml'
       - 'docker-compose.yml'
       
 jobs:
