@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'solide-api-gateway/**'
-      - '.github/workflows/main.yml'
+      - '.github/workflows/solide-api-gateway.yml'
       - 'docker-compose.yml'
       
 jobs:
@@ -38,9 +38,8 @@ jobs:
          
       - name: Build with Maven
         run: |
-          cd solide-api-gateway
-          mvn clean compile
-          mvn -B package --file pom.xml 
+          mvn clean compile -f solide-api-gateway/pom.xml
+          mvn -B package -f solide-api-gateway/pom.xml 
           
       - name: Build Docker Image
         uses: docker/build-push-action@v2

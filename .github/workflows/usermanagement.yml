@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'usermanagement/**'
+      - '.github/workflows/usermanagement.yml'
+      - 'docker-compose.yml'
       
 jobs:
   build-deploy:
@@ -34,9 +38,8 @@ jobs:
          
       - name: Build with Maven
         run: |
-          cd usermanagement
-          mvn clean compile
-          mvn -B package --file pom.xml 
+          mvn clean compile -f usermanagement/pom.xml
+          mvn -B package -f usermanagement/pom.xml 
           
       - name: Build Docker Image
         uses: docker/build-push-action@v2
