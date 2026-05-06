@@ -264,12 +264,12 @@ http.get(`${BASE_URL}/api/studentschedule`, () => {
                        }
                      });
                    }
-                          if (username === 'Salhi' && password === 'salhi') {
+                          if (username === 'Aziz' && password === 'aziz') {
                                                     return HttpResponse.json({
                                                       token: 'mock-user-token',
                                                       user: {
                                                         id: 9,
-                                                        username: 'Salhi',
+                                                        username: 'Aziz',
                                                         roles: ['teacher']
                                                       }
                                                     });
