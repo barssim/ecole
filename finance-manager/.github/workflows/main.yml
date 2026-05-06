@@ -3,7 +3,7 @@ name: Build & Deploy finance-manager app
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'finance-manager/**'
       - '.github/workflows/main.yml'
