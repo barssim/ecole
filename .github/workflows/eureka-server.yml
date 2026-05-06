@@ -35,8 +35,8 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Build with Maven
-        working-directory: ./eureka-server
         run: |
+          cd eureka-server
           mvn clean compile
           mvn -B package --file pom.xml
 
@@ -77,4 +77,3 @@ jobs:
             docker stop eureka-server || true
             docker rm eureka-server || true
             docker run -d --name eureka-server -p 8761:8761 ${{ secrets.DOCKER_HUB_USERNAME }}/eureka-server:latest
-

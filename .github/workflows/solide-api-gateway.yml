@@ -37,8 +37,8 @@ jobs:
             ${{ runner.os }}-maven-     
          
       - name: Build with Maven
-        working-directory: ./solide-api-gateway
         run: |
+          cd solide-api-gateway
           mvn clean compile
           mvn -B package --file pom.xml 
           

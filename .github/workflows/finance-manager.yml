@@ -35,8 +35,8 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Build with Maven
-        working-directory: ./finance-manager
         run: |
+          cd finance-manager
           mvn clean compile
           mvn -B package --file pom.xml
 
@@ -77,4 +77,3 @@ jobs:
             docker stop finance-manager || true
             docker rm finance-manager || true
             docker run -d --name finance-manager -p 8094:8094 ${{ secrets.DOCKER_HUB_USERNAME }}/finance-manager:latest
-
