@@ -3,7 +3,7 @@ name : Build & Deploy ecole-portal app
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'ecole-portal/**'
       - '.github/workflows/main.yml'
