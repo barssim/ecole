@@ -44,8 +44,8 @@ jobs:
       - name: Build Docker Image
         uses: docker/build-push-action@v2
         with: 
-          context: .
-          dockerfile: Dockerfile
+          context: ./solide-api-gateway
+          dockerfile: ./solide-api-gateway/Dockerfile
           push: false
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/solide_api_gateway:latest
            
@@ -58,8 +58,8 @@ jobs:
       - name: Push to Docker Hub
         uses: docker/build-push-action@v2
         with: 
-          context: .
-          dockerfile: Dockerfile
+          context: ./solide-api-gateway
+          dockerfile: ./solide-api-gateway/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/solide_api_gateway:latest
                

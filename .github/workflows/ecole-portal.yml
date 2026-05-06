@@ -23,8 +23,8 @@ jobs:
       - name: Build Docker Image
         uses: docker/build-push-action@v2
         with: 
-          context: .
-          dockerfile: Dockerfile
+          context: ./ecole-portal
+          dockerfile: ./ecole-portal/Dockerfile
           push: false
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:latest
            
@@ -37,8 +37,8 @@ jobs:
       - name: Push to Docker Hub
         uses: docker/build-push-action@v2
         with: 
-          context: .
-          dockerfile: Dockerfile
+          context: ./ecole-portal
+          dockerfile: ./ecole-portal/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole_portal:latest
 
