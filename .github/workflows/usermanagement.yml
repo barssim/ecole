@@ -33,6 +33,7 @@ jobs:
             ${{ runner.os }}-maven-     
          
       - name: Build with Maven
+        working-directory: ./usermanagement
         run: |
           mvn clean compile
           mvn -B package --file pom.xml 

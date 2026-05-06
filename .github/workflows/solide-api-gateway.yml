@@ -37,6 +37,7 @@ jobs:
             ${{ runner.os }}-maven-     
          
       - name: Build with Maven
+        working-directory: ./solide-api-gateway
         run: |
           mvn clean compile
           mvn -B package --file pom.xml 
@@ -63,6 +64,3 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/solide_api_gateway:latest
                
-           
-           
-           
