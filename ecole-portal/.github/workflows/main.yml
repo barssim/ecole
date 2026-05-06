@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'ecole-portal/**'
+      - '.github/workflows/main.yml'
+      - 'docker-compose.yml'
       
 jobs:
   build-deploy:

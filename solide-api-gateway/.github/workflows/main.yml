@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'solide-api-gateway/**'
+      - '.github/workflows/main.yml'
+      - 'docker-compose.yml'
       
 jobs:
   build-deploy:
