@@ -4,7 +4,6 @@ import ma.solide.finance_manager.service.SchoolInvoicePdfService;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Map;
 
