@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>All solide Users</title>
+	<style>
+		table {
+			width: 50%;
+			border-collapse: collapse;
+			margin: 20px auto;
+		}
+
+		th,
+		td {
+			border: 1px solid #ccc;
+			padding: 10px;
+			text-align: center;
+		}
+
+		th {
+			background-color: #f4f4f4;
+		}
+	</style>
+</head>
+
+<body>
+	<h1 style="text-align: center;">Users List</h1>
+	<table id="users-table">
+		<thead>
+			<tr>
+				<th>User No</th>
+				<th>User Name</th>
+				<th>User Role</th>
+			</tr>
+		</thead>
+		<tbody>
+			<!-- Rows will be dynamically added here -->
+		</tbody>
+	</table>
+
+	<script>
+		// Define the API endpoint
+		const apiUrl = 'http://localhost:8091/users';
+
+		// Fetch data from the REST API
+		fetch(apiUrl)
+			.then(response => {
+				if (!response.ok) {
+					throw new Error(`HTTP error! Status: ${response.status}`);
+				}
+				return response.json();
+			})
+			.then(data => {
+				const tableBody = document.querySelector('#users-table tbody');
+				tableBody.innerHTML = ''; // Clear any existing rows
+
+				// Populate the table with data
+				data.forEach(aBean => {
+
+
+					const row = document.createElement('tr');
+					row.innerHTML = `
+					                        <td>${aBean.userno} </td>
+											<td>${aBean.username} </td>
+											<td>${aBean.role} </td>
+																			
+																																																		</h3></td>
+																											
+					                    `;
+					tableBody.appendChild(row);
+
+				});
+			})
+			           .catch(error => {
+			               console.error('Error fetching users:', error);
+			           });
+
+	</script>
+</body>
+
+</html>
