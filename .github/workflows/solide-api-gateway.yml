@@ -76,6 +76,6 @@ jobs:
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/solide_api_gateway:latest
             docker stop solide-api-gateway || true
             docker rm solide-api-gateway || true
-            docker run -d --name solide-api-gateway -p 8094:8094 ${{ secrets.DOCKER_HUB_USERNAME }}/solide_api_gateway:latest
+            docker run -d --name solide-api-gateway -p 8085:8085 ${{ secrets.DOCKER_HUB_USERNAME }}/solide_api_gateway:latest
       
                
