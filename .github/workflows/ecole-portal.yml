@@ -54,8 +54,8 @@ jobs:
           script: |
             docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_TOKEN }}
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/ecole_portal:latest
-            docker stop ecole_portal || true
-            docker rm ecole_portal || true
-            docker run -d --name ecole_portal -p 80:3000 ${{ secrets.DOCKER_HUB_USERNAME }}/ecole_portal:latest     
+            docker stop ecole-portal || true
+            docker rm ecole-portal || true
+            docker run -d --name ecole-portal -p 80:3000 ${{ secrets.DOCKER_HUB_USERNAME }}/ecole_portal:latest     
            
            
