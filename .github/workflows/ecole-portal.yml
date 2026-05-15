@@ -26,7 +26,7 @@ jobs:
           context: ./ecole-portal
           dockerfile: ./ecole-portal/Dockerfile
           push: false
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:latest
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole_portal:latest
            
       - name: Login Docker Hub
         uses: docker/login-action@v1
