@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'finance-manager/**'
-      - '.github/workflows/main.yml'
+      - '.github/workflows/finance-manager.yml'
       - 'docker-compose.yml'
 
 jobs:

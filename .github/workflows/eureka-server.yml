@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'eureka-server/**'
-      - '.github/workflows/main.yml'
+      - '.github/workflows/eureka-server.yml'
       - 'docker-compose.yml'
 
 jobs:
