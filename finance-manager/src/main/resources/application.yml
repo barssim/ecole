@@ -2,9 +2,6 @@ server:
   address: 0.0.0.0
   port: 8094
 
-spring:
-  profiles:
-    active: dev
   datasource:
     url: jdbc:mysql://mysql-fin:3306/finDB
     username: root
