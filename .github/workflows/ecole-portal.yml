@@ -63,6 +63,12 @@ jobs:
     if: github.ref_name == 'refs/heads/main' || github.ref_name == 'refs/heads/develop'
 
     steps:
+      - name: Print branch
+        run: echo ${{ github.ref_name }}
+
+      - name: Deploy
+        run: echo "Deploying..."
+
       - name: Deploy on Server
         uses: appleboy/ssh-action@v0.1.6
         with:
