@@ -1,9 +1,7 @@
 services:
 
   ecole-portal:
-    build:
-      context: ./ecole-portal
-      target: test
+    image: barssim/ecole-portal:test
     ports:
       - "3000:3000"
     volumes:

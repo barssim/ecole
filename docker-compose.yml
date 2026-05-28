@@ -17,27 +17,26 @@ services:
       - ecole
 
   usermanagement:
-    build: ./usermanagement
+    image: barssim/usermanagement:latest
     depends_on:
       - mysql-user
     networks:
       - ecole
 
   finance-manager:
-    build: ./finance-manager
+    image: barssim/finance-manager:latest
     depends_on:
       - mysql-fin
     networks:
       - ecole
 
   eureka-server:
-    build: ./eureka-server
+    image: barssim/eureka-server:latest
     networks:
       - ecole
 
   api-gateway:
-    build: ./solide-api-gateway
-    depends_on:
+    image: barssim/solide-api-gateway:latest
       - usermanagement
       - finance-manager
     networks:

@@ -4,40 +4,62 @@ on:
   push:
     branches:
       - main
+      - develop
     paths:
       - 'ecole-portal/**'
       - '.github/workflows/ecole-portal.yml'
       - 'docker-compose.yml'
 
 jobs:
-  build-deploy:
-    name: Build & Deploy
+  build:
+    name: Build & Push Docker Image
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout code
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Login Docker Hub
       - name: Login Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      # Build & Push Docker image
-      - name: Build and Push Docker Image
+      # Build & Push (DEVELOP)
+      - name: Build & Push Develop Image
+        if: github.ref == 'refs/heads/develop'
         uses: docker/build-push-action@v5
         with:
           context: ./ecole-portal
-          dockerfile: ./ecole-portal/Dockerfile
+          file: ./ecole-portal/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole_portal:latest
-
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:develop
           build-args: |
             REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_TEST }}
 
-      # Deploy on server
+      # Build & Push (MAIN)
+      - name: Build & Push Production Image
+        if: github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ecole-portal
+          file: ./ecole-portal/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:latest
+          build-args: |
+            REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_PROD }}
+
+  deploy:
+    name: Deploy to Server (main + develop)
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Print branch
+        run: echo ${{ github.ref_name }}
+
       - name: Deploy on Server
         uses: appleboy/ssh-action@v0.1.6
         with:
@@ -46,17 +68,27 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
 
           script: |
-            docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+            echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/ecole_portal:latest
+            if [ "${{ github.ref_name }}" = "main" ]; then
+              IMAGE_TAG=latest
+              CONTAINER_NAME=ecole-portal
+              PORT=80
+            else
+              IMAGE_TAG=develop
+              CONTAINER_NAME=ecole-portal-dev
+              PORT=8080
+            fi
 
-            docker stop ecole-portal || true
-            docker rm ecole-portal || true
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:$IMAGE_TAG
+
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
 
             docker run -d \
-              --name ecole-portal \
+              --name $CONTAINER_NAME \
               --restart unless-stopped \
-              -p 80:80 \
-              ${{ secrets.DOCKER_HUB_USERNAME }}/ecole_portal:latest
+              -p $PORT:80 \
+              ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:$IMAGE_TAG
 
-            docker image prune -af
+            docker image prune -f
