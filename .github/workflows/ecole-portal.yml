@@ -47,8 +47,7 @@ jobs:
           context: ./ecole-portal
           file: ./ecole-portal/Dockerfile
           push: true
-          tags: |
-            ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:latest
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:latest
           build-args: |
             REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_PROD }}
 
@@ -57,14 +56,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
-    if: github.ref_name == 'refs/heads/main' || github.ref_name == 'refs/heads/develop'
-
     steps:
       - name: Print branch
         run: echo ${{ github.ref_name }}
-
-      - name: Deploy
-        run: echo "Deploying..."
 
       - name: Deploy on Server
         uses: appleboy/ssh-action@v0.1.6
