@@ -56,9 +56,6 @@ jobs:
     name: Deploy to Server (main + develop)
     needs: build
     runs-on: ubuntu-latest
-    script:
-      - echo $CI_COMMIT_BRANCH
-      - echo "Deploying..."
 
     if: github.ref_name == 'refs/heads/main' || github.ref_name == 'refs/heads/develop'
 
