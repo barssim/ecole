@@ -1,45 +1,34 @@
-name: Build & Deploy ecole-portal app
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
       - develop
-    paths:
-      - 'ecole-portal/**'
-      - '.github/workflows/ecole-portal.yml'
-      - 'docker-compose.yml'
+      - test
 
 jobs:
+
   build:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout code
-      - name: Checkout code
+      - name: Checkout Source
         uses: actions/checkout@v4
 
-      # Login Docker Hub
-      - name: Login Docker Hub
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      # Build & Push (DEVELOP)
-      - name: Build & Push Develop Image
-        if: github.ref == 'refs/heads/develop'
-        uses: docker/build-push-action@v5
-        with:
-          context: ./ecole-portal
-          file: ./ecole-portal/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:develop
-          build-args: |
-            REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_TEST }}
-
-      # Build & Push (MAIN)
+      # =========================
+      # BUILD MAIN (PRODUCTION)
+      # =========================
       - name: Build & Push Production Image
         if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v5
@@ -47,19 +36,52 @@ jobs:
           context: ./ecole-portal
           file: ./ecole-portal/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:latest
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:latest
           build-args: |
             REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_PROD }}
 
+      # =========================
+      # BUILD DEVELOP
+      # =========================
+      - name: Build & Push Develop Image
+        if: github.ref == 'refs/heads/develop'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ecole-portal
+          file: ./ecole-portal/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:develop
+          build-args: |
+            REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_TEST }}
+
+      # =========================
+      # BUILD TEST
+      # =========================
+      - name: Build & Push Test Image
+        if: github.ref == 'refs/heads/test'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ecole-portal
+          file: ./ecole-portal/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:test
+          build-args: |
+            REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_TEST }}
+
   deploy:
-    name: Deploy to Server (main + develop)
+    name: Deploy to Server
     needs: build
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Print branch
-        run: echo ${{ github.ref_name }}
+    if: |
+      github.ref == 'refs/heads/main' ||
+      github.ref == 'refs/heads/develop' ||
+      github.ref == 'refs/heads/test'
 
+    steps:
       - name: Deploy on Server
         uses: appleboy/ssh-action@v0.1.6
         with:
@@ -70,15 +92,32 @@ jobs:
           script: |
             echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
+            # =========================
+            # MAIN / PRODUCTION
+            # =========================
             if [ "${{ github.ref_name }}" = "main" ]; then
               IMAGE_TAG=latest
               CONTAINER_NAME=ecole-portal
               PORT=80
-            else
+
+            # =========================
+            # DEVELOP
+            # =========================
+            elif [ "${{ github.ref_name }}" = "develop" ]; then
               IMAGE_TAG=develop
               CONTAINER_NAME=ecole-portal-dev
               PORT=8080
+
+            # =========================
+            # TEST
+            # =========================
+            else
+              IMAGE_TAG=test
+              CONTAINER_NAME=ecole-portal-test
+              PORT=8081
             fi
+
+            echo "Deploying image: $IMAGE_TAG"
 
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:$IMAGE_TAG
 
