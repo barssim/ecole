@@ -3,7 +3,7 @@ services:
   ecole-portal:
     image: barssim/ecole-portal:develop
     ports:
-      - "3000:3000"
+      - "8080:8080"
     volumes:
       - ./ecole-portal:/app
       - /app/node_modules
