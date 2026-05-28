@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - develop
+      - test
     paths:
       - 'ecole-portal/**'
       - '.github/workflows/ecole-portal.yml'
@@ -27,6 +28,18 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
+      # Build & Push (TEST)
+      - name: Build & Push Test Image
+        if: github.ref == 'refs/heads/test'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ecole-portal
+          file: ./ecole-portal/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:test
+          build-args: |
+            REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_TEST }}
+
       # Build & Push (DEVELOP)
       - name: Build & Push Develop Image
         if: github.ref == 'refs/heads/develop'
@@ -37,9 +50,9 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:develop
           build-args: |
-            REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_TEST }}
+            REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_DEV }}
 
-      # Build & Push (MAIN)
+      # Build & Push (MAIN / PRODUCTION)
       - name: Build & Push Production Image
         if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v5
@@ -52,9 +65,12 @@ jobs:
             REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_PROD }}
 
   deploy:
-    name: Deploy to Server (main + develop)
+    name: Deploy to Server (main + develop + test)
     needs: build
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' ||
+      github.ref == 'refs/heads/develop' ||
+      github.ref == 'refs/heads/test'
 
     steps:
       - name: Print branch
@@ -70,10 +86,18 @@ jobs:
           script: |
             echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
-            if [ "${{ github.ref_name }}" = "main" ]; then
+            BRANCH="${{ github.ref_name }}"
+
+            if [ "$BRANCH" = "main" ]; then
               IMAGE_TAG=latest
               CONTAINER_NAME=ecole-portal
               PORT=80
+
+            elif [ "$BRANCH" = "test" ]; then
+              IMAGE_TAG=test
+              CONTAINER_NAME=ecole-portal-test
+              PORT=8081
+
             else
               IMAGE_TAG=develop
               CONTAINER_NAME=ecole-portal-dev
