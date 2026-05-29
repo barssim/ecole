@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - develop
+      - test
     paths:
       - 'solide-api-gateway/**'
       - '.github/workflows/solide-api-gateway.yml'

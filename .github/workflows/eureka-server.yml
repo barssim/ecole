@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - develop
+      - test
     paths:
       - 'eureka-server/**'
       - '.github/workflows/eureka-server.yml'
