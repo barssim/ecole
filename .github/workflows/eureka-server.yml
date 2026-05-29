@@ -33,6 +33,8 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+      - name: List files
+        run: ls -R
 
       - name: Build with Maven
         run: |
