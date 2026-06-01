@@ -37,6 +37,7 @@ services:
 
   api-gateway:
     image: barssim/solide-api-gateway:latest
+    depends_on:
       - usermanagement
       - finance-manager
     networks:
