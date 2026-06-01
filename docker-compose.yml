@@ -36,7 +36,7 @@ services:
       - ecole
 
   api-gateway:
-    image: barssim/solide-api-gateway:latest
+    image: barssim/solide_api_gateway:latest
     depends_on:
       - usermanagement
       - finance-manager
