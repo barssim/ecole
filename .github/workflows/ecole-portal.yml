@@ -109,10 +109,3 @@ jobs:
             docker stop $CONTAINER_NAME || true
             docker rm $CONTAINER_NAME || true
 
-            docker run -d \
-              --name $CONTAINER_NAME \
-              --restart unless-stopped \
-              -p $PORT:80 \
-              ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:$IMAGE_TAG
-
-            docker image prune -f

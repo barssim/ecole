@@ -2,6 +2,7 @@ services:
 
   mysql-user:
     image: mysql:8
+    container_name: mysql-user
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: userDB
@@ -10,6 +11,7 @@ services:
 
   mysql-fin:
     image: mysql:8
+    container_name: mysql-fin
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: finDB
@@ -18,28 +20,41 @@ services:
 
   usermanagement:
     image: barssim/usermanagement:latest
+    container_name: usermanagement
     depends_on:
       - mysql-user
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-user:3306/userDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
     networks:
       - ecole
 
   finance-manager:
     image: barssim/finance-manager:latest
+    container_name: finance-manager
     depends_on:
       - mysql-fin
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-fin:3306/finDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
     networks:
       - ecole
 
   eureka-server:
     image: barssim/eureka-server:latest
+    container_name: eureka-server
     networks:
       - ecole
 
   api-gateway:
     image: barssim/solide_api_gateway:latest
+    container_name: api-gateway
     depends_on:
       - usermanagement
       - finance-manager
+      - eureka-server
     networks:
       - ecole
 
