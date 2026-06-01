@@ -67,9 +67,15 @@ jobs:
       - name: Install SSH client
         run: sudo apt-get install -y openssh-client
 
-      - name: Deploy with Docker Compose
-        run: |
-          docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_TOKEN }}
-
-          docker compose pull
-          docker compose up -d --remove-orphans
+      - name: Pull Docker image on server
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_TOKEN }}
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/finance-manager:latest
+            docker stop finance-manager || true
+            docker rm finance-manager || true
+            docker run -d --name finance-manager -p 8094:8094 ${{ secrets.DOCKER_HUB_USERNAME }}/finance-manager:latest

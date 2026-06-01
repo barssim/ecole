@@ -67,10 +67,17 @@ jobs:
       - name: Install SSH client
         run: sudo apt-get install -y openssh-client
 
-      - name: Deploy with Docker Compose
-        run: |
-          docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_TOKEN }}
-
-          docker compose pull
-          docker compose up -d --remove-orphans
+      - name: Pull Docker image on server
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_TOKEN }}
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/solide_api_gateway:latest
+            docker stop solide-api-gateway || true
+            docker rm solide-api-gateway || true
+            docker run -d --name solide-api-gateway -p 8085:8085 ${{ secrets.DOCKER_HUB_USERNAME }}/solide_api_gateway:latest
+      
                
