@@ -76,4 +76,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_TOKEN }}
-           
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/usermanagement:latest
+            docker stop usermanagement || true
+            docker rm usermanagement || true
+            docker run -d --name usermanagement -p 8091:8091 ${{ secrets.DOCKER_HUB_USERNAME }}/usermanagement:latest
