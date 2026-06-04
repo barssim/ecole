@@ -3,7 +3,7 @@ server:
   port: 8094
 
   datasource:
-    url: jdbc:mysql://mysql-fin:3306/finDB
+    url: jdbc:mysql://localhost:3306/finDB
     username: root
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver

@@ -6,6 +6,13 @@ on:
       - main
       - develop
       - test
+<<<<<<< HEAD
+=======
+    paths:
+      - 'ecole-portal/**'
+      - '.github/workflows/ecole-portal.yml'
+      - 'docker-compose.yml'
+>>>>>>> 448ece56cdf2122814aea4d016d7f35c6090f390
 
 jobs:
 
@@ -26,16 +33,23 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
+<<<<<<< HEAD
       # =========================
       # MAIN (PRODUCTION)
       # =========================
       - name: Build & Push Production Image
         if: github.ref == 'refs/heads/main'
+=======
+      # Build & Push (TEST)
+      - name: Build & Push Test Image
+        if: github.ref == 'refs/heads/test'
+>>>>>>> 448ece56cdf2122814aea4d016d7f35c6090f390
         uses: docker/build-push-action@v5
         with:
           context: ./ecole-portal
           file: ./ecole-portal/Dockerfile
           push: true
+<<<<<<< HEAD
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:latest
           build-args: |
             REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_PROD }}
@@ -43,6 +57,13 @@ jobs:
       # =========================
       # DEVELOP
       # =========================
+=======
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:test
+          build-args: |
+            REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_TEST }}
+
+      # Build & Push (DEVELOP)
+>>>>>>> 448ece56cdf2122814aea4d016d7f35c6090f390
       - name: Build & Push Develop Image
         if: github.ref == 'refs/heads/develop'
         uses: docker/build-push-action@v5
@@ -52,29 +73,54 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:develop
           build-args: |
-            REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_TEST }}
+            REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_DEV }}
 
+<<<<<<< HEAD
       # =========================
       # TEST
       # =========================
       - name: Build & Push Test Image
         if: github.ref == 'refs/heads/test'
+=======
+      # Build & Push (MAIN / PRODUCTION)
+      - name: Build & Push Production Image
+        if: github.ref == 'refs/heads/main'
+>>>>>>> 448ece56cdf2122814aea4d016d7f35c6090f390
         uses: docker/build-push-action@v5
         with:
           context: ./ecole-portal
           file: ./ecole-portal/Dockerfile
           push: true
+<<<<<<< HEAD
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:test
+=======
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:latest
+>>>>>>> 448ece56cdf2122814aea4d016d7f35c6090f390
           build-args: |
             REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_TEST }}
 
   deploy:
+<<<<<<< HEAD
     name: Deploy to Server
     needs: build
     runs-on: ubuntu-latest
 
     steps:
       - name: Deploy via SSH (Docker Compose)
+=======
+    name: Deploy to Server (main + develop + test)
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' ||
+      github.ref == 'refs/heads/develop' ||
+      github.ref == 'refs/heads/test'
+
+    steps:
+      - name: Print branch
+        run: echo ${{ github.ref_name }}
+
+      - name: Deploy on Server
+>>>>>>> 448ece56cdf2122814aea4d016d7f35c6090f390
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -84,6 +130,7 @@ jobs:
           script: |
             echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
+<<<<<<< HEAD
             cd /path/to/your/project
 
             git pull
@@ -101,5 +148,35 @@ jobs:
 
             docker compose pull $SERVICE
             docker compose up -d $SERVICE
+=======
+            BRANCH="${{ github.ref_name }}"
+
+            if [ "$BRANCH" = "main" ]; then
+              IMAGE_TAG=latest
+              CONTAINER_NAME=ecole-portal
+              PORT=80
+
+            elif [ "$BRANCH" = "test" ]; then
+              IMAGE_TAG=test
+              CONTAINER_NAME=ecole-portal-test
+              PORT=8081
+
+            else
+              IMAGE_TAG=develop
+              CONTAINER_NAME=ecole-portal-dev
+              PORT=8080
+            fi
+
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:$IMAGE_TAG
+
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
+
+            docker run -d \
+              --name $CONTAINER_NAME \
+              --restart unless-stopped \
+              -p $PORT:80 \
+              ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:$IMAGE_TAG
+>>>>>>> 448ece56cdf2122814aea4d016d7f35c6090f390
 
             docker image prune -f

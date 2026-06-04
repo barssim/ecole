@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - develop
+      - test
     paths:
       - 'eureka-server/**'
       - '.github/workflows/eureka-server.yml'
@@ -33,6 +35,8 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+      - name: List files
+        run: ls -R
 
       - name: Build with Maven
         run: |
