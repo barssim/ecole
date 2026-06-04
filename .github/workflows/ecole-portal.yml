@@ -177,6 +177,6 @@ jobs:
               --restart unless-stopped \
               -p $PORT:80 \
               ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:$IMAGE_TAG
->>>>>>> 448ece56cdf2122814aea4d016d7f35c6090f390
+
 
             docker image prune -f
