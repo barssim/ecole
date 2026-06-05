@@ -69,6 +69,8 @@ jobs:
 
             docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_TOKEN }}
 
+            # ensure the Docker network used by docker-compose exists on the target host
+            docker network inspect ecole >/dev/null 2>&1 || docker network create ecole
 
             docker compose pull eureka-server
             docker compose up -d eureka-server
