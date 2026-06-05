@@ -84,7 +84,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
 
           script: |
-            echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+            echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
             BRANCH="${{ github.ref_name }}"
 
