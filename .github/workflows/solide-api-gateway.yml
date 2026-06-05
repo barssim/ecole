@@ -65,5 +65,5 @@ jobs:
             docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_TOKEN }}
 
 
-            docker compose pull solide_api_gateway
-            docker compose up -d solide_api_gateway
+            docker compose pull api-gateway
+            docker compose up -d api-gateway
