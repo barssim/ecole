@@ -69,7 +69,6 @@ jobs:
 
             docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_TOKEN }}
 
-            git pull
 
             docker compose pull eureka-server
             docker compose up -d eureka-server
