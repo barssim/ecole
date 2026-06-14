@@ -36,14 +36,14 @@ spring:
           predicates:
             - Path=/api/auth/**
           filters:
-            - StripPrefix=1
+            - StripPrefix=0
 
         - id: finance-manager
           uri: "http://finance-manager:8094"
           predicates:
             - Path=/api/facture/**
           filters:
-            - StripPrefix=1
+            - StripPrefix=0
 
 management:
   endpoints:
