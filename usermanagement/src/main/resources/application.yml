@@ -1,6 +1,7 @@
 server:
   port: 8091
   address: 0.0.0.0
+  forward-headers-strategy: framework
 
 spring:
   datasource:
