@@ -1,6 +1,9 @@
 services:
 
   ecole-portal:
+    build:
+      context: ./ecole-portal
+      dockerfile: Dockerfile
     image: barssim/ecole-portal:develop
     ports:
       - "8080:8080"

@@ -104,14 +104,20 @@ jobs:
               PORT=8080
             fi
 
+            # ensure the Docker network used by docker-compose (and other services) exists on the target host
+            docker network inspect ecole >/dev/null 2>&1 || docker network create ecole
+
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:$IMAGE_TAG
 
             docker stop $CONTAINER_NAME || true
             docker rm $CONTAINER_NAME || true
 
+            # run the portal container and attach it to the shared 'ecole' network so it can communicate
+            # with other services if needed (and so service names resolve between containers)
             docker run -d \
               --name $CONTAINER_NAME \
               --restart unless-stopped \
+              --network ecole \
               -p $PORT:80 \
               ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:$IMAGE_TAG
 

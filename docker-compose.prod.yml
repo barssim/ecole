@@ -1,9 +1,83 @@
 services:
 
+  mysql-user:
+    image: mysql:8
+    container_name: mysql-user
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: userDB
+    networks:
+      - ecole
+    restart: always
+
+  mysql-fin:
+    image: mysql:8
+    container_name: mysql-fin
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: finDB
+    networks:
+      - ecole
+    restart: always
+
+  usermanagement:
+    image: barssim/usermanagement:latest
+    container_name: usermanagement
+    depends_on:
+      - mysql-user
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-user:3306/userDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - ecole
+    restart: always
+
+  finance-manager:
+    image: barssim/finance-manager:latest
+    container_name: finance-manager
+    depends_on:
+      - mysql-fin
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-fin:3306/finDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - ecole
+    restart: always
+
+  eureka-server:
+    image: barssim/eureka-server:latest
+    container_name: eureka-server
+    networks:
+      - ecole
+    restart: always
+
+  api-gateway:
+    image: barssim/solide_api_gateway:latest
+    container_name: api-gateway
+    ports:
+      - "8085:8085"
+    depends_on:
+      - usermanagement
+      - finance-manager
+      - eureka-server
+    networks:
+      - ecole
+    restart: always
+
   ecole-portal:
+    build:
+      context: ./ecole-portal
+      dockerfile: Dockerfile
     image: barssim/ecole-portal:latest
     ports:
       - "80:80"
     restart: always
     environment:
       NODE_ENV: production
+    networks:
+      - ecole
+
+networks:
+  ecole:
