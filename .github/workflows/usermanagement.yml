@@ -71,3 +71,5 @@ jobs:
 
             docker compose pull usermanagement
             docker compose up -d usermanagement
+            
+            docker image prune -a -f

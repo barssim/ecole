@@ -69,3 +69,5 @@ jobs:
 
             docker compose pull api-gateway
             docker compose up -d api-gateway
+            
+            docker image prune -a -f

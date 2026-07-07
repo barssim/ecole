@@ -72,3 +72,5 @@ jobs:
 
             docker compose pull finance-manager
             docker compose up -d finance-manager
+            
+            docker image prune -a -f

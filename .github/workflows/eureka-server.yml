@@ -74,3 +74,5 @@ jobs:
 
             docker compose pull eureka-server
             docker compose up -d eureka-server
+            
+            docker image prune -a -f
