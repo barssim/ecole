@@ -22,33 +22,59 @@ if (language === "fr") {
 	const [password, setPassword] = useState('');
 	const [errorMessage, setErrorMessage] = useState('');
 	const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login status
-	const handleLogin = (e) => {
+	const [isLoading, setIsLoading] = useState(false); // Track loading state
+
+	const handleLogin = async (e) => {
 		e.preventDefault();
+		setIsLoading(true);
+		setErrorMessage('');
 
 		const userCredentials = { username, password };
 
 		// Send POST request to the backend to authenticate the user
+		try {
+			const response = await axios.post(
+				`${process.env.REACT_APP_API_GATEWAY_URL}/api/auth/login`,
+				userCredentials,
+				{
+					timeout: 10000 // 10 second timeout
+				}
+			);
 
-		axios.post(`${process.env.REACT_APP_API_GATEWAY_URL}/api/auth/login`, userCredentials)
-			.then(response => {
-			    const { token, user } = response.data;
-				// Store the JWT token in sessionStorage
-				sessionStorage.setItem('jwt_token', token);
-				// Store the login status in localStorage
-				localStorage.setItem("isLoggedIn", "true");
-				localStorage.setItem("LoggedIn", user.username);
-				localStorage.setItem("userId", user.id);
-				// Store user roles
-                localStorage.setItem("user_roles", JSON.stringify(user.roles));
-				// Set login status to true in the state
-				setIsLoggedIn(true);
-				  // 🔄 Force full reload
-                    window.location.href = "/";
+			const { token, user } = response.data;
+			// Store the JWT token in sessionStorage
+			sessionStorage.setItem('jwt_token', token);
+			// Store the login status in localStorage
+			localStorage.setItem("isLoggedIn", "true");
+			localStorage.setItem("LoggedIn", user.username);
+			localStorage.setItem("userId", user.id);
+			// Store user roles
+			localStorage.setItem("user_roles", JSON.stringify(user.roles));
+			// Set login status to true in the state
+			setIsLoggedIn(true);
+			// 🔄 Force full reload
+			window.location.href = "/";
+		} catch (error) {
+			let errorMsg = 'An error occurred during login. Please try again.';
 
-			})
-			.catch(error => {
-				setErrorMessage('Invalid credentials. Please try again.');
-			});
+			if (error.code === 'ECONNABORTED') {
+				errorMsg = 'Connection timeout. The server is not responding. Please check your internet connection and try again.';
+			} else if (error.code === 'ENOTFOUND' || error.code === 'ERR_INVALID_URL') {
+				errorMsg = 'Unable to connect to the server. Please check the API endpoint configuration.';
+			} else if (error.response) {
+				// Server responded with error status
+				if (error.response.status === 401) {
+					errorMsg = 'Invalid username or password. Please try again.';
+				} else if (error.response.status === 500) {
+					errorMsg = 'Server error. Please try again later.';
+				}
+			} else if (error.message === 'Network Error') {
+				errorMsg = 'Network error. Please check your internet connection.';
+			}
+
+			setErrorMessage(errorMsg);
+			setIsLoading(false);
+		}
 	};
 
 	return (
@@ -79,7 +105,12 @@ if (language === "fr") {
 				<br />
 				<div>
 					<button
-						className="buttonStyle" type="submit">{content.enter}</button>
+						className="buttonStyle"
+						type="submit"
+						disabled={isLoading}
+					>
+						{isLoading ? 'Logging in...' : content.enter}
+					</button>
 				</div>
 				<br />
 			</form>
