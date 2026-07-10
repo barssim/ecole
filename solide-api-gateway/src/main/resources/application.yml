@@ -28,6 +28,14 @@ spring:
 
       httpclient:
         wiretap: false  # disable wiretap in prod
+        connectTimeout: 30000  # 30 seconds
+        responseTimeout: 60000  # 60 seconds
+
+      httpserver:
+        wiretap: false
+
+      websocket:
+        max-frame-payload-size: 100KB
 
       routes:
 
