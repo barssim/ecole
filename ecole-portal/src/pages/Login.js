@@ -49,15 +49,48 @@ if (language === "fr") {
 				}
 			);
 
-			const { token, user } = response.data;
+			console.log('Login response:', response.data);
+
+			// Extract token and user from response - handle different response formats
+			let token, user;
+
+			if (response.data.token) {
+				// Format: { token: "...", user: {...} }
+				token = response.data.token;
+				user = response.data.user;
+			} else if (response.data.jwt || response.data.jwtToken) {
+				// Format: { jwt: "..." } or { jwtToken: "..." }
+				token = response.data.jwt || response.data.jwtToken;
+				user = { username: username };
+			} else {
+				throw new Error('Unexpected response format: No token found in response');
+			}
+
+			if (!token) {
+				throw new Error('No authentication token received from server');
+			}
+
 			// Store the JWT token in sessionStorage
 			sessionStorage.setItem('jwt_token', token);
 			// Store the login status in localStorage
 			localStorage.setItem("isLoggedIn", "true");
-			localStorage.setItem("LoggedIn", user.username);
-			localStorage.setItem("userId", user.id);
-			// Store user roles
-			localStorage.setItem("user_roles", JSON.stringify(user.roles));
+
+			// Store user info if available
+			if (user && user.username) {
+				localStorage.setItem("LoggedIn", user.username);
+			} else {
+				localStorage.setItem("LoggedIn", username);
+			}
+
+			if (user && user.id) {
+				localStorage.setItem("userId", user.id);
+			}
+
+			// Store user roles if available
+			if (user && user.roles) {
+				localStorage.setItem("user_roles", JSON.stringify(user.roles));
+			}
+
 			// Set login status to true in the state
 			setIsLoggedIn(true);
 			// 🔄 Force full reload
