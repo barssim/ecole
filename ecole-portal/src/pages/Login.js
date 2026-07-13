@@ -30,14 +30,22 @@ if (language === "fr") {
 		setErrorMessage('');
 
 		const userCredentials = { username, password };
+		const apiUrl = `${process.env.REACT_APP_API_GATEWAY_URL}/api/auth/login`;
+
+		// Log API details for debugging
+		console.log('Login attempt - API URL:', apiUrl);
+		console.log('Debug mode:', process.env.REACT_APP_DEBUG);
 
 		// Send POST request to the backend to authenticate the user
 		try {
 			const response = await axios.post(
-				`${process.env.REACT_APP_API_GATEWAY_URL}/api/auth/login`,
+				apiUrl,
 				userCredentials,
 				{
-					timeout: 10000 // 10 second timeout
+					timeout: 10000, // 10 second timeout
+					headers: {
+						'Content-Type': 'application/json'
+					}
 				}
 			);
 
@@ -55,6 +63,14 @@ if (language === "fr") {
 			// 🔄 Force full reload
 			window.location.href = "/";
 		} catch (error) {
+			console.error('Login error:', error);
+			console.error('Error code:', error.code);
+			console.error('Error message:', error.message);
+			if (error.response) {
+				console.error('Response status:', error.response.status);
+				console.error('Response data:', error.response.data);
+			}
+
 			let errorMsg = 'An error occurred during login. Please try again.';
 
 			if (error.code === 'ECONNABORTED') {
@@ -65,11 +81,20 @@ if (language === "fr") {
 				// Server responded with error status
 				if (error.response.status === 401) {
 					errorMsg = 'Invalid username or password. Please try again.';
+				} else if (error.response.status === 403) {
+					errorMsg = 'Access forbidden. Your account may not have permission to login.';
+				} else if (error.response.status === 400) {
+					errorMsg = error.response.data?.message || 'Invalid request. Please check your input.';
 				} else if (error.response.status === 500) {
 					errorMsg = 'Server error. Please try again later.';
+				} else if (error.response.status >= 400) {
+					errorMsg = `Server error (${error.response.status}): ${error.response.data?.message || 'Please try again later.'}`;
 				}
 			} else if (error.message === 'Network Error') {
 				errorMsg = 'Network error. Please check your internet connection.';
+			} else if (error.message) {
+				// Use the actual error message if available
+				errorMsg = error.message;
 			}
 
 			setErrorMessage(errorMsg);
