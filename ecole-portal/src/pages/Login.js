@@ -86,10 +86,11 @@ if (language === "fr") {
 				localStorage.setItem("userId", user.id);
 			}
 
-			// Store user roles if available
-			if (user && user.roles) {
-				localStorage.setItem("user_roles", JSON.stringify(user.roles));
-			}
+			// Store user roles - always store a valid JSON array
+			const userRoles = (user && Array.isArray(user.roles)) ? user.roles : [];
+			localStorage.setItem("user_roles", JSON.stringify(userRoles));
+
+			console.log('Login successful! Stored roles:', userRoles);
 
 			// Set login status to true in the state
 			setIsLoggedIn(true);
