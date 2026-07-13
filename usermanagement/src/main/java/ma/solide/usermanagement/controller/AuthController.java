@@ -31,8 +31,9 @@ public class AuthController {
     public ResponseEntity<Object> login(@RequestBody LoginRequest loginRequest) {
         // Mock authentication logic (replace with database/user service in production)
         if (userService.existsBySurnameAndPassword(loginRequest.getUsername(), loginRequest.getPassword())) {
+            User user = userService.findBySurname(loginRequest.getUsername());
             String token = jwtUtil.generateToken(loginRequest.getUsername());
-            return ResponseEntity.ok(new AuthResponse(token));
+            return ResponseEntity.ok(new AuthResponse(token, user));
         } else
             return ResponseEntity.status(401).body("Invalid username or password");
 
@@ -55,13 +56,59 @@ public class AuthController {
     // DTO for the authentication response
     public static class AuthResponse {
         private final String token;
+        private final UserResponse user;
 
-        public AuthResponse(String token) {
+        public AuthResponse(String token, User user) {
             this.token = token;
+            this.user = user != null ? new UserResponse(user) : null;
         }
 
         public String getToken() {
             return token;
+        }
+
+        public UserResponse getUser() {
+            return user;
+        }
+    }
+
+    // DTO for user information in response
+    public static class UserResponse {
+        private final Integer id;
+        private final String username;
+        private final String firstname;
+        private final String email;
+        private final java.util.List<String> roles;
+
+        public UserResponse(User user) {
+            this.id = user.getUserno();
+            this.username = user.getSurname();
+            this.firstname = user.getFirstname();
+            this.email = user.getEmail();
+            // Convert single role to list of roles
+            this.roles = user.getRole() != null ? 
+                java.util.Arrays.asList(user.getRole().split(",")) : 
+                java.util.Collections.emptyList();
+        }
+
+        public Integer getId() {
+            return id;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getFirstname() {
+            return firstname;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public java.util.List<String> getRoles() {
+            return roles;
         }
     }
 }

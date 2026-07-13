@@ -32,6 +32,11 @@ public class UserService {
 		return userRepository.existsBySurnameAndPassword(username, password);
 		
 	}
+
+	public User findBySurname(String surname) {
+		return userRepository.findBySurname(surname).orElse(null);
+	}
+
 	public List<User> findAllUsers() {
 		return userRepository.findAll();
 	}
