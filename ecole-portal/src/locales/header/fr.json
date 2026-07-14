@@ -35,5 +35,9 @@
   "role": "Rôle",
   "roleParent": "Parent",
   "roleStudent": "Élève",
+  "roleTeacher": "Enseignant",
+  "roleAdmin": "Administrateur",
+  "roleManager": "Manager",
+  "roleFinance": "Finance",
   "roleRequired": "Veuillez sélectionner un rôle"
 }

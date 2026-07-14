@@ -133,6 +133,10 @@
 	"role": "Rôle",
 	"roleParent": "Parent",
 	"roleStudent": "Élève",
+	"roleTeacher": "Enseignant",
+	"roleAdmin": "Administrateur",
+	"roleManager": "Manager",
+	"roleFinance": "Finance",
 
 	"classes_title": "Liste des classes",
 	"classes_showStudents": "👥 Voir les élèves",

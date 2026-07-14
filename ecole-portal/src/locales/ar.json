@@ -134,6 +134,10 @@
 	"role": "الدور",
 	"roleParent": "ولي أمر",
 	"roleStudent": "طالب",
+	"roleTeacher": "معلم",
+	"roleAdmin": "مشرف",
+	"roleManager": "مدير",
+	"roleFinance": "المالية",
 
 	"classes_title": "قائمة الفصول",
 	"classes_showStudents": "👥 عرض الطلاب",

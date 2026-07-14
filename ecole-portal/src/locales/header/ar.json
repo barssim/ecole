@@ -35,5 +35,9 @@
   "role": "الدور",
   "roleParent": "ولي أمر",
   "roleStudent": "طالب",
+  "roleTeacher": "معلم",
+  "roleAdmin": "مشرف",
+  "roleManager": "مدير",
+  "roleFinance": "المالية",
   "roleRequired": "يرجى تحديد دور"
 }

@@ -120,6 +120,10 @@
   "role": "Role",
   "roleParent": "Parent",
   "roleStudent": "Student",
+  "roleTeacher": "Teacher",
+  "roleAdmin": "Admin",
+  "roleManager": "Manager",
+  "roleFinance": "Finance",
 
   "classes_title": "Class List",
   "classes_showStudents": "👥 Show Students",

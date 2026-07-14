@@ -23,7 +23,7 @@ if (language === "fr") {
 		adresse: "",
 		password: "",
 		confirmPassword: "",
-		role: "parent", // Default role
+		role: "student", // Default role is now student
 	});
 
 	const [error, setError] = useState({});
@@ -95,7 +95,7 @@ if (language === "fr") {
 					adresse: "",
 					password: "",
 					confirmPassword: "",
-					role: "parent",
+					role: "student",
 				});
 				// Redirect the user to a protected page after 3 seconds
 				setTimeout(() => {
@@ -184,8 +184,12 @@ if (language === "fr") {
 					value={formData.role}
 					onChange={handleChange}
 				>
-					<option value="parent">{content.roleParent || "Parent"}</option>
 					<option value="student">{content.roleStudent || "Student"}</option>
+					<option value="parent">{content.roleParent || "Parent"}</option>
+					<option value="teacher">{content.roleTeacher || "Teacher"}</option>
+					<option value="admin">{content.roleAdmin || "Admin"}</option>
+					<option value="manager">{content.roleManager || "Manager"}</option>
+					<option value="finance">{content.roleFinance || "Finance"}</option>
 				</select>
 				{error.role && <p className="field-error">{error.role}</p>}
 			</div>

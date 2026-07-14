@@ -22,7 +22,10 @@ public class User {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	Integer userno;
+	
+	@Column(length = 255)  // Allow multiple comma-separated roles
 	String role;
+	
 	String surname;
 	String firstname;
 	String email;

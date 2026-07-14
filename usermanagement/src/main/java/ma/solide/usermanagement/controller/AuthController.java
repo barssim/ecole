@@ -40,17 +40,37 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> createUser(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<Object> createUser(@RequestBody UserDTO userDTO) {
+        // Validate required fields
+        if (userDTO.getSurname() == null || userDTO.getSurname().isEmpty() ||
+            userDTO.getFirstname() == null || userDTO.getFirstname().isEmpty() ||
+            userDTO.getEmail() == null || userDTO.getEmail().isEmpty() ||
+            userDTO.getPassword() == null || userDTO.getPassword().isEmpty()) {
+            return ResponseEntity.status(400).body("Missing required fields");
+        }
+
+        // Convert roles list to CSV string (comma-separated values)
+        String roleString = "";
+        if (userDTO.getRoles() != null && !userDTO.getRoles().isEmpty()) {
+            roleString = String.join(",", userDTO.getRoles());
+        } else {
+            roleString = "student"; // Default role is now 'student' if none provided
+        }
+
         User user = User.builder()
                 .surname(userDTO.getSurname())
                 .firstname(userDTO.getFirstname())
                 .email(userDTO.getEmail())
                 .adresse(userDTO.getAdresse())
                 .password(userDTO.getPassword())
+                .role(roleString)  // Store roles as CSV string
                 .build();
 
         User createdUser = userService.createUser(user);
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+        
+        // Return response with user and roles
+        return new ResponseEntity<>(new AuthResponse(jwtUtil.generateToken(userDTO.getEmail()), createdUser), 
+                HttpStatus.CREATED);
     }
 
     // DTO for the authentication response
