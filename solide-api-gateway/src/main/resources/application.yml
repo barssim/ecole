@@ -53,6 +53,13 @@ spring:
           filters:
             - StripPrefix=0
 
+        - id: attestation-service
+          uri: "http://attestation-service:8095"
+          predicates:
+            - Path=/api/attestations,/api/attestations/**,/api/attestationsproduction,/api/attestationsproduction/**
+          filters:
+            - StripPrefix=0
+
 management:
   endpoints:
     web:

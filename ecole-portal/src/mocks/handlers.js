@@ -178,6 +178,107 @@ http.get(`${BASE_URL}/api/studentschedule`, () => {
        ]);
     }),
 
+    // 🎓 Handler for production attestations (detailed, user-specific)
+    http.get(`${BASE_URL}/api/attestationsproduction`, () => {
+      const userId = localStorage.getItem("userId");
+
+      const productionAttestations = {
+        "5": [
+          {
+            id: 1,
+            title: "Attestation de scolarité",
+            type: "enrollment",
+            date: "2024-09-01",
+            status: "approved",
+            documentUrl: "/documents/attestation-scolarite-5-2024.pdf",
+            issuedBy: "Directeur de l'école",
+            validFrom: "2024-09-01",
+            validUntil: "2025-08-31",
+            reference: "ATT-2024-001-5"
+          },
+          {
+            id: 2,
+            title: "Attestation de présence",
+            type: "attendance",
+            date: "2025-01-15",
+            status: "approved",
+            documentUrl: "/documents/attestation-presence-5-2025.pdf",
+            issuedBy: "Coordinatrice pédagogique",
+            validFrom: "2025-01-01",
+            validUntil: "2025-12-31",
+            reference: "ATT-2025-002-5"
+          },
+          {
+            id: 3,
+            title: "Attestation d'inscription",
+            type: "registration",
+            date: "2025-03-22",
+            status: "pending",
+            documentUrl: null,
+            issuedBy: "Secrétariat",
+            validFrom: "2025-03-22",
+            validUntil: "2026-03-22",
+            reference: "ATT-2025-003-5"
+          },
+          {
+            id: 4,
+            title: "Attestation de bonne conduite",
+            type: "conduct",
+            date: "2025-07-10",
+            status: "approved",
+            documentUrl: "/documents/attestation-conduite-5-2025.pdf",
+            issuedBy: "Directeur de l'école",
+            validFrom: "2025-07-10",
+            validUntil: "2026-07-10",
+            reference: "ATT-2025-004-5"
+          }
+        ],
+        "6": [
+          {
+            id: 5,
+            title: "Attestation de scolarité",
+            type: "enrollment",
+            date: "2024-09-01",
+            status: "approved",
+            documentUrl: "/documents/attestation-scolarite-6-2024.pdf",
+            issuedBy: "Directeur de l'école",
+            validFrom: "2024-09-01",
+            validUntil: "2025-08-31",
+            reference: "ATT-2024-001-6"
+          },
+          {
+            id: 6,
+            title: "Attestation de résultats académiques",
+            type: "academic",
+            date: "2025-06-15",
+            status: "approved",
+            documentUrl: "/documents/attestation-resultats-6-2025.pdf",
+            issuedBy: "Chef du département académique",
+            validFrom: "2025-06-15",
+            validUntil: "2025-12-31",
+            reference: "ATT-2025-005-6"
+          }
+        ],
+        "7": [
+          {
+            id: 7,
+            title: "Attestation de scolarité",
+            type: "enrollment",
+            date: "2024-09-01",
+            status: "approved",
+            documentUrl: "/documents/attestation-scolarite-7-2024.pdf",
+            issuedBy: "Directeur de l'école",
+            validFrom: "2024-09-01",
+            validUntil: "2025-08-31",
+            reference: "ATT-2024-001-7"
+          }
+        ]
+      };
+
+      const attestations = productionAttestations[userId] || [];
+      return HttpResponse.json(attestations);
+    }),
+
 
     // 🔐 Handler for login authentication with roles
     http.post(`${BASE_URL}/api/auth/login`, async ({ request }) => {

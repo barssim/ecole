@@ -18,6 +18,15 @@ services:
     networks:
       - ecole
 
+  mysql-attestation:
+    image: mysql:8
+    container_name: mysql-attestation
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: attestationDB
+    networks:
+      - ecole
+
   usermanagement:
     image: barssim/usermanagement:latest
     container_name: usermanagement
@@ -42,6 +51,21 @@ services:
     networks:
       - ecole
 
+  attestation-service:
+    build:
+      context: ./attestation-service
+      dockerfile: Dockerfile
+    image: barssim/attestation-service:latest
+    container_name: attestation-service
+    depends_on:
+      - mysql-attestation
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-attestation:3306/attestationDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - ecole
+
   eureka-server:
     image: barssim/eureka-server:latest
     container_name: eureka-server
@@ -49,11 +73,15 @@ services:
       - ecole
 
   api-gateway:
+    build:
+      context: ./solide-api-gateway
+      dockerfile: Dockerfile
     image: barssim/solide_api_gateway:latest
     container_name: api-gateway
     depends_on:
       - usermanagement
       - finance-manager
+      - attestation-service
       - eureka-server
     networks:
       - ecole

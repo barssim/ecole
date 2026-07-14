@@ -15,9 +15,15 @@ const AttestationsPage = ({ language }) => {
   useEffect(() => {
     const fetchAttestations = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_GATEWAY_URL}/api/attestations`);
+        const userId = localStorage.getItem('userId');
+        const token = sessionStorage.getItem('jwt_token');
+        const query = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+
+        const response = await fetch(`${process.env.REACT_APP_API_GATEWAY_URL}/api/attestations${query}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
         const data = await response.json();
-        setAttestations(data);
+        setAttestations(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to fetch attestations:', error);
       }
@@ -25,6 +31,20 @@ const AttestationsPage = ({ language }) => {
 
     fetchAttestations();
   }, []);
+
+  const handleView = (attestationId) => {
+    window.open(`${process.env.REACT_APP_API_GATEWAY_URL}/api/attestations/${attestationId}/view`, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleDownload = (attestationId) => {
+    const link = document.createElement('a');
+    link.href = `${process.env.REACT_APP_API_GATEWAY_URL}/api/attestations/${attestationId}/download`;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const filtered = attestations.filter((a) =>
     a.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -48,12 +68,23 @@ const AttestationsPage = ({ language }) => {
             <div>
               <p className="font-semibold">{attestation.title}</p>
               <p className="text-sm text-gray-500">🗓 {attestation.date}</p>
+              {attestation.reference && (
+                <p className="text-xs text-gray-500">#{attestation.reference}</p>
+              )}
             </div>
             <div className="space-x-2">
-              <button className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm">
+              <button
+                type="button"
+                onClick={() => handleView(attestation.id)}
+                className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm"
+              >
                 {content.attestation_viewButton}
               </button>
-              <button className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm">
+              <button
+                type="button"
+                onClick={() => handleDownload(attestation.id)}
+                className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm"
+              >
                 {content.attestation_downloadButton}
               </button>
             </div>
