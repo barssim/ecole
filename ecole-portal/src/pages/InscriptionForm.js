@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import fr from "../locales/fr.json";
 import en from "../locales/en.json";
 import ar from "../locales/ar.json";
+import "../cssFiles/Inscription.css";
 
 const InscriptionForm = ({isAuthorized, language }) => {
 const content = language === "fr" ? fr : language === "en" ? en : ar;
@@ -11,6 +12,9 @@ const content = language === "fr" ? fr : language === "en" ? en : ar;
     classLevel: '',
     guardianContact: '',
   });
+
+  const [submitted, setSubmitted] = useState(false);
+  const [submittedData, setSubmittedData] = useState(null);
 
   const handleChange = (e) => {
     setFormData({
@@ -22,10 +26,39 @@ const content = language === "fr" ? fr : language === "en" ? en : ar;
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Form submitted:', formData);
+    setSubmittedData(formData);
+    setSubmitted(true);
+
+    // Reset form
+    setFormData({
+      studentName: '',
+      birthDate: '',
+      classLevel: '',
+      guardianContact: '',
+    });
+
+    // Auto-hide confirmation after 4 seconds
+    setTimeout(() => {
+      setSubmitted(false);
+    }, 4000);
   };
 
   return (
     <div className="inscription-container">
+      {submitted && submittedData && (
+        <div className="inscription-overlay">
+          <div className="inscription-confirmation">
+            <div className="confirmation-content">
+              <div className="confirmation-checkmark">✓</div>
+              <h3>{content.submissionSuccess || "Inscription enregistrée!"}</h3>
+              <p>{content.studentName}: <strong>{submittedData.studentName}</strong></p>
+              <p className="confirmation-message">
+                {content.confirmationMessage || "Votre demande d'inscription a été reçue avec succès."}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <h2>📝 {content.title}</h2>
       <form onSubmit={handleSubmit}>
         <input

@@ -62,3 +62,136 @@
 .signup-button:hover {
   background: #218838;
 }
+
+/* Confirmation Modal Styles */
+.confirmation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.confirmation-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.confirmation-icon {
+  font-size: 4rem;
+  color: #28a745;
+  margin-bottom: 20px;
+  animation: scaleIn 0.5s ease-out;
+}
+
+.confirmation-modal h2 {
+  color: #28a745;
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+}
+
+.confirmation-modal p {
+  color: #555;
+  font-size: 1rem;
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+.redirect-message {
+  color: #999;
+  font-size: 0.9rem;
+  margin-top: 15px;
+  font-style: italic;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* InscriptionForm Confirmation Styles */
+.inscription-container {
+  position: relative;
+}
+
+.inscription-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 998;
+}
+
+.inscription-confirmation {
+  position: relative;
+  z-index: 999;
+}
+
+.confirmation-content {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  min-width: 320px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.confirmation-checkmark {
+  font-size: 3rem;
+  color: #28a745;
+  margin-bottom: 15px;
+  animation: scaleIn 0.5s ease-out;
+}
+
+.confirmation-content h3 {
+  color: #28a745;
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+}
+
+.confirmation-content p {
+  color: #555;
+  margin: 8px 0;
+  font-size: 0.95rem;
+}
+
+.confirmation-message {
+  color: #999;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 10px !important;
+}
+

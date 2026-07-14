@@ -19,5 +19,17 @@
   "confirmPassword": "Confirm password",
   "surname": "Last name",
   "firstname": "First name",
-  "logout": "Log out"
+  "logout": "Log out",
+  "registrationSuccess": "Congratulations {surname}! You have been successfully registered.",
+  "registrationError": "An error occurred during registration. Please try again.",
+  "surnameRequired": "Last name is required",
+  "firstnameRequired": "First name is required",
+  "emailRequired": "Email is required",
+  "invalidEmail": "Please enter a valid email address",
+  "adresseRequired": "Address is required",
+  "passwordRequired": "Password is required",
+  "confirmPasswordRequired": "Please confirm your password",
+  "passwordMismatch": "Passwords do not match",
+  "loading": "Loading...",
+  "redirectingMessage": "Redirecting to dashboard..."
 }

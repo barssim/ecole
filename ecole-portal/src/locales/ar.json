@@ -126,6 +126,11 @@
 	"birth": "تاريخ الميلاد",
 	"class": "المستوى الدراسي",
 	"contact": "اتصال الوالد",
+	"cp": "CP",
+	"ce1": "CE1",
+	"ce2": "CE2",
+	"submissionSuccess": "تم تسجيل الالتحاق!",
+	"confirmationMessage": "تم استقبال طلب التسجيل الخاص بك بنجاح.",
 
 	"classes_title": "قائمة الفصول",
 	"classes_showStudents": "👥 عرض الطلاب",

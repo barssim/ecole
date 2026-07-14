@@ -112,6 +112,11 @@
   "birth": "Date de naissance",
   "class": "Niveau de classe",
   "contact": "Contact du parent",
+  "cp": "CP",
+  "ce1": "CE1",
+  "ce2": "CE2",
+  "submissionSuccess": "Registration submitted!",
+  "confirmationMessage": "Your registration request has been successfully received.",
 
   "classes_title": "Class List",
   "classes_showStudents": "👥 Show Students",

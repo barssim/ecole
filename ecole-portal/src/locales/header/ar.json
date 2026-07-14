@@ -19,5 +19,17 @@
   "confirmPassword": "تأكيد كلمة المرور",
   "surname": "الاسم العائلي",
   "firstname": "الاسم الشخصي",
-  "logout": "الخروج"
+  "logout": "الخروج",
+  "registrationSuccess": "مبروك {surname}! لقد تم تسجيلك بنجاح.",
+  "registrationError": "حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.",
+  "surnameRequired": "الاسم العائلي مطلوب",
+  "firstnameRequired": "الاسم الأول مطلوب",
+  "emailRequired": "البريد الإلكتروني مطلوب",
+  "invalidEmail": "يرجى إدخال عنوان بريد إلكتروني صحيح",
+  "adresseRequired": "العنوان مطلوب",
+  "passwordRequired": "كلمة المرور مطلوبة",
+  "confirmPasswordRequired": "يرجى تأكيد كلمة المرور",
+  "passwordMismatch": "كلمات المرور غير متطابقة",
+  "loading": "جاري التحميل...",
+  "redirectingMessage": "إعادة توجيه إلى لوحة المعلومات..."
 }

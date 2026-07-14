@@ -28,6 +28,7 @@ if (language === "fr") {
 	const [error, setError] = useState({});
 	const [success, setSuccess] = useState("");
 	const [loading, setLoading] = useState(false);
+	const [showConfirmation, setShowConfirmation] = useState(false);
 
 	const handleChange = (e) => {
 		const { name, value } = e.target;
@@ -80,10 +81,22 @@ if (language === "fr") {
 			});
 
 			if (response.status === 201) {
-				setSuccess(content.registrationSuccess.replace("{surname}", surname));
+				const successMessage = content.registrationSuccess.replace("{surname}", surname);
+				setSuccess(successMessage);
+				setShowConfirmation(true);
 				setError({});
-				// Redirect the user to a protected page (you can use react-router here)
-				window.location.href = '/dashboard';  // Example redirection
+				setFormData({
+					surname: "",
+					firstname: "",
+					email: "",
+					adresse: "",
+					password: "",
+					confirmPassword: "",
+				});
+				// Redirect the user to a protected page after 3 seconds
+				setTimeout(() => {
+					window.location.href = '/dashboard';  // Example redirection
+				}, 3000);
 			} else {
 				setError({ general: content.registrationError });
 			}
@@ -97,10 +110,20 @@ if (language === "fr") {
 
 	return (
 		<div className="signup-container">
+			{showConfirmation && (
+				<div className="confirmation-overlay">
+					<div className="confirmation-modal">
+						<div className="confirmation-icon">✓</div>
+						<h2>{content.registrationSuccess.split("{surname}")[0]}</h2>
+						<p>{success}</p>
+						<p className="redirect-message">{content.redirectingMessage || "Redirecting to dashboard..."}</p>
+					</div>
+				</div>
+			)}
 			<form className="signup-form" onSubmit={handleSubmit}>
 				<h2>{content.register}</h2>
 				{error.general && <p className="error-message">{error.general}</p>}
-				{success && <p className="success-message">{success}</p>}
+				{success && !showConfirmation && <p className="success-message">{success}</p>}
 				<div className="form-group">
 					<label htmlFor="surname">{content.surname}:</label>
 					<input
@@ -173,7 +196,7 @@ if (language === "fr") {
 					/>
 					{error.confirmPassword && <p className="field-error">{error.confirmPassword}</p>}
 				</div>
-				<button type="submit" className="signup-button" disabled={loading}>
+				<button type="submit" className="signup-button" disabled={loading || showConfirmation}>
 					{loading ? content.loading : content.submit}
 				</button>
 			</form>

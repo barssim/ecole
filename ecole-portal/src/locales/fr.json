@@ -125,6 +125,11 @@
 	"birth": "Date de naissance",
 	"class": "Niveau de classe",
 	"contact": "Contact du parent",
+	"cp": "CP",
+	"ce1": "CE1",
+	"ce2": "CE2",
+	"submissionSuccess": "Inscription enregistrée!",
+	"confirmationMessage": "Votre demande d'inscription a été reçue avec succès.",
 
 	"classes_title": "Liste des classes",
 	"classes_showStudents": "👥 Voir les élèves",

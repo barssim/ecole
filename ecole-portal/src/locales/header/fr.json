@@ -19,5 +19,17 @@
   "confirmPassword": "Confirmez le mot de passe",
   "surname": "nom de famille",
   "firstname": "Prénom",
-  "logout": "Se deconnecter"
+  "logout": "Se deconnecter",
+  "registrationSuccess": "Félicitations {surname}! Vous êtes inscrit avec succès.",
+  "registrationError": "Une erreur s'est produite lors de l'inscription. Veuillez réessayer.",
+  "surnameRequired": "Le nom de famille est requis",
+  "firstnameRequired": "Le prénom est requis",
+  "emailRequired": "L'email est requis",
+  "invalidEmail": "Veuillez entrer une adresse email valide",
+  "adresseRequired": "L'adresse est requise",
+  "passwordRequired": "Le mot de passe est requis",
+  "confirmPasswordRequired": "Veuillez confirmer votre mot de passe",
+  "passwordMismatch": "Les mots de passe ne correspondent pas",
+  "loading": "Chargement...",
+  "redirectingMessage": "Redirection vers le tableau de bord..."
 }
