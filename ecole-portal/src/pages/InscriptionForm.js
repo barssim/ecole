@@ -25,7 +25,12 @@ const content = language === "fr" ? fr : language === "en" ? en : ar;
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    const inscriptionData = {
+      ...formData,
+      role: 'student', // Automatically assign student role
+      timestamp: new Date().toISOString()
+    };
+    console.log('Form submitted with role:', inscriptionData);
     setSubmittedData(formData);
     setSubmitted(true);
 
@@ -52,6 +57,8 @@ const content = language === "fr" ? fr : language === "en" ? en : ar;
               <div className="confirmation-checkmark">✓</div>
               <h3>{content.submissionSuccess || "Inscription enregistrée!"}</h3>
               <p>{content.studentName}: <strong>{submittedData.studentName}</strong></p>
+              <p>{content.class}: <strong>{submittedData.classLevel}</strong></p>
+              <p>{content.role}: <strong>{content.roleStudent || "Student"}</strong></p>
               <p className="confirmation-message">
                 {content.confirmationMessage || "Votre demande d'inscription a été reçue avec succès."}
               </p>

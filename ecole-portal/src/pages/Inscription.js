@@ -23,6 +23,7 @@ if (language === "fr") {
 		adresse: "",
 		password: "",
 		confirmPassword: "",
+		role: "parent", // Default role
 	});
 
 	const [error, setError] = useState({});
@@ -37,7 +38,7 @@ if (language === "fr") {
 	};
 
 	const validateInputs = () => {
-		const { surname, firstname, email, adresse, password, confirmPassword } = formData;
+		const { surname, firstname, email, adresse, password, confirmPassword, role } = formData;
 		const errors = {};
 
 		if (!surname.trim()) errors.surname = content.surnameRequired;
@@ -49,6 +50,7 @@ if (language === "fr") {
 		if (!password) errors.password = content.passwordRequired;
 		if (!confirmPassword) errors.confirmPassword = content.confirmPasswordRequired;
 		else if (password !== confirmPassword) errors.confirmPassword = content.passwordMismatch;
+		if (!role) errors.role = content.roleRequired;
 
 		return errors;
 	};
@@ -65,14 +67,15 @@ if (language === "fr") {
 		}
 
 		try {
-			const { surname, firstname, email, adresse, password } = formData;
+			const { surname, firstname, email, adresse, password, role } = formData;
 			const token = sessionStorage.getItem('jwt_token');
 			const response = await axios.post(`${process.env.REACT_APP_API_GATEWAY_URL}/api/auth/register`, {
 				surname,
 				firstname,
 				email,
 				adresse,
-				password
+				password,
+				roles: [role] // Send role as an array
 			}, {
 				headers: {
 					'Content-Type': 'application/json', // Ensure correct content type
@@ -92,6 +95,7 @@ if (language === "fr") {
 					adresse: "",
 					password: "",
 					confirmPassword: "",
+					role: "parent",
 				});
 				// Redirect the user to a protected page after 3 seconds
 				setTimeout(() => {
@@ -160,20 +164,33 @@ if (language === "fr") {
 					/>
 					{error.email && <p className="field-error">{error.email}</p>}
 				</div>
-				<div className="form-group">
-					<label htmlFor="adresse">{content.adresse}:</label>
-					<input
-						type="text"
-						id="adresse"
-						name="adresse"
-						value={formData.adresse}
-						onChange={handleChange}
-						placeholder="Enter your address"
-					/>
-					{error.adresse && <p className="field-error">{error.adresse}</p>}
-				</div>
-				<div className="form-group">
-					<label htmlFor="password">{content.password}:</label>
+			<div className="form-group">
+				<label htmlFor="adresse">{content.adresse}:</label>
+				<input
+					type="text"
+					id="adresse"
+					name="adresse"
+					value={formData.adresse}
+					onChange={handleChange}
+					placeholder="Enter your address"
+				/>
+				{error.adresse && <p className="field-error">{error.adresse}</p>}
+			</div>
+			<div className="form-group">
+				<label htmlFor="role">{content.role}:</label>
+				<select
+					id="role"
+					name="role"
+					value={formData.role}
+					onChange={handleChange}
+				>
+					<option value="parent">{content.roleParent || "Parent"}</option>
+					<option value="student">{content.roleStudent || "Student"}</option>
+				</select>
+				{error.role && <p className="field-error">{error.role}</p>}
+			</div>
+			<div className="form-group">
+				<label htmlFor="password">{content.password}:</label>
 					<input
 						type="password"
 						id="password"

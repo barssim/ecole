@@ -37,6 +37,15 @@
   border-radius: 4px;
 }
 
+.form-group select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+}
+
 .error-message {
   color: red;
   font-size: 0.9em;

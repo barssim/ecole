@@ -31,5 +31,9 @@
   "confirmPasswordRequired": "Veuillez confirmer votre mot de passe",
   "passwordMismatch": "Les mots de passe ne correspondent pas",
   "loading": "Chargement...",
-  "redirectingMessage": "Redirection vers le tableau de bord..."
+  "redirectingMessage": "Redirection vers le tableau de bord...",
+  "role": "Rôle",
+  "roleParent": "Parent",
+  "roleStudent": "Élève",
+  "roleRequired": "Veuillez sélectionner un rôle"
 }

@@ -117,6 +117,9 @@
   "ce2": "CE2",
   "submissionSuccess": "Registration submitted!",
   "confirmationMessage": "Your registration request has been successfully received.",
+  "role": "Role",
+  "roleParent": "Parent",
+  "roleStudent": "Student",
 
   "classes_title": "Class List",
   "classes_showStudents": "👥 Show Students",

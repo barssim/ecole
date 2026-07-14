@@ -130,6 +130,9 @@
 	"ce2": "CE2",
 	"submissionSuccess": "Inscription enregistrée!",
 	"confirmationMessage": "Votre demande d'inscription a été reçue avec succès.",
+	"role": "Rôle",
+	"roleParent": "Parent",
+	"roleStudent": "Élève",
 
 	"classes_title": "Liste des classes",
 	"classes_showStudents": "👥 Voir les élèves",

@@ -131,6 +131,9 @@
 	"ce2": "CE2",
 	"submissionSuccess": "تم تسجيل الالتحاق!",
 	"confirmationMessage": "تم استقبال طلب التسجيل الخاص بك بنجاح.",
+	"role": "الدور",
+	"roleParent": "ولي أمر",
+	"roleStudent": "طالب",
 
 	"classes_title": "قائمة الفصول",
 	"classes_showStudents": "👥 عرض الطلاب",

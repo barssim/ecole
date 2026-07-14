@@ -31,5 +31,9 @@
   "confirmPasswordRequired": "يرجى تأكيد كلمة المرور",
   "passwordMismatch": "كلمات المرور غير متطابقة",
   "loading": "جاري التحميل...",
-  "redirectingMessage": "إعادة توجيه إلى لوحة المعلومات..."
+  "redirectingMessage": "إعادة توجيه إلى لوحة المعلومات...",
+  "role": "الدور",
+  "roleParent": "ولي أمر",
+  "roleStudent": "طالب",
+  "roleRequired": "يرجى تحديد دور"
 }

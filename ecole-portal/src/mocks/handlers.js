@@ -276,6 +276,34 @@ http.get(`${BASE_URL}/api/studentschedule`, () => {
                                                   }
       return new HttpResponse(null, { status: 401 });
     }),
+
+    // 🔐 Handler for user registration with role assignment
+    http.post(`${BASE_URL}/api/auth/register`, async ({ request }) => {
+      const { surname, firstname, email, adresse, password, roles } = await request.json();
+
+      // Validate required fields
+      if (!surname || !firstname || !email || !password || !roles || roles.length === 0) {
+        return new HttpResponse("Missing required fields", { status: 400 });
+      }
+
+      // Generate a mock user ID
+      const userId = Math.floor(Math.random() * 10000);
+
+      // Return success response with token and user info including role
+      return HttpResponse.json({
+        token: `mock-registration-token-${userId}`,
+        user: {
+          id: userId,
+          username: email.split('@')[0], // Use email prefix as username
+          email: email,
+          surname: surname,
+          firstname: firstname,
+          adresse: adresse,
+          roles: roles // Return the assigned roles
+        }
+      }, { status: 201 });
+    }),
+
 http.post("/api/upload", async ({ request }) => {
     const formData = await request.formData();
     const file = formData.get("file");

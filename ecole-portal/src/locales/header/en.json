@@ -31,5 +31,9 @@
   "confirmPasswordRequired": "Please confirm your password",
   "passwordMismatch": "Passwords do not match",
   "loading": "Loading...",
-  "redirectingMessage": "Redirecting to dashboard..."
+  "redirectingMessage": "Redirecting to dashboard...",
+  "role": "Role",
+  "roleParent": "Parent",
+  "roleStudent": "Student",
+  "roleRequired": "Please select a role"
 }
