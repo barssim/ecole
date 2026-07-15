@@ -21,8 +21,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
+
+      - name: Init attestation-service submodule (if needed)
+        run: |
+          if [ -f ".gitmodules" ] && grep -q "path = attestation-service" .gitmodules && [ ! -f "attestation-service/mvnw" ]; then
+            git submodule sync -- attestation-service
+            git submodule update --init --depth 1 attestation-service
+          fi
 
       - name: Setup JDK 17
         uses: actions/setup-java@v4
