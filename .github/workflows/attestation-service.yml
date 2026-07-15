@@ -7,7 +7,9 @@ on:
       - develop
       - test
     paths:
+      - 'attestation-service'
       - 'attestation-service/**'
+      - '.gitmodules'
       - '.github/workflows/attestation-service.yml'
       - 'docker-compose.yml'
 
