@@ -20,25 +20,33 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'corretto'
           java-version: 17
 
       - name: Cache Maven dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Build with Maven
+      - name: Resolve service path
         run: |
-          cd attestation-service
+          if [ -d "attestation-service" ]; then
+            echo "SERVICE_DIR=attestation-service" >> "$GITHUB_ENV"
+          else
+            echo "SERVICE_DIR=." >> "$GITHUB_ENV"
+          fi
+
+      - name: Build with Maven
+        working-directory: ${{ env.SERVICE_DIR }}
+        run: |
           chmod +x mvnw
           ./mvnw clean compile
           ./mvnw -B package --file pom.xml
@@ -52,8 +60,8 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: ./attestation-service
-          file: ./attestation-service/Dockerfile
+          context: ${{ env.SERVICE_DIR }}
+          file: ${{ env.SERVICE_DIR }}/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/attestation-service:latest
 
