@@ -279,6 +279,48 @@ http.get(`${BASE_URL}/api/studentschedule`, () => {
       return HttpResponse.json(attestations);
     }),
 
+    // 📋 Handler for student attestation request (POST)
+    http.post(`${BASE_URL}/api/attestations/request`, async ({ request }) => {
+      const body = await request.json();
+      const { userId, studentName, className, type } = body;
+
+      if (!userId || !type) {
+        return new HttpResponse("userId et type sont requis", { status: 400 });
+      }
+
+      const TYPE_TITLES = {
+        enrollment:   "Attestation de scolarité",
+        attendance:   "Attestation de présence",
+        conduct:      "Attestation de bonne conduite",
+        academic:     "Attestation de résultats académiques",
+        registration: "Attestation d'inscription",
+      };
+
+      if (!TYPE_TITLES[type]) {
+        return new HttpResponse("Type invalide", { status: 400 });
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const mockId = Math.floor(Math.random() * 90000) + 10000;
+      const reference = `REQ-${today.replace(/-/g,'')}${userId}-${type.substring(0,3).toUpperCase()}`;
+
+      return HttpResponse.json({
+        id: mockId,
+        userId: userId,
+        studentName: studentName || `Étudiant ${userId}`,
+        className: className || '-',
+        title: TYPE_TITLES[type],
+        type: type,
+        date: today,
+        status: 'pending',
+        documentUrl: null,
+        viewUrl: null,
+        issuedBy: 'En attente de validation',
+        validFrom: today,
+        validUntil: null,
+        reference: reference,
+      }, { status: 201 });
+    }),
 
     // 🔐 Handler for login authentication with roles
     http.post(`${BASE_URL}/api/auth/login`, async ({ request }) => {
