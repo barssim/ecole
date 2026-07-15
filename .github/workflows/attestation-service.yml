@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup JDK 17
         uses: actions/setup-java@v4
@@ -38,10 +40,20 @@ jobs:
 
       - name: Resolve service path
         run: |
-          if [ -d "attestation-service" ]; then
+          if [ -f "attestation-service/mvnw" ]; then
             echo "SERVICE_DIR=attestation-service" >> "$GITHUB_ENV"
-          else
+          elif [ -f "mvnw" ]; then
             echo "SERVICE_DIR=." >> "$GITHUB_ENV"
+          else
+            echo "::error::mvnw wurde weder in ./attestation-service noch im Repo-Root gefunden."
+            echo "::error::Pruefe checkout-Konfiguration (z. B. submodules/sparse-checkout) und Repository-Inhalt."
+            echo "--- pwd ---"
+            pwd
+            echo "--- top-level files ---"
+            ls -la
+            echo "--- mvnw/pom.xml candidates ---"
+            find . -maxdepth 4 \( -name mvnw -o -name pom.xml \) -print
+            exit 1
           fi
 
       - name: Build with Maven
