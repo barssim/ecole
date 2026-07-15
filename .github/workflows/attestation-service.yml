@@ -9,9 +9,17 @@ on:
     paths:
       - 'attestation-service'
       - 'attestation-service/**'
+      - 'docker-compose*.yml'
       - '.gitmodules'
       - '.github/workflows/attestation-service.yml'
-      - 'docker-compose.yml'
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Enable debug output'
+        required: false
+        default: false
+  schedule:
+    - cron: '0 2 * * 0'
 
 jobs:
   build-deploy:
@@ -23,6 +31,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Debug - Workflow trigger info
+        run: |
+          echo "=== TRIGGER DEBUG INFO ==="
+          echo "Event name: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Ref name: ${{ github.ref_name }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Modified files in this push:"
+          git --no-pager diff --name-only ${{ github.event.before }}..${{ github.event.after }} 2>/dev/null || echo "(not available for non-push events)"
+          echo "=== END DEBUG ==="
 
       - name: Init attestation-service submodule (if needed)
         run: |
