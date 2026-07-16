@@ -30,7 +30,8 @@ if (language === "fr") {
 		setErrorMessage('');
 
 		const userCredentials = { username, password };
-		const apiUrl = `${process.env.REACT_APP_API_GATEWAY_URL}/api/auth/login`;
+		const apiBaseUrl = (process.env.REACT_APP_API_GATEWAY_URL || '').replace(/\/$/, '');
+		const apiUrl = `${apiBaseUrl}/api/auth/login`;
 
 		// Log API details for debugging
 		console.log('Login attempt - API URL:', apiUrl);

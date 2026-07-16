@@ -47,8 +47,8 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
 
 function App() {
 	const [language, setLanguage] = useState("fr"); // Track current language
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 	let content;
-	const today = new Date().toISOString().split("T")[0];
 
 if (language === "fr") {
   content = fr;
@@ -73,33 +73,44 @@ useEffect(() => {
   }
 }, []);
 
+useEffect(() => {
+  const handleResize = () => {
+    if (window.innerWidth > 992) {
+      setIsMenuOpen(false);
+    }
+  };
+
+  window.addEventListener("resize", handleResize);
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
+
+const isRtl = language === "ar";
+
 
 	return (
 		<Router>
 			<Header language={language} toggleLanguage={toggleLanguage}/>
-			<div style={{
-                     display: "flex",
-                     alignItems: "center",
-                     flexDirection: language === "ar" ? "row-reverse" : "row", }}>
+      <div className="layout-controls">
+        <button
+          type="button"
+          className="mobile-menu-toggle"
+          onClick={() => setIsMenuOpen((prev) => !prev)}
+        >
+          {isMenuOpen ? "Close menu" : "Open menu"}
+        </button>
+      </div>
+      <div className={`main-layout ${isRtl ? "layout-rtl" : "layout-ltr"}`}>
 				{/* Left Menu */}
-				<div className="left-panel">
+        <div className={`left-panel ${isMenuOpen ? "left-panel-open" : ""}`}>
 					<Menu language={language} toggleLanguage={toggleLanguage} />
 				</div>
+        {isMenuOpen && <div className="layout-backdrop" onClick={() => setIsMenuOpen(false)} />}
 
 				{/* Right Content */}
-				<div
-                                 className="center-content"
-                                >
+        <div className="center-content">
 
 
-               <div
-                               style={{
-                                 width: "fit-content",
-                                 height: "fit-content",
-                                 padding: "10px",
-                                 alignItems: "center",
-                               }}
-                             >
+                 <div className="hero-title">
                    <h1 style={{ color: "blue" }}>{content.whatWeDo}{ecole.name[language] || ecole.name["fr"]}</h1>
 
                  </div>
@@ -108,16 +119,7 @@ useEffect(() => {
     <h4 style={{ color: "#00BBFF" }}>{content.whatYouFind}</h4>
     <img src={ecole.logo} width="300" />
   </div>
-              	<div
-                                                style={{
-                                                  display: "flex",
-                                                  flexDirection: "column",
-                                                  gap: "10px",
-                                                  maxWidth: "800px",
-                                                  margin: "0 auto",
-                                                  width: "100%"
-                                                }}
-                                              >
+                  <div className="routes-wrapper">
 
                    <Routes>
                      <Route path="/finance/factures" element={<PostInvoice language={language} toggleLanguage={toggleLanguage} />} />

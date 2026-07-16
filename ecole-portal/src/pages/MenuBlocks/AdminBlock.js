@@ -2,20 +2,22 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 
-const AdminBlock = ({ isAuthorized, content }) => {
+const AdminBlock = ({ isAuthorized, canAccessAttestations = false, content }) => {
   const [showActivites, setShowActivites] = useState(false);
+  const canOpenAdministration = isAuthorized || canAccessAttestations;
 
   return (
    <div className="bg-white p-4 shadow-md rounded-md">
 
           <li
-                   className={`menu-item ${isAuthorized ? "menu-item-active" : "menu-item-inactive"}`}
-                   onClick={() => isAuthorized && setShowActivites(!showActivites)}
+                   className={`menu-item ${canOpenAdministration ? "menu-item-active" : "menu-item-inactive"}`}
+                   onClick={() => canOpenAdministration && setShowActivites(!showActivites)}
                  >
                    {content.administration}
                  </li>
         {showActivites && (
       <ul className="ml-6 mt-2 space-y-1 list-disc list-inside">
+        {isAuthorized && (
         <li>
           <Link
             to="/administration/classes"
@@ -24,6 +26,8 @@ const AdminBlock = ({ isAuthorized, content }) => {
             {content.classes}
           </Link>
         </li>
+        )}
+        {(isAuthorized || canAccessAttestations) && (
         <li>
           <Link
             to="/administration/attestations"
@@ -32,6 +36,8 @@ const AdminBlock = ({ isAuthorized, content }) => {
             {content.attestations}
           </Link>
         </li>
+        )}
+        {isAuthorized && (
         <li>
           <Link
             to="/administration/examens"
@@ -40,6 +46,8 @@ const AdminBlock = ({ isAuthorized, content }) => {
             {content.examens}
           </Link>
         </li>
+        )}
+        {isAuthorized && (
         <li>
           <Link
             to="/administration/presence"
@@ -48,6 +56,8 @@ const AdminBlock = ({ isAuthorized, content }) => {
             {content.presence}
           </Link>
         </li>
+        )}
+        {isAuthorized && (
         <li>
           <button
             onClick={() => setShowActivites(!showActivites)}
@@ -84,6 +94,7 @@ const AdminBlock = ({ isAuthorized, content }) => {
             </ul>
           )}
         </li>
+        )}
       </ul>
       )}
     </div>

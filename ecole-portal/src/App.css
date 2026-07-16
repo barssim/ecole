@@ -215,9 +215,10 @@
 /* App.css */
 .main-layout {
   display: grid;
-  grid-template-columns: 1fr 3fr 1fr;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) minmax(220px, 320px);
   gap: 1rem;
   padding: 1rem;
+  align-items: start;
 }
 
 .left-panel, .right-panel {
@@ -227,12 +228,53 @@
 }
 
 .center-content {
-  display: inline-block;       /* or block, depending on layout */
-  width: auto;                 /* allow width to follow content */
-  height: auto;                /* allow height to follow content */
-  padding: 1rem;               /* optional internal spacing */
-  max-width: 100%;             /* avoids overflow on large content */
-  box-sizing: border-box;      /* includes padding in total size */
+  min-width: 0;
+  padding: 1rem;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  border-radius: 8px;
+}
+
+.layout-ltr {
+  direction: ltr;
+}
+
+.layout-rtl {
+  direction: rtl;
+}
+
+.hero-title {
+  width: 100%;
+  padding: 10px;
+}
+
+.routes-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.layout-controls {
+  display: none;
+  padding: 0 1rem;
+}
+
+.mobile-menu-toggle {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.layout-backdrop {
+  display: none;
 }
 
 .bounce-container {
@@ -253,6 +295,80 @@
   }
   100% {
     left: calc(100% - 200px); /* Adjust based on content width */
+  }
+}
+
+@media (max-width: 1200px) {
+  .main-layout {
+	grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  }
+
+  .right-panel {
+	display: none;
+  }
+}
+
+@media (max-width: 992px) {
+  .layout-controls {
+	display: block;
+  }
+
+  .main-layout {
+	display: block;
+	padding-top: 0.5rem;
+  }
+
+  .left-panel {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 100vh;
+	width: min(85vw, 320px);
+	z-index: 1200;
+	overflow-y: auto;
+	transform: translateX(-105%);
+	transition: transform 0.25s ease;
+	border-radius: 0;
+  }
+
+  .layout-rtl .left-panel {
+	left: auto;
+	right: 0;
+	transform: translateX(105%);
+  }
+
+  .left-panel.left-panel-open {
+	transform: translateX(0);
+  }
+
+  .layout-backdrop {
+	display: block;
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.35);
+	z-index: 1100;
+  }
+
+  .center-content {
+	padding: 0.75rem;
+  }
+
+  .bounce-content {
+	animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .menu-item-active,
+  .menu-item-inactive {
+	width: 100%;
+	max-width: 240px;
+	font-size: 16px;
+  }
+
+  .hero-title h1 {
+	font-size: 1.35rem;
+	line-height: 1.3;
   }
 }
 
