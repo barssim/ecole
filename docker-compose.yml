@@ -51,12 +51,12 @@ services:
     networks:
       - ecole
 
-  attestation-service:
+  secretary-office:
     build:
-      context: ./attestation-service
+      context: ./secretary-office
       dockerfile: Dockerfile
-    image: barssim/attestation-service:latest
-    container_name: attestation-service
+    image: barssim/secretary-office:latest
+    container_name: secretary-office
     depends_on:
       - mysql-attestation
     environment:
@@ -81,7 +81,7 @@ services:
     depends_on:
       - usermanagement
       - finance-manager
-      - attestation-service
+      - secretary-office
       - eureka-server
     networks:
       - ecole

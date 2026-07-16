@@ -64,12 +64,12 @@ services:
       - ecole
     restart: always
 
-  attestation-service:
+  secretary-office:
     build:
-      context: ./attestation-service
+      context: ./secretary-office
       dockerfile: Dockerfile
-    image: barssim/attestation-service:latest
-    container_name: attestation-service
+    image: barssim/secretary-office:latest
+    container_name: secretary-office
     env_file:
       - .env
     depends_on:
@@ -101,7 +101,7 @@ services:
     depends_on:
       - usermanagement
       - finance-manager
-      - attestation-service
+      - secretary-office
       - eureka-server
     networks:
       - ecole
