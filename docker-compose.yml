@@ -18,12 +18,12 @@ services:
     networks:
       - ecole
 
-  mysql-attestation:
+  mysql-secretary-office:
     image: mysql:8
-    container_name: mysql-attestation
+    container_name: mysql-secretary-office
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: attestationDB
+      MYSQL_DATABASE: secretaryOfficeDB
     networks:
       - ecole
 
@@ -58,9 +58,9 @@ services:
     image: barssim/secretary-office:latest
     container_name: secretary-office
     depends_on:
-      - mysql-attestation
+      - mysql-secretary-office
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-attestation:3306/attestationDB
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-secretary-office:3306/secretaryOfficeDB
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
     networks:

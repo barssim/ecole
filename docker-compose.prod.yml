@@ -20,14 +20,14 @@ services:
       - ecole
     restart: always
 
-  mysql-attestation:
+  mysql-secretary-office:
     image: mysql:8
-    container_name: mysql-attestation
+    container_name: mysql-secretary-office
     env_file:
       - .env
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-dev-pass}
-      MYSQL_DATABASE: attestationDB
+      MYSQL_DATABASE: secretaryOfficeDB
     networks:
       - ecole
     restart: always
@@ -73,10 +73,10 @@ services:
     env_file:
       - .env
     depends_on:
-      mysql-attestation:
+      mysql-secretary-office:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-attestation:3306/attestationDB
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-secretary-office:3306/secretaryOfficeDB
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-dev-pass}
     networks:
