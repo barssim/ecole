@@ -1,6 +1,3 @@
-[submodule "secretary-office"]
-	path = secretary-office
-	url = https://github.com/barssim/secretary-office.git
 [submodule "ecole-docs"]
 	path = ecole-docs
     url = https://github.com/barssim/ecole-docs.git
