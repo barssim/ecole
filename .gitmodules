@@ -4,6 +4,3 @@
 [submodule "ecole-docs"]
 	path = ecole-docs
     url = https://github.com/barssim/ecole-docs.git
-[submodule "ecole-organigramm"]
-	path = ecole-organigramm
-    url = https://github.com/barssim/ecole-organigramm.git
