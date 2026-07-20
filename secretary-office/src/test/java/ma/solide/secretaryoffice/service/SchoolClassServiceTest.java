@@ -1,0 +1,73 @@
+package ma.solide.secretaryoffice.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import ma.solide.secretaryoffice.dto.SchoolClassRequestDTO;
+import ma.solide.secretaryoffice.dto.SchoolClassResponse;
+import ma.solide.secretaryoffice.model.SchoolClass;
+import ma.solide.secretaryoffice.repository.SchoolClassRepository;
+
+@ExtendWith(MockitoExtension.class)
+class SchoolClassServiceTest {
+
+    @Mock
+    private SchoolClassRepository schoolClassRepository;
+
+    @InjectMocks
+    private SchoolClassService schoolClassService;
+
+    @Test
+    void createClassShouldPersistTrimmedDistinctStudents() {
+        SchoolClassRequestDTO dto = new SchoolClassRequestDTO();
+        dto.setName(" 4e A ");
+        dto.setStudents(List.of(" Sara ", "", "Sara", " Youssef "));
+
+        when(schoolClassRepository.existsByNameIgnoreCase("4e A")).thenReturn(false);
+        when(schoolClassRepository.save(any(SchoolClass.class))).thenAnswer(invocation -> {
+            SchoolClass schoolClass = invocation.getArgument(0);
+            schoolClass.setId(12);
+            return schoolClass;
+        });
+
+        SchoolClassResponse response = schoolClassService.createClass(dto);
+
+        ArgumentCaptor<SchoolClass> captor = ArgumentCaptor.forClass(SchoolClass.class);
+        verify(schoolClassRepository).save(captor.capture());
+        SchoolClass saved = captor.getValue();
+
+        assertThat(saved.getName()).isEqualTo("4e A");
+        assertThat(saved.getStudents()).containsExactly("Sara", "Youssef");
+        assertThat(response.getId()).isEqualTo(12);
+        assertThat(response.getName()).isEqualTo("4e A");
+        assertThat(response.getStudents()).containsExactly("Sara", "Youssef");
+    }
+
+    @Test
+    void createClassShouldRejectDuplicateName() {
+        SchoolClassRequestDTO dto = new SchoolClassRequestDTO();
+        dto.setName("3e A");
+
+        when(schoolClassRepository.existsByNameIgnoreCase("3e A")).thenReturn(true);
+
+        assertThatThrownBy(() -> schoolClassService.createClass(dto))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(error -> ((ResponseStatusException) error).getStatusCode())
+                .isEqualTo(HttpStatus.CONFLICT);
+    }
+}
+

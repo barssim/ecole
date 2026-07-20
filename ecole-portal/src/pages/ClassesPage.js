@@ -4,9 +4,15 @@ import en from "../locales/en.json";
 import ar from "../locales/ar.json";
 
 const ClassesPage = ({ language }) => {
-const content = language === "fr" ? fr : language === "en" ? en : ar;
+  const content = language === "fr" ? fr : language === "en" ? en : ar;
   const [classes, setClasses] = useState([]);
   const [expandedClassId, setExpandedClassId] = useState(null);
+  const [newClassName, setNewClassName] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState('');
+
+  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
 
   const toggleExpand = (id) => {
     setExpandedClassId(expandedClassId === id ? null : id);
@@ -15,9 +21,7 @@ const content = language === "fr" ? fr : language === "en" ? en : ar;
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
         const url = `${baseUrl}/api/classes`;
-        console.log('Fetching classes from:', url);
 
         const response = await fetch(url);
         if (!response.ok) {
@@ -32,11 +36,94 @@ const content = language === "fr" ? fr : language === "en" ? en : ar;
     };
 
     fetchClasses();
-  }, []);
+  }, [baseUrl]);
+
+  const handleCreateClass = async (event) => {
+    event.preventDefault();
+    setSubmitError('');
+    setSubmitSuccess('');
+
+    const className = newClassName.trim();
+    if (!className) {
+      setSubmitError(content.classes_createValidation);
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const response = await fetch(`${baseUrl}/api/classes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: className,
+          students: [],
+        }),
+      });
+
+      if (!response.ok) {
+        let message = content.classes_createError;
+        try {
+          const errorPayload = await response.json();
+          message = errorPayload.message || errorPayload.error || message;
+        } catch {
+          if (response.status === 409) {
+            message = content.classes_createDuplicate;
+          }
+        }
+        throw new Error(message);
+      }
+
+      const createdClass = await response.json();
+      setClasses((currentClasses) => [...currentClasses, createdClass].sort((a, b) => a.name.localeCompare(b.name)));
+      setExpandedClassId(createdClass.id);
+      setNewClassName('');
+      setSubmitSuccess(content.classes_createSuccess);
+    } catch (error) {
+      setSubmitError(error.message || content.classes_createError);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <h2 className="text-2xl font-bold">🏫 {content.classes_title}</h2>
+
+      <form onSubmit={handleCreateClass} className="bg-white rounded shadow p-4 space-y-3 border border-gray-200">
+        <div>
+          <label htmlFor="className" className="block text-sm font-medium text-gray-700 mb-1">
+            {content.classes_createLabel}
+          </label>
+          <div className="flex flex-col gap-3 md:flex-row">
+            <input
+              id="className"
+              type="text"
+              value={newClassName}
+              onChange={(event) => setNewClassName(event.target.value)}
+              placeholder={content.classes_createPlaceholder}
+              className="flex-1 border rounded px-3 py-2"
+              disabled={isSubmitting}
+            />
+            <button
+              type="submit"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm disabled:opacity-60"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? content.classes_createSubmitting : content.classes_createButton}
+            </button>
+          </div>
+        </div>
+
+        {submitError && (
+          <p className="text-sm text-red-600">{submitError}</p>
+        )}
+
+        {submitSuccess && (
+          <p className="text-sm text-green-600">{submitSuccess}</p>
+        )}
+      </form>
 
       {classes.map((cls) => (
         <div key={cls.id} className="bg-gray-100 rounded shadow p-4">

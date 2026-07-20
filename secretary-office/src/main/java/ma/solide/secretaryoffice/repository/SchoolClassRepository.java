@@ -9,5 +9,7 @@ import ma.solide.secretaryoffice.model.SchoolClass;
 public interface SchoolClassRepository extends JpaRepository<SchoolClass, Integer> {
 
     List<SchoolClass> findAllByOrderByNameAsc();
+
+    boolean existsByNameIgnoreCase(String name);
 }
 
