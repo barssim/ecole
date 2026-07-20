@@ -29,6 +29,14 @@ public class SchoolClassService {
                 .toList();
     }
 
+    public void deleteClass(Integer id) {
+        if (!schoolClassRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Classe introuvable pour l'id " + id);
+        }
+        schoolClassRepository.deleteById(id);
+    }
+
     public SchoolClassResponse createClass(SchoolClassRequestDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getName())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le nom de la classe est requis");

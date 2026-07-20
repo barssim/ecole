@@ -3,6 +3,8 @@ package ma.solide.secretaryoffice.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -30,6 +32,28 @@ class SchoolClassServiceTest {
 
     @InjectMocks
     private SchoolClassService schoolClassService;
+
+    @Test
+    void deleteClassShouldCallRepositoryDeleteById() {
+        when(schoolClassRepository.existsById(1)).thenReturn(true);
+        doNothing().when(schoolClassRepository).deleteById(1);
+
+        schoolClassService.deleteClass(1);
+
+        verify(schoolClassRepository).deleteById(1);
+    }
+
+    @Test
+    void deleteClassShouldThrowNotFoundForUnknownId() {
+        when(schoolClassRepository.existsById(99)).thenReturn(false);
+
+        assertThatThrownBy(() -> schoolClassService.deleteClass(99))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.NOT_FOUND);
+
+        verify(schoolClassRepository, never()).deleteById(99);
+    }
 
     @Test
     void createClassShouldPersistTrimmedDistinctStudents() {

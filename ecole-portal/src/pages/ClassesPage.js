@@ -9,6 +9,7 @@ const ClassesPage = ({ language }) => {
   const [expandedClassId, setExpandedClassId] = useState(null);
   const [newClassName, setNewClassName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
 
@@ -37,6 +38,29 @@ const ClassesPage = ({ language }) => {
 
     fetchClasses();
   }, [baseUrl]);
+
+  const handleDeleteClass = async (cls) => {
+    if (!window.confirm(`${content.classes_removeConfirm} "${cls.name}"?`)) return;
+
+    setDeletingId(cls.id);
+    setSubmitError('');
+    setSubmitSuccess('');
+    try {
+      const response = await fetch(`${baseUrl}/api/classes/${cls.id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      setClasses((current) => current.filter((c) => c.id !== cls.id));
+      if (expandedClassId === cls.id) setExpandedClassId(null);
+      setSubmitSuccess(`"${cls.name}" ${content.classes_removeSuccess}`);
+    } catch (error) {
+      setSubmitError(content.classes_removeError);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const handleCreateClass = async (event) => {
     event.preventDefault();
@@ -144,8 +168,12 @@ const ClassesPage = ({ language }) => {
               <button className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm">
                 {content.classes_editClass}
               </button>
-              <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
-                {content.classes_removeClass}
+              <button
+                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm disabled:opacity-60"
+                onClick={() => handleDeleteClass(cls)}
+                disabled={deletingId === cls.id}
+              >
+                {deletingId === cls.id ? '...' : content.classes_removeClass}
               </button>
             </div>
           </div>
