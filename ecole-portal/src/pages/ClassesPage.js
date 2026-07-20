@@ -15,11 +15,19 @@ const content = language === "fr" ? fr : language === "en" ? en : ar;
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_GATEWAY_URL}/api/classes`);
+        const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
+        const url = `${baseUrl}/api/classes`;
+        console.log('Fetching classes from:', url);
+
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         const data = await response.json();
         setClasses(data);
       } catch (error) {
         console.error('Failed to fetch classes:', error);
+        setClasses([]);
       }
     };
 
