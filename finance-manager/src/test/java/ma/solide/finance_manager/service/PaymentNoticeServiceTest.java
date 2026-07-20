@@ -100,7 +100,12 @@ class PaymentNoticeServiceTest {
     void testCreateNoticeSuccess() {
         // Arrange
         when(paymentNoticeRepository.findAll()).thenReturn(Arrays.asList());
-        when(paymentNoticeRepository.save(any(PaymentNotice.class))).thenReturn(mockNotice);
+        when(paymentNoticeRepository.save(any(PaymentNotice.class)))
+                .thenAnswer(invocation -> {
+                    PaymentNotice n = invocation.getArgument(0);
+                    n.setId(1);
+                    return n;
+                });
 
         // Act
         PaymentNoticeDTO result = paymentNoticeService.createNotice(mockNoticeDTO);
@@ -125,7 +130,9 @@ class PaymentNoticeServiceTest {
     void testUpdateNoticeStatusToPaid() {
         // Arrange
         when(paymentNoticeRepository.findById(1)).thenReturn(Optional.of(mockNotice));
-        when(paymentNoticeRepository.save(any(PaymentNotice.class))).thenReturn(mockNotice);
+        // Return the same entity passed to save() so mutations (paidDate) are reflected
+        when(paymentNoticeRepository.save(any(PaymentNotice.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
         PaymentNoticeDTO result = paymentNoticeService.updateNoticeStatus(1, "paid");

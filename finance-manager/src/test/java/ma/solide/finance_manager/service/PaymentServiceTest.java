@@ -59,7 +59,12 @@ class PaymentServiceTest {
     @Test
     void testRecordPaymentSuccess() {
         // Arrange
-        when(paymentRepository.save(any(Payment.class))).thenReturn(mockPayment);
+        when(paymentRepository.save(any(Payment.class)))
+                .thenAnswer(invocation -> {
+                    Payment p = invocation.getArgument(0);
+                    p.setId(1);
+                    return p;
+                });
 
         // Act
         PaymentDTO result = paymentService.recordPayment(mockPaymentDTO);
