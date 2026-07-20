@@ -88,11 +88,41 @@ public class SchoolInvoiceController {
 
     /**
      * Record a new payment
+     * Only finance, admin, and manager roles are allowed
      */
     @PostMapping("/payments")
-    public ResponseEntity<PaymentDTO> recordPayment(@RequestBody PaymentDTO paymentDTO) {
+    public ResponseEntity<PaymentDTO> recordPayment(
+            @RequestBody PaymentDTO paymentDTO,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+        
+        // Check if user has permission to create payments
+        if (!isAuthorizedToCreatePayment(userRolesHeader)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                "Only finance, admin, and manager roles can create payments");
+        }
+        
         PaymentDTO saved = paymentService.recordPayment(paymentDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+    
+    /**
+     * Check if user has permission to create payments
+     */
+    private boolean isAuthorizedToCreatePayment(String userRolesHeader) {
+        if (userRolesHeader == null || userRolesHeader.trim().isEmpty()) {
+            return false;
+        }
+        
+        String[] roles = userRolesHeader.split(",");
+        for (String role : roles) {
+            String trimmedRole = role.trim().toLowerCase();
+            if ("finance".equals(trimmedRole) || 
+                "admin".equals(trimmedRole) || 
+                "manager".equals(trimmedRole)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

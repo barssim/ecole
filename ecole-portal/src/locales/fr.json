@@ -234,7 +234,23 @@
 	"payment_statusPending": "En attente",
 	"payment_statusOverdue": "Échue",
 	"payment_statusUnpaid": "Non payée",
-	"payment_totalAmount": "Montant total"
+	"payment_totalAmount": "Montant total",
+	"payment_createTitle": "💳 Enregistrer un Paiement",
+	"payment_studentNameRequired": "Le nom de l'élève est requis",
+	"payment_amountInvalid": "Le montant doit être supérieur à 0",
+	"payment_methodRequired": "La méthode de paiement est requise",
+	"payment_studentNamePlaceholder": "Entrez le nom de l'élève",
+	"payment_classPlaceholder": "ex. 5ème année",
+	"payment_referencePlaceholder": "ex. CHQ-12345 ou TXN-ABC123",
+	"payment_notesPlaceholder": "Ajouter des informations supplémentaires...",
+	"payment_submitButton": "Enregistrer le Paiement",
+	"payment_resetButton": "Réinitialiser",
+	"payment_createSuccess": "Paiement enregistré avec succès!",
+	"payment_createError": "Échec de l'enregistrement du paiement",
+	"payment_paymentDate": "Date du Paiement",
+	"payment_notes": "Notes (optionnel)",
+	"payment_roleError": "Vous n'avez pas la permission d'enregistrer des paiements",
+	"loading": "Chargement..."
 
 
 }

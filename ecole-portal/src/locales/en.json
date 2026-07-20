@@ -221,5 +221,21 @@
   "payment_statusPending": "Pending",
   "payment_statusOverdue": "Overdue",
   "payment_statusUnpaid": "Unpaid",
-  "payment_totalAmount": "Total Amount"
+  "payment_totalAmount": "Total Amount",
+  "payment_createTitle": "💳 Record a Payment",
+  "payment_studentNameRequired": "Student name is required",
+  "payment_amountInvalid": "Amount must be greater than 0",
+  "payment_methodRequired": "Payment method is required",
+  "payment_studentNamePlaceholder": "Enter student name",
+  "payment_classPlaceholder": "e.g., Grade 5A",
+  "payment_referencePlaceholder": "e.g., CHQ-12345 or TXN-ABC123",
+  "payment_notesPlaceholder": "Add any additional information...",
+  "payment_submitButton": "Record Payment",
+  "payment_resetButton": "Clear",
+  "payment_createSuccess": "Payment recorded successfully!",
+  "payment_createError": "Failed to record payment",
+  "payment_paymentDate": "Payment Date",
+  "payment_notes": "Notes (optional)",
+  "payment_roleError": "You do not have permission to record payments",
+  "loading": "Loading..."
 }

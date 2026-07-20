@@ -236,5 +236,21 @@
 	"payment_statusPending": "قيد الانتظار",
 	"payment_statusOverdue": "متأخرة",
 	"payment_statusUnpaid": "غير مدفوعة",
-	"payment_totalAmount": "المبلغ الإجمالي"
+	"payment_totalAmount": "المبلغ الإجمالي",
+	"payment_createTitle": "💳 تسجيل دفعة",
+	"payment_studentNameRequired": "اسم الطالب مطلوب",
+	"payment_amountInvalid": "يجب أن يكون المبلغ أكبر من 0",
+	"payment_methodRequired": "طريقة الدفع مطلوبة",
+	"payment_studentNamePlaceholder": "أدخل اسم الطالب",
+	"payment_classPlaceholder": "مثل الصف 5 أ",
+	"payment_referencePlaceholder": "مثل CHQ-12345 أو TXN-ABC123",
+	"payment_notesPlaceholder": "أضف أي معلومات إضافية...",
+	"payment_submitButton": "تسجيل الدفعة",
+	"payment_resetButton": "إعادة تعيين",
+	"payment_createSuccess": "تم تسجيل الدفعة بنجاح!",
+	"payment_createError": "فشل تسجيل الدفعة",
+	"payment_paymentDate": "تاريخ الدفع",
+	"payment_notes": "الملاحظات (اختياري)",
+	"payment_roleError": "ليس لديك إذن بتسجيل الدفعات",
+	"loading": "جارٍ التحميل..."
 }
