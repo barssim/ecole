@@ -14,6 +14,7 @@ public class PaymentNoticeDTO {
     private String currency;
     private String status;
     private LocalDate paidDate;
+    private String description;
     private List<InvoiceItemDTO> items;
 
     public PaymentNoticeDTO() {}
@@ -111,6 +112,14 @@ public class PaymentNoticeDTO {
 
     public void setPaidDate(LocalDate paidDate) {
         this.paidDate = paidDate;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public List<InvoiceItemDTO> getItems() {
