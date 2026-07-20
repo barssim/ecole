@@ -34,6 +34,50 @@ class SchoolClassServiceTest {
     private SchoolClassService schoolClassService;
 
     @Test
+    void updateClassNameShouldPersistNewName() {
+        SchoolClass existing = SchoolClass.builder().id(1).name("3e A").students(new java.util.ArrayList<>()).build();
+        when(schoolClassRepository.findById(1)).thenReturn(java.util.Optional.of(existing));
+        when(schoolClassRepository.existsByNameIgnoreCase("4e A")).thenReturn(false);
+        when(schoolClassRepository.save(any(SchoolClass.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        SchoolClassRequestDTO dto = new SchoolClassRequestDTO();
+        dto.setName(" 4e A ");
+
+        SchoolClassResponse response = schoolClassService.updateClassName(1, dto);
+
+        assertThat(response.getName()).isEqualTo("4e A");
+        verify(schoolClassRepository).save(existing);
+    }
+
+    @Test
+    void updateClassNameShouldAllowSameNameCaseInsensitive() {
+        SchoolClass existing = SchoolClass.builder().id(1).name("3e A").students(new java.util.ArrayList<>()).build();
+        when(schoolClassRepository.findById(1)).thenReturn(java.util.Optional.of(existing));
+        when(schoolClassRepository.save(any(SchoolClass.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        SchoolClassRequestDTO dto = new SchoolClassRequestDTO();
+        dto.setName("3E A"); // same name, different case → no conflict
+
+        SchoolClassResponse response = schoolClassService.updateClassName(1, dto);
+        assertThat(response.getName()).isEqualTo("3E A");
+    }
+
+    @Test
+    void updateClassNameShouldRejectDuplicate() {
+        SchoolClass existing = SchoolClass.builder().id(1).name("3e A").students(new java.util.ArrayList<>()).build();
+        when(schoolClassRepository.findById(1)).thenReturn(java.util.Optional.of(existing));
+        when(schoolClassRepository.existsByNameIgnoreCase("4e B")).thenReturn(true);
+
+        SchoolClassRequestDTO dto = new SchoolClassRequestDTO();
+        dto.setName("4e B");
+
+        assertThatThrownBy(() -> schoolClassService.updateClassName(1, dto))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
     void deleteClassShouldCallRepositoryDeleteById() {
         when(schoolClassRepository.existsById(1)).thenReturn(true);
         doNothing().when(schoolClassRepository).deleteById(1);

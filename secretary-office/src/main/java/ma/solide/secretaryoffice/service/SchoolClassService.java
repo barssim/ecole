@@ -29,14 +29,6 @@ public class SchoolClassService {
                 .toList();
     }
 
-    public void deleteClass(Integer id) {
-        if (!schoolClassRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Classe introuvable pour l'id " + id);
-        }
-        schoolClassRepository.deleteById(id);
-    }
-
     public SchoolClassResponse createClass(SchoolClassRequestDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getName())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le nom de la classe est requis");
@@ -62,6 +54,34 @@ public class SchoolClassService {
                 .build();
 
         return toResponse(schoolClassRepository.save(schoolClass));
+    }
+
+    public SchoolClassResponse updateClassName(Integer id, SchoolClassRequestDTO dto) {
+        if (dto == null || !StringUtils.hasText(dto.getName())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le nom de la classe est requis");
+        }
+
+        SchoolClass schoolClass = schoolClassRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Classe introuvable pour l'id " + id));
+
+        String newName = dto.getName().trim();
+        if (!schoolClass.getName().equalsIgnoreCase(newName)
+                && schoolClassRepository.existsByNameIgnoreCase(newName)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Une classe avec ce nom existe déjà");
+        }
+
+        schoolClass.setName(newName);
+        return toResponse(schoolClassRepository.save(schoolClass));
+    }
+
+    public void deleteClass(Integer id) {
+        if (!schoolClassRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Classe introuvable pour l'id " + id);
+        }
+        schoolClassRepository.deleteById(id);
     }
 
     private SchoolClassResponse toResponse(SchoolClass schoolClass) {
