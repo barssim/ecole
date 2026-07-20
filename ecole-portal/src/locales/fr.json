@@ -212,7 +212,30 @@
 	"student_schedule": "Emploi du temps",
 	"student_exercices": "Exercices",
 	"student_chat": "Chat",
-	"teacher_absence": "Absence"
+	"teacher_absence": "Absence",
+
+	"payments_title": "💳 Factures et Paiements",
+	"payment_currentInvoice": "Facture Actuelle",
+	"payment_paymentHistory": "Historique des Paiements",
+	"payment_studentName": "Élève",
+	"payment_class": "Classe",
+	"payment_invoiceDate": "Date de facture",
+	"payment_dueDate": "Échéance",
+	"payment_paidDate": "Date de paiement",
+	"payment_amount": "Montant",
+	"payment_date": "Date",
+	"payment_method": "Méthode",
+	"payment_reference": "Référence",
+	"payment_currency": "Devise",
+	"payment_downloadInvoice": "Télécharger Facture",
+	"payment_noInvoice": "Aucune facture en attente",
+	"payment_noPaymentHistory": "Aucun paiement enregistré",
+	"payment_statusPaid": "Payée",
+	"payment_statusPending": "En attente",
+	"payment_statusOverdue": "Échue",
+	"payment_statusUnpaid": "Non payée",
+	"payment_totalAmount": "Montant total"
 
 
 }
+

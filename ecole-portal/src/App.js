@@ -33,6 +33,7 @@ import ParentMeetingPage from "./pages/ParentMeetingPage";
 import StudentSchedulePage from "./components/StudentSchedulePage";
 import TeacherCourses  from "./pages/TeacherCourses";
 import OuttingPage  from "./pages/OuttingPage";
+import PaymentsPage from './pages/PaymentsPage';
 
 
 
@@ -121,10 +122,11 @@ const isRtl = language === "ar";
   </div>
                   <div className="routes-wrapper">
 
-                   <Routes>
-                     <Route path="/finance/factures" element={<PostInvoice language={language} toggleLanguage={toggleLanguage} />} />
-                     <Route path="/finance/paymentNotice" element={<SchoolInvoicePreview  language={language} toggleLanguage={toggleLanguage} />} />
-                     <Route path="/finance/payments" element={<Payments language={language} toggleLanguage={toggleLanguage} />} />
+                    <Routes>
+                      <Route path="/finance/factures" element={<PostInvoice language={language} toggleLanguage={toggleLanguage} />} />
+                      <Route path="/finance/paymentNotice" element={<SchoolInvoicePreview  language={language} toggleLanguage={toggleLanguage} />} />
+                      <Route path="/finance/payments" element={<Payments language={language} toggleLanguage={toggleLanguage} />} />
+                      <Route path="/finance/invoices" element={<PaymentsPage language={language} />} />
                      <Route path="/administration/presence" element={<ProfessorPresence language={language} toggleLanguage={toggleLanguage} />} />
                      <Route path="/administration/classes" element={<ClassesPage language={language} toggleLanguage={toggleLanguage} />} />
                       <Route path="/administration/examens" element={<ExamProgram language={language} toggleLanguage={toggleLanguage} />} />

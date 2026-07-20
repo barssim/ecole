@@ -7,18 +7,16 @@ export const handlers = [
   // 💳 Handler for a payment notice
   http.get(`${BASE_URL}/api/paymentNotice`, () => {
     return HttpResponse.json({
+      id: 1,
       invoiceNumber: 'INV-2025-07-001',
       invoiceDate: '2025-07-06',
       dueDate: '2025-07-15',
-      recipient: 'Yasmine El Idrissi',
-      class: '5ème année',
-      items: [
-        { label: 'Tuition - July', amount: 1000 },
-        { label: 'Books & Materials', amount: 300 },
-        { label: 'Transport', amount: 200 },
-      ],
-      total: 1500,
+      studentName: 'Yasmine El Idrissi',
+      className: '5ème année',
+      totalAmount: 1500,
       currency: 'MAD',
+      status: 'pending',
+      paidDate: null,
     });
   }),
 
@@ -26,20 +24,49 @@ export const handlers = [
   http.get(`${BASE_URL}/api/payments`, () => {
     return HttpResponse.json([
       {
-        date: '2025-07-01',
-        studentName: 'Amira B.',
-        amount: '1500',
+        id: 1,
+        paymentDate: '2025-07-01',
+        studentName: 'Yasmine El Idrissi',
+        className: '5ème année',
+        amount: 1500,
         currency: 'MAD',
         method: 'Espèces',
+        reference: 'PAY-2025-07-001',
+        notes: null,
       },
       {
-        date: '2025-06-15',
-        studentName: 'Omar L.',
-        amount: '1200',
+        id: 2,
+        paymentDate: '2025-06-15',
+        studentName: 'Yasmine El Idrissi',
+        className: '5ème année',
+        amount: 1200,
         currency: 'MAD',
         method: 'Carte bancaire',
+        reference: 'PAY-2025-06-001',
+        notes: null,
       },
     ]);
+  }),
+
+  // 💳 Handler for creating a payment
+  http.post(`${BASE_URL}/api/payments`, async ({ request }) => {
+    const body = await request.json();
+    return HttpResponse.json({
+      id: Math.floor(Math.random() * 10000),
+      ...body,
+      paymentDate: body.paymentDate || new Date().toISOString().split('T')[0],
+    }, { status: 201 });
+  }),
+
+  // 📋 Handler for creating a payment notice
+  http.post(`${BASE_URL}/api/paymentNotices`, async ({ request }) => {
+    const body = await request.json();
+    return HttpResponse.json({
+      id: Math.floor(Math.random() * 10000),
+      invoiceNumber: `INV-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-001`,
+      ...body,
+      status: 'pending',
+    }, { status: 201 });
   }),
 
   // 👩‍🏫 Handler for professor presence

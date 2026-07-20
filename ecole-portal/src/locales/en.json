@@ -199,5 +199,27 @@
   "student_schedule": "Time schedule",
   "student_exercices": "Exercices",
   "student_chat": "Chat",
-  "teacher_absence": "Absence"
+  "teacher_absence": "Absence",
+
+  "payments_title": "💳 Invoices and Payments",
+  "payment_currentInvoice": "Current Invoice",
+  "payment_paymentHistory": "Payment History",
+  "payment_studentName": "Student",
+  "payment_class": "Class",
+  "payment_invoiceDate": "Invoice Date",
+  "payment_dueDate": "Due Date",
+  "payment_paidDate": "Payment Date",
+  "payment_amount": "Amount",
+  "payment_date": "Date",
+  "payment_method": "Method",
+  "payment_reference": "Reference",
+  "payment_currency": "Currency",
+  "payment_downloadInvoice": "Download Invoice",
+  "payment_noInvoice": "No pending invoices",
+  "payment_noPaymentHistory": "No payments recorded",
+  "payment_statusPaid": "Paid",
+  "payment_statusPending": "Pending",
+  "payment_statusOverdue": "Overdue",
+  "payment_statusUnpaid": "Unpaid",
+  "payment_totalAmount": "Total Amount"
 }

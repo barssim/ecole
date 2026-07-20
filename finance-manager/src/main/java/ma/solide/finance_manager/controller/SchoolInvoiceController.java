@@ -1,6 +1,11 @@
 package ma.solide.finance_manager.controller;
 
+import ma.solide.finance_manager.dto.PaymentDTO;
+import ma.solide.finance_manager.dto.PaymentNoticeDTO;
+import ma.solide.finance_manager.dto.InvoiceItemDTO;
 import ma.solide.finance_manager.service.SchoolInvoicePdfService;
+import ma.solide.finance_manager.service.PaymentService;
+import ma.solide.finance_manager.service.PaymentNoticeService;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -8,16 +13,113 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/facture")
+@RequestMapping("/api")
 public class SchoolInvoiceController {
 
     private final SchoolInvoicePdfService pdfService;
+    private final PaymentService paymentService;
+    private final PaymentNoticeService paymentNoticeService;
 
-    public SchoolInvoiceController(SchoolInvoicePdfService pdfService) {
+    public SchoolInvoiceController(SchoolInvoicePdfService pdfService,
+                                   PaymentService paymentService,
+                                   PaymentNoticeService paymentNoticeService) {
         this.pdfService = pdfService;
+        this.paymentService = paymentService;
+        this.paymentNoticeService = paymentNoticeService;
     }
 
-    @PostMapping("/generate")
+    /**
+     * Get current payment notice for a student
+     * Returns the most recent pending/unpaid invoice
+     */
+    @GetMapping("/paymentNotice")
+    public ResponseEntity<PaymentNoticeDTO> getPaymentNotice(
+            @RequestParam(value = "studentName", required = false) String studentName) {
+        if (studentName == null || studentName.trim().isEmpty()) {
+            // Return a sample notice if no student specified
+            PaymentNoticeDTO sample = new PaymentNoticeDTO(
+                    1,
+                    "INV-2025-07-001",
+                    java.time.LocalDate.of(2025, 7, 6),
+                    java.time.LocalDate.of(2025, 7, 15),
+                    "Yasmine El Idrissi",
+                    "5ème année",
+                    1500.0,
+                    "MAD",
+                    "pending"
+            );
+            return ResponseEntity.ok(sample);
+        }
+
+        PaymentNoticeDTO notice = paymentNoticeService.getCurrentNotice(studentName);
+        if (notice != null) {
+            return ResponseEntity.ok(notice);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    /**
+     * Get all payment notices for a student
+     */
+    @GetMapping("/paymentNotices")
+    public ResponseEntity<List<PaymentNoticeDTO>> getPaymentNotices(
+            @RequestParam(value = "studentName", required = false) String studentName) {
+        if (studentName == null || studentName.trim().isEmpty()) {
+            return ResponseEntity.ok(paymentNoticeService.getAllNotices());
+        }
+        return ResponseEntity.ok(paymentNoticeService.getNoticesByStudent(studentName));
+    }
+
+    /**
+     * Get all payments history
+     */
+    @GetMapping("/payments")
+    public ResponseEntity<List<PaymentDTO>> getPayments(
+            @RequestParam(value = "studentName", required = false) String studentName,
+            @RequestParam(value = "className", required = false) String className) {
+        if (studentName != null && !studentName.trim().isEmpty()) {
+            return ResponseEntity.ok(paymentService.getPaymentsByStudent(studentName));
+        }
+        if (className != null && !className.trim().isEmpty()) {
+            return ResponseEntity.ok(paymentService.getPaymentsByClass(className));
+        }
+        return ResponseEntity.ok(paymentService.getAllPayments());
+    }
+
+    /**
+     * Record a new payment
+     */
+    @PostMapping("/payments")
+    public ResponseEntity<PaymentDTO> recordPayment(@RequestBody PaymentDTO paymentDTO) {
+        PaymentDTO saved = paymentService.recordPayment(paymentDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+    /**
+     * Create a new payment notice
+     */
+    @PostMapping("/paymentNotices")
+    public ResponseEntity<PaymentNoticeDTO> createPaymentNotice(@RequestBody PaymentNoticeDTO noticeDTO) {
+        PaymentNoticeDTO created = paymentNoticeService.createNotice(noticeDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    /**
+     * Update payment notice status (mark as paid, pending, etc.)
+     */
+    @PatchMapping("/paymentNotices/{id}/status")
+    public ResponseEntity<PaymentNoticeDTO> updatePaymentNoticeStatus(
+            @PathVariable Integer id,
+            @RequestBody Map<String, String> request) {
+        String status = request.get("status");
+        PaymentNoticeDTO updated = paymentNoticeService.updateNoticeStatus(id, status);
+        return ResponseEntity.ok(updated);
+    }
+
+    /**
+     * Generate PDF invoice
+     */
+    @PostMapping("/facture/generate")
     public ResponseEntity<InputStreamResource> generate(@RequestBody InvoiceRequest request) {
         var pdf = pdfService.generateInvoice(request.getStudentName(), request.getClassName(), request.getItems());
 

@@ -214,5 +214,27 @@
 	"student_schedule": "استعمال الزمان",
 	"student_exercices": "االتمارين",
 	"student_chat": "الدردشة",
-	"teacher_absence": "االغياب"
+	"teacher_absence": "االغياب",
+
+	"payments_title": "💳 الفواتير والمدفوعات",
+	"payment_currentInvoice": "الفاتورة الحالية",
+	"payment_paymentHistory": "سجل المدفوعات",
+	"payment_studentName": "الطالب",
+	"payment_class": "الفصل",
+	"payment_invoiceDate": "تاريخ الفاتورة",
+	"payment_dueDate": "تاريخ الاستحقاق",
+	"payment_paidDate": "تاريخ الدفع",
+	"payment_amount": "المبلغ",
+	"payment_date": "التاريخ",
+	"payment_method": "الطريقة",
+	"payment_reference": "المرجع",
+	"payment_currency": "العملة",
+	"payment_downloadInvoice": "تحميل الفاتورة",
+	"payment_noInvoice": "لا توجد فواتير معلقة",
+	"payment_noPaymentHistory": "لا توجد مدفوعات مسجلة",
+	"payment_statusPaid": "مدفوعة",
+	"payment_statusPending": "قيد الانتظار",
+	"payment_statusOverdue": "متأخرة",
+	"payment_statusUnpaid": "غير مدفوعة",
+	"payment_totalAmount": "المبلغ الإجمالي"
 }
