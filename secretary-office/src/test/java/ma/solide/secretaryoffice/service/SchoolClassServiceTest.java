@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ma.solide.secretaryoffice.dto.SchoolClassRequestDTO;
 import ma.solide.secretaryoffice.dto.SchoolClassResponse;
+import ma.solide.secretaryoffice.dto.StudentRequestDTO;
 import ma.solide.secretaryoffice.model.SchoolClass;
 import ma.solide.secretaryoffice.repository.SchoolClassRepository;
 
@@ -32,6 +33,58 @@ class SchoolClassServiceTest {
 
     @InjectMocks
     private SchoolClassService schoolClassService;
+
+    @Test
+    void addStudentShouldAppendToClassStudents() {
+        SchoolClass existing = SchoolClass.builder().id(1).name("3e A")
+                .students(new java.util.ArrayList<>(List.of("Alice"))).build();
+        when(schoolClassRepository.findById(1)).thenReturn(java.util.Optional.of(existing));
+        when(schoolClassRepository.save(any(SchoolClass.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        StudentRequestDTO dto = new StudentRequestDTO();
+        dto.setName(" Bob ");
+
+        SchoolClassResponse response = schoolClassService.addStudent(1, dto);
+        assertThat(response.getStudents()).containsExactly("Alice", "Bob");
+    }
+
+    @Test
+    void addStudentShouldRejectDuplicate() {
+        SchoolClass existing = SchoolClass.builder().id(1).name("3e A")
+                .students(new java.util.ArrayList<>(List.of("Alice"))).build();
+        when(schoolClassRepository.findById(1)).thenReturn(java.util.Optional.of(existing));
+
+        StudentRequestDTO dto = new StudentRequestDTO();
+        dto.setName("alice"); // case-insensitive duplicate
+
+        assertThatThrownBy(() -> schoolClassService.addStudent(1, dto))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    void removeStudentShouldRemoveFromClassStudents() {
+        SchoolClass existing = SchoolClass.builder().id(1).name("3e A")
+                .students(new java.util.ArrayList<>(List.of("Alice", "Bob"))).build();
+        when(schoolClassRepository.findById(1)).thenReturn(java.util.Optional.of(existing));
+        when(schoolClassRepository.save(any(SchoolClass.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        SchoolClassResponse response = schoolClassService.removeStudent(1, "Alice");
+        assertThat(response.getStudents()).containsExactly("Bob");
+    }
+
+    @Test
+    void removeStudentShouldThrowNotFoundForUnknownStudent() {
+        SchoolClass existing = SchoolClass.builder().id(1).name("3e A")
+                .students(new java.util.ArrayList<>(List.of("Alice"))).build();
+        when(schoolClassRepository.findById(1)).thenReturn(java.util.Optional.of(existing));
+
+        assertThatThrownBy(() -> schoolClassService.removeStudent(1, "Unknown"))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.NOT_FOUND);
+    }
 
     @Test
     void updateClassNameShouldPersistNewName() {

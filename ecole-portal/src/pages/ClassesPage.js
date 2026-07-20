@@ -13,6 +13,10 @@ const ClassesPage = ({ language }) => {
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState('');
   const [savingId, setSavingId] = useState(null);
+  const [addingStudentToClassId, setAddingStudentToClassId] = useState(null);
+  const [newStudentName, setNewStudentName] = useState('');
+  const [savingStudentId, setSavingStudentId] = useState(null);
+  const [removingStudent, setRemovingStudent] = useState(null); // { classId, name }
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
 
@@ -41,6 +45,75 @@ const ClassesPage = ({ language }) => {
 
     fetchClasses();
   }, [baseUrl]);
+
+  const handleAddStudentClick = (cls) => {
+    setAddingStudentToClassId(cls.id);
+    setNewStudentName('');
+    setExpandedClassId(cls.id);
+    setSubmitError('');
+    setSubmitSuccess('');
+  };
+
+  const handleCancelAddStudent = () => {
+    setAddingStudentToClassId(null);
+    setNewStudentName('');
+  };
+
+  const handleSaveStudent = async (cls) => {
+    const trimmed = newStudentName.trim();
+    if (!trimmed) {
+      setSubmitError(content.classes_studentValidation);
+      return;
+    }
+    setSavingStudentId(cls.id);
+    setSubmitError('');
+    setSubmitSuccess('');
+    try {
+      const response = await fetch(`${baseUrl}/api/classes/${cls.id}/students`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: trimmed }),
+      });
+      if (!response.ok) {
+        let message = content.classes_studentError;
+        try {
+          const payload = await response.json();
+          message = payload.message || message;
+        } catch {
+          if (response.status === 409) message = content.classes_studentDuplicate;
+        }
+        throw new Error(message);
+      }
+      const updated = await response.json();
+      setClasses((current) => current.map((c) => (c.id === updated.id ? updated : c)));
+      setNewStudentName('');
+      setAddingStudentToClassId(null);
+      setSubmitSuccess(content.classes_studentSuccess);
+    } catch (error) {
+      setSubmitError(error.message || content.classes_studentError);
+    } finally {
+      setSavingStudentId(null);
+    }
+  };
+
+  const handleRemoveStudent = async (cls, studentName) => {
+    setRemovingStudent({ classId: cls.id, name: studentName });
+    setSubmitError('');
+    setSubmitSuccess('');
+    try {
+      const response = await fetch(
+        `${baseUrl}/api/classes/${cls.id}/students/${encodeURIComponent(studentName)}`,
+        { method: 'DELETE' }
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const updated = await response.json();
+      setClasses((current) => current.map((c) => (c.id === updated.id ? updated : c)));
+    } catch {
+      setSubmitError(content.classes_studentRemoveError);
+    } finally {
+      setRemovingStudent(null);
+    }
+  };
 
   const handleEditClass = (cls) => {
     setEditingId(cls.id);
@@ -253,7 +326,11 @@ const ClassesPage = ({ language }) => {
                   ? content.classes_hideStudents
                   : content.classes_showStudents}
               </button>
-              <button className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
+              <button
+                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm disabled:opacity-60"
+                onClick={() => handleAddStudentClick(cls)}
+                disabled={addingStudentToClassId === cls.id || editingId === cls.id}
+              >
                 {content.classes_addStudent}
               </button>
               <button
@@ -274,17 +351,66 @@ const ClassesPage = ({ language }) => {
           </div>
 
           {expandedClassId === cls.id && (
-            <ul className="mt-3 ml-4 list-disc list-inside text-sm space-y-1">
-              {cls.students.length > 0 ? (
-                cls.students.map((student, index) => (
-                  <li key={index}>{student}</li>
-                ))
-              ) : (
-                <li className="italic text-gray-500">
-                  {content.classes_noStudents}
-                </li>
+            <div className="mt-3">
+              <ul className="ml-4 list-disc list-inside text-sm space-y-1">
+                {cls.students.length > 0 ? (
+                  cls.students.map((student, index) => (
+                    <li key={index} className="flex items-center justify-between pr-2">
+                      <span>{student}</span>
+                      <button
+                        onClick={() => handleRemoveStudent(cls, student)}
+                        disabled={
+                          removingStudent?.classId === cls.id &&
+                          removingStudent?.name === student
+                        }
+                        className="ml-2 text-red-400 hover:text-red-600 text-xs disabled:opacity-50"
+                        title={content.classes_removeStudentTooltip}
+                      >
+                        {removingStudent?.classId === cls.id && removingStudent?.name === student
+                          ? '...'
+                          : '✕'}
+                      </button>
+                    </li>
+                  ))
+                ) : (
+                  <li className="italic text-gray-500">
+                    {content.classes_noStudents}
+                  </li>
+                )}
+              </ul>
+
+              {addingStudentToClassId === cls.id && (
+                <div className="mt-2 flex items-center gap-2 ml-4">
+                  <input
+                    type="text"
+                    value={newStudentName}
+                    onChange={(e) => setNewStudentName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveStudent(cls);
+                      if (e.key === 'Escape') handleCancelAddStudent();
+                    }}
+                    placeholder={content.classes_studentPlaceholder}
+                    className="border rounded px-2 py-1 text-sm flex-1"
+                    autoFocus
+                    disabled={savingStudentId === cls.id}
+                  />
+                  <button
+                    onClick={() => handleSaveStudent(cls)}
+                    disabled={savingStudentId === cls.id}
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm disabled:opacity-60"
+                  >
+                    {savingStudentId === cls.id ? '...' : content.classes_studentSave}
+                  </button>
+                  <button
+                    onClick={handleCancelAddStudent}
+                    disabled={savingStudentId === cls.id}
+                    className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded text-sm"
+                  >
+                    {content.classes_editCancel}
+                  </button>
+                </div>
               )}
-            </ul>
+            </div>
           )}
         </div>
       ))}

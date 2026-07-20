@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ma.solide.secretaryoffice.dto.SchoolClassRequestDTO;
 import ma.solide.secretaryoffice.dto.SchoolClassResponse;
+import ma.solide.secretaryoffice.dto.StudentRequestDTO;
 import ma.solide.secretaryoffice.service.SchoolClassService;
 
 @RestController
@@ -49,6 +50,18 @@ public class SchoolClassController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteClass(@PathVariable Integer id) {
         schoolClassService.deleteClass(id);
+    }
+
+    @PostMapping("/{id}/students")
+    public ResponseEntity<SchoolClassResponse> addStudent(@PathVariable Integer id,
+                                                          @RequestBody StudentRequestDTO dto) {
+        return ResponseEntity.ok(schoolClassService.addStudent(id, dto));
+    }
+
+    @DeleteMapping("/{id}/students/{studentName}")
+    public ResponseEntity<SchoolClassResponse> removeStudent(@PathVariable Integer id,
+                                                             @PathVariable String studentName) {
+        return ResponseEntity.ok(schoolClassService.removeStudent(id, studentName));
     }
 }
 

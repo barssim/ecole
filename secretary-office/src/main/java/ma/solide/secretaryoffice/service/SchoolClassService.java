@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ma.solide.secretaryoffice.dto.SchoolClassRequestDTO;
 import ma.solide.secretaryoffice.dto.SchoolClassResponse;
+import ma.solide.secretaryoffice.dto.StudentRequestDTO;
 import ma.solide.secretaryoffice.model.SchoolClass;
 import ma.solide.secretaryoffice.repository.SchoolClassRepository;
 
@@ -73,6 +74,37 @@ public class SchoolClassService {
         }
 
         schoolClass.setName(newName);
+        return toResponse(schoolClassRepository.save(schoolClass));
+    }
+
+    public SchoolClassResponse addStudent(Integer classId, StudentRequestDTO dto) {
+        if (dto == null || !StringUtils.hasText(dto.getName())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le nom de l'élève est requis");
+        }
+        SchoolClass schoolClass = schoolClassRepository.findById(classId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Classe introuvable pour l'id " + classId));
+
+        String studentName = dto.getName().trim();
+        if (schoolClass.getStudents().stream().anyMatch(s -> s.equalsIgnoreCase(studentName))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "L'élève '" + studentName + "' est déjà dans cette classe");
+        }
+        schoolClass.getStudents().add(studentName);
+        return toResponse(schoolClassRepository.save(schoolClass));
+    }
+
+    public SchoolClassResponse removeStudent(Integer classId, String studentName) {
+        SchoolClass schoolClass = schoolClassRepository.findById(classId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Classe introuvable pour l'id " + classId));
+
+        boolean removed = schoolClass.getStudents()
+                .removeIf(s -> s.equalsIgnoreCase(studentName));
+        if (!removed) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Élève '" + studentName + "' introuvable dans cette classe");
+        }
         return toResponse(schoolClassRepository.save(schoolClass));
     }
 
