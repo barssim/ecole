@@ -113,42 +113,42 @@ const AttestationsPage = ({ language }) => {
     );
   };
 
-  const handleDownload = (id) => {
-    const link = document.createElement('a');
-    link.href = `${baseUrl}/api/attestations/${id}/download`;
-    link.target = '_blank';
-          const handleStatusUpdate = async (attestationId, status) => {
-            setRequestMessage(null);
-            try {
-              const response = await fetch(`${baseUrl}/api/attestations/${attestationId}/status`, {
-                method: 'PATCH',
-                headers: {
-                  'Content-Type': 'application/json',
-                  ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                  ...(rolesHeaderValue ? { 'X-User-Roles': rolesHeaderValue } : {}),
-                },
-                body: JSON.stringify({ status }),
-              });
+   const handleStatusUpdate = async (attestationId, status) => {
+     setRequestMessage(null);
+     try {
+       const response = await fetch(`${baseUrl}/api/attestations/${attestationId}/status`, {
+         method: 'PATCH',
+         headers: {
+           'Content-Type': 'application/json',
+           ...(token ? { Authorization: `Bearer ${token}` } : {}),
+           ...(rolesHeaderValue ? { 'X-User-Roles': rolesHeaderValue } : {}),
+         },
+         body: JSON.stringify({ status }),
+       });
 
-              if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-              }
+       if (!response.ok) {
+         throw new Error(`HTTP ${response.status}`);
+       }
 
-              const updated = await response.json();
-              setAttestations((current) =>
-                current.map((item) => (item.id === updated.id ? updated : item))
-              );
-              setRequestMessage({ type: 'success', text: content.attestation_manageSuccess });
-            } catch {
-              setRequestMessage({ type: 'error', text: content.attestation_manageError });
-            }
-          };
+       const updated = await response.json();
+       setAttestations((current) =>
+         current.map((item) => (item.id === updated.id ? updated : item))
+       );
+       setRequestMessage({ type: 'success', text: content.attestation_manageSuccess });
+     } catch {
+       setRequestMessage({ type: 'error', text: content.attestation_manageError });
+     }
+   };
 
-    link.rel = 'noopener noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+   const handleDownload = (id) => {
+     const link = document.createElement('a');
+     link.href = `${baseUrl}/api/attestations/${id}/download`;
+     link.target = '_blank';
+     link.rel = 'noopener noreferrer';
+     document.body.appendChild(link);
+     link.click();
+     document.body.removeChild(link);
+   };
 
   const filtered = attestations.filter((a) =>
     a.title.toLowerCase().includes(searchTerm.toLowerCase())
