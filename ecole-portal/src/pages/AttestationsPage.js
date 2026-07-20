@@ -14,6 +14,7 @@ const ATTESTATION_TYPES = [
 const STATUS_COLORS = {
   approved: 'bg-green-100 text-green-700',
   pending:  'bg-yellow-100 text-yellow-700',
+  rejected: 'bg-red-100 text-red-700',
 };
 
 const AttestationsPage = ({ language }) => {
@@ -33,13 +34,25 @@ const AttestationsPage = ({ language }) => {
   const userId    = localStorage.getItem('userId');
   const username  = localStorage.getItem('LoggedIn') || '';
   const token     = sessionStorage.getItem('jwt_token');
+  const userRoles = JSON.parse(localStorage.getItem('user_roles') || '[]');
+  const normalizedRoles = userRoles.map((role) => String(role).toLowerCase());
+  const canManageAttestations = normalizedRoles.includes('admin') || normalizedRoles.includes('manager');
+  const canRequestAttestation = !canManageAttestations;
+
+  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
+  const rolesHeaderValue = normalizedRoles.join(',');
 
   const fetchAttestations = async () => {
     try {
-      const query = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+      const query = !canManageAttestations && userId ? `?userId=${encodeURIComponent(userId)}` : '';
       const response = await fetch(
-        `${process.env.REACT_APP_API_GATEWAY_URL}/api/attestations${query}`,
-        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+        `${baseUrl}/api/attestations${query}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...(rolesHeaderValue ? { 'X-User-Roles': rolesHeaderValue } : {}),
+          },
+        }
       );
       const data = await response.json();
       setAttestations(Array.isArray(data) ? data : []);
@@ -56,12 +69,13 @@ const AttestationsPage = ({ language }) => {
     setRequestMessage(null);
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_GATEWAY_URL}/api/attestations/request`,
+        `${baseUrl}/api/attestations/request`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...(rolesHeaderValue ? { 'X-User-Roles': rolesHeaderValue } : {}),
           },
           body: JSON.stringify({
             userId: userId ? parseInt(userId) : null,
@@ -78,6 +92,8 @@ const AttestationsPage = ({ language }) => {
         setRequestReason('');
         setRequestType('enrollment');
         await fetchAttestations();  // refresh list
+      } else if (response.status === 403) {
+        setRequestMessage({ type: 'error', text: content.attestation_requestForbidden });
       } else if (response.status === 409) {
         setRequestMessage({ type: 'error', text: content.attestation_requestDuplicate });
       } else {
@@ -92,15 +108,42 @@ const AttestationsPage = ({ language }) => {
 
   const handleView = (id) => {
     window.open(
-      `${process.env.REACT_APP_API_GATEWAY_URL}/api/attestations/${id}/view`,
+      `${baseUrl}/api/attestations/${id}/view`,
       '_blank', 'noopener,noreferrer'
     );
   };
 
   const handleDownload = (id) => {
     const link = document.createElement('a');
-    link.href = `${process.env.REACT_APP_API_GATEWAY_URL}/api/attestations/${id}/download`;
+    link.href = `${baseUrl}/api/attestations/${id}/download`;
     link.target = '_blank';
+          const handleStatusUpdate = async (attestationId, status) => {
+            setRequestMessage(null);
+            try {
+              const response = await fetch(`${baseUrl}/api/attestations/${attestationId}/status`, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                  ...(rolesHeaderValue ? { 'X-User-Roles': rolesHeaderValue } : {}),
+                },
+                body: JSON.stringify({ status }),
+              });
+
+              if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+              }
+
+              const updated = await response.json();
+              setAttestations((current) =>
+                current.map((item) => (item.id === updated.id ? updated : item))
+              );
+              setRequestMessage({ type: 'success', text: content.attestation_manageSuccess });
+            } catch {
+              setRequestMessage({ type: 'error', text: content.attestation_manageError });
+            }
+          };
+
     link.rel = 'noopener noreferrer';
     document.body.appendChild(link);
     link.click();
@@ -115,13 +158,17 @@ const AttestationsPage = ({ language }) => {
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">{content.attestation_title}</h2>
-        <button
-          type="button"
-          onClick={() => { setShowRequestForm(true); setRequestMessage(null); }}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
-        >
-          {content.attestation_requestButton}
-        </button>
+        {canRequestAttestation ? (
+          <button
+            type="button"
+            onClick={() => { setShowRequestForm(true); setRequestMessage(null); }}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
+          >
+            {content.attestation_requestButton}
+          </button>
+        ) : (
+          <span className="text-sm text-gray-600 italic">{content.attestation_manageMode}</span>
+        )}
       </div>
 
       {/* Feedback message */}
@@ -216,11 +263,31 @@ const AttestationsPage = ({ language }) => {
                 }`}>
                   {attestation.status === 'pending'
                     ? content.attestation_statusPending
-                    : content.attestation_statusApproved}
+                    : attestation.status === 'rejected'
+                      ? content.attestation_statusRejected
+                      : content.attestation_statusApproved}
                 </span>
               )}
             </div>
             <div className="space-x-2">
+              {canManageAttestations && attestation.status === 'pending' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleStatusUpdate(attestation.id, 'approved')}
+                    className="bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700 text-sm"
+                  >
+                    {content.attestation_approveButton}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStatusUpdate(attestation.id, 'rejected')}
+                    className="bg-rose-600 text-white px-3 py-1 rounded hover:bg-rose-700 text-sm"
+                  >
+                    {content.attestation_rejectButton}
+                  </button>
+                </>
+              )}
               <button
                 type="button"
                 disabled={attestation.status === 'pending'}

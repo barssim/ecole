@@ -10,16 +10,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import ma.solide.secretaryoffice.dto.AttestationRequestDTO;
 import ma.solide.secretaryoffice.dto.AttestationResponse;
+import ma.solide.secretaryoffice.dto.AttestationStatusUpdateDTO;
 import ma.solide.secretaryoffice.model.Attestation;
 import ma.solide.secretaryoffice.service.AttestationPdfService;
 import ma.solide.secretaryoffice.service.AttestationService;
@@ -60,8 +64,34 @@ public class AttestationController {
 
     @PostMapping("/request")
     @ResponseStatus(HttpStatus.CREATED)
-    public AttestationResponse requestAttestation(@RequestBody AttestationRequestDTO dto) {
+    public AttestationResponse requestAttestation(
+            @RequestBody AttestationRequestDTO dto,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+        if (isAdminOrManager(userRolesHeader)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Les administrateurs et managers ne peuvent pas demander une attestation");
+        }
         return attestationService.requestAttestation(dto);
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<AttestationResponse> updateStatus(
+            @PathVariable Integer id,
+            @RequestBody AttestationStatusUpdateDTO dto,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+        if (!isAdminOrManager(userRolesHeader)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Seuls les administrateurs et managers peuvent gérer les attestations");
+        }
+        return ResponseEntity.ok(attestationService.updateStatus(id, dto.getStatus()));
+    }
+
+    private boolean isAdminOrManager(String rolesHeader) {
+        if (rolesHeader == null || rolesHeader.isBlank()) {
+            return false;
+        }
+        String normalized = rolesHeader.toLowerCase();
+        return normalized.contains("admin") || normalized.contains("manager");
     }
 
     private ResponseEntity<InputStreamResource> buildPdfResponse(Integer id, boolean inline) {

@@ -2,6 +2,7 @@ package ma.solide.secretaryoffice.service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Set;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +18,8 @@ import ma.solide.secretaryoffice.repository.AttestationRepository;
 
 @Service
 public class AttestationService {
+
+    private static final Set<String> MANAGED_STATUSES = Set.of("pending", "approved", "rejected");
 
     private static final Map<String, String> TYPE_TITLES = Map.of(
         "enrollment",    "Attestation de scolarité",
@@ -118,6 +121,23 @@ public class AttestationService {
 
         Attestation saved = attestationRepository.save(attestation);
         return toResponse(saved);
+    }
+
+    public AttestationResponse updateStatus(Integer id, String status) {
+        if (!StringUtils.hasText(status)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le statut est requis");
+        }
+
+        String normalizedStatus = status.trim().toLowerCase();
+        if (!MANAGED_STATUSES.contains(normalizedStatus)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Statut invalide. Valeurs acceptées : " + MANAGED_STATUSES);
+        }
+
+        Attestation attestation = findEntity(id);
+        attestation.setStatus(normalizedStatus);
+        attestation.setIssuedBy("Traitée par administration");
+        return toResponse(attestationRepository.save(attestation));
     }
 }
 
