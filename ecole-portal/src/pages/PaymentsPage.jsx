@@ -7,6 +7,7 @@ import '../cssFiles/PaymentsPage.css';
 const PaymentsPage = ({ language }) => {
   const content = language === 'fr' ? fr : language === 'en' ? en : ar;
   const [paymentNotice, setPaymentNotice] = useState(null);
+  const [allNotices, setAllNotices] = useState([]);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,6 +37,19 @@ const PaymentsPage = ({ language }) => {
       if (noticeResponse.ok) {
         const notice = await noticeResponse.json();
         setPaymentNotice(notice);
+      }
+
+      // Fetch all payment notices for this student
+      const allNoticesResponse = await fetch(`${baseUrl}/api/paymentNotices?studentName=${encodeURIComponent(studentName)}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (allNoticesResponse.ok) {
+        const noticesData = await allNoticesResponse.json();
+        setAllNotices(Array.isArray(noticesData) ? noticesData : []);
       }
 
       // Fetch payment history
@@ -202,7 +216,55 @@ const PaymentsPage = ({ language }) => {
         )}
       </section>
 
-      {/* Payment History Section */}
+      {/* All Generated Invoices Section */}
+      <section className="all-invoices-section">
+        <h2>{content?.payment_allInvoices || 'Toutes les Factures Générées'}</h2>
+        {allNotices && allNotices.length > 0 ? (
+          <div className="invoices-list">
+            {allNotices.map((notice) => (
+              <div key={notice.id} className="invoice-item">
+                <div className="invoice-item-header">
+                  <div className="invoice-item-number">
+                    <strong>{notice.invoiceNumber}</strong>
+                  </div>
+                  <div className={`status-badge ${getStatusBadgeClass(notice.status)}`}>
+                    {getStatusLabel(notice.status)}
+                  </div>
+                </div>
+                <div className="invoice-item-details">
+                  <div className="detail-row">
+                    <label>{content?.payment_studentName || 'Élève'}:</label>
+                    <span>{notice.studentName}</span>
+                  </div>
+                  <div className="detail-row">
+                    <label>{content?.payment_class || 'Classe'}:</label>
+                    <span>{notice.className}</span>
+                  </div>
+                  <div className="detail-row">
+                    <label>{content?.payment_invoiceDate || 'Date de facture'}:</label>
+                    <span>{formatDate(notice.invoiceDate)}</span>
+                  </div>
+                  <div className="detail-row">
+                    <label>{content?.payment_dueDate || 'Échéance'}:</label>
+                    <span>{formatDate(notice.dueDate)}</span>
+                  </div>
+                  {notice.paidDate && (
+                    <div className="detail-row">
+                      <label>{content?.payment_paidDate || 'Date de paiement'}:</label>
+                      <span>{formatDate(notice.paidDate)}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="invoice-item-amount">
+                  <strong>{notice.totalAmount.toFixed(2)} {notice.currency}</strong>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="no-data">{content?.payment_noInvoices || 'Aucune facture générée'}</p>
+        )}
+      </section>
       <section className="payment-history-section">
         <h2>{content?.payment_paymentHistory || 'Historique des Paiements'}</h2>
         {payments && payments.length > 0 ? (

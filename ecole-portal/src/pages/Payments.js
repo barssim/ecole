@@ -68,7 +68,7 @@ const Payments = ({ language }) => {
     setLoading(true);
     setError('');
     try {
-      console.log('[Payments] Fetching from:', apiBase);
+      console.log('[Payments] Fetching from:', paymentsApiBase);
       const response = await axios.get(paymentsApiBase, {
         timeout: 10000,
         headers: {
