@@ -111,13 +111,12 @@ const isRtl = language === "ar";
         <div className="center-content">
 
 
-                 <div className="hero-title">
+                 <div className="hero-title" style={{ textAlign: "center" }}>
                    <h1 style={{ color: "blue" }}>{content.whatWeDo}{ecole.name[language] || ecole.name["fr"]}</h1>
-
+                   <h4 style={{ color: "#00BBFF" }}>{content.whatYouFind}</h4>
                  </div>
 <div className="bounce-container">
   <div className="bounce-content">
-    <h4 style={{ color: "#00BBFF" }}>{content.whatYouFind}</h4>
     <img src={ecole.logo} width="300" />
   </div>
                   <div className="routes-wrapper">
