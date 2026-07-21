@@ -30,25 +30,50 @@ if (language === "fr") {
 		setErrorMessage('');
 
 		const userCredentials = { username, password };
-		const apiBaseUrl = (process.env.REACT_APP_API_GATEWAY_URL || '').replace(/\/$/, '');
-		const apiUrl = `${apiBaseUrl}/api/auth/login`;
+		const configuredBase = (process.env.REACT_APP_API_GATEWAY_URL || '').replace(/\/$/, '');
+		const fallbackBases = [
+			configuredBase,
+			'http://localhost:8085',
+			'http://127.0.0.1:8085'
+		].filter(Boolean).filter((base, index, arr) => arr.indexOf(base) === index);
 
 		// Log API details for debugging
-		console.log('Login attempt - API URL:', apiUrl);
+		console.log('Login attempt - API base candidates:', fallbackBases);
 		console.log('Debug mode:', process.env.REACT_APP_DEBUG);
 
 		// Send POST request to the backend to authenticate the user
 		try {
-			const response = await axios.post(
-				apiUrl,
-				userCredentials,
-				{
-					timeout: 10000, // 10 second timeout
-					headers: {
-						'Content-Type': 'application/json'
+			let response;
+			let lastError;
+
+			for (const base of fallbackBases) {
+				const apiUrl = `${base}/api/auth/login`;
+				try {
+					response = await axios.post(
+						apiUrl,
+						userCredentials,
+						{
+							timeout: 10000,
+							headers: {
+								'Content-Type': 'application/json'
+							}
+						}
+					);
+					console.log('Login succeeded via:', apiUrl);
+					break;
+				} catch (candidateError) {
+					lastError = candidateError;
+					const isNetworkIssue = candidateError.code === 'ECONNABORTED' || candidateError.message === 'Network Error';
+					if (!isNetworkIssue || candidateError.response) {
+						throw candidateError;
 					}
+					console.warn('Login failed via candidate URL:', apiUrl, candidateError.message);
 				}
-			);
+			}
+
+			if (!response) {
+				throw lastError || new Error('Unable to connect to authentication service');
+			}
 
 			console.log('Login response:', response.data);
 
