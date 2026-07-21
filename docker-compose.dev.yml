@@ -1,5 +1,11 @@
 services:
 
+  api-gateway:
+    ports:
+      - "8085:8085"
+    networks:
+      - ecole
+
   ecole-portal:
     build:
       context: ./ecole-portal
@@ -14,7 +20,7 @@ services:
     networks:
       - ecole
     environment:
-      - REACT_APP_API_GATEWAY_URL=http://api-gateway:8085
+      - REACT_APP_API_GATEWAY_URL=http://localhost:8085
       - REACT_APP_DEBUG=true
 
 networks:
