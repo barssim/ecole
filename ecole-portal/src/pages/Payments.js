@@ -64,16 +64,35 @@ const Payments = ({ language }) => {
     setLoading(true);
     setError('');
     try {
-      const response = await axios.get(apiBase);
+      console.log('[Payments] Fetching from:', apiBase);
+      const response = await axios.get(apiBase, {
+        timeout: 10000,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      console.log('[Payments] Success:', response.data);
       setPayments(Array.isArray(response.data) ? response.data : []);
     } catch (fetchError) {
-      setError(fetchError.response?.data?.message || 'Unable to fetch payments.');
+      console.error('[Payments] Fetch error:', fetchError);
+      const errorMsg =
+        fetchError.response?.data?.message ||
+        fetchError.response?.statusText ||
+        fetchError.message ||
+        'Unable to fetch payments.';
+      setError(`Error: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    console.log('[Payments] Component mounted');
+    console.log('[Payments] API URL:', apiBase);
+    console.log('[Payments] Environment:', {
+      REACT_APP_API_GATEWAY_URL: process.env.REACT_APP_API_GATEWAY_URL,
+      NODE_ENV: process.env.NODE_ENV
+    });
     fetchPayments();
   }, []);
 
@@ -188,7 +207,25 @@ const Payments = ({ language }) => {
         </div>
       </form>
 
-      {error && <p style={{ color: '#b91c1c' }}>{error}</p>}
+      {error && (
+        <div style={{
+          background: '#fee2e2',
+          border: '1px solid #fca5a5',
+          borderRadius: '6px',
+          padding: '12px',
+          color: '#991b1b'
+        }}>
+          <strong>Error:</strong> {error}
+          <br />
+          <small style={{ color: '#7f1d1d' }}>
+            API Endpoint: {apiBase}
+            <br />
+            Gateway URL: {process.env.REACT_APP_API_GATEWAY_URL || '(not set)'}
+            <br />
+            <em>Check browser console (F12) for more details.</em>
+          </small>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-gray-600 text-center mt-4">Loading payments...</p>
