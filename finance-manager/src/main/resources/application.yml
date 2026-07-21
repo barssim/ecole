@@ -1,6 +1,7 @@
 server:
-  address: 0.0.0.0
   port: 8094
+  address: 0.0.0.0
+  forward-headers-strategy: framework
 
 spring:
   datasource:
@@ -8,17 +9,19 @@ spring:
     username: root
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari.connection-timeout: 30000
   jpa:
+    defer-datasource-initialization: true
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
   application:
-    name: financeservice
-    Desc: responsible for all finance operations
-
+    name: finance-manager
   main:
     web-application-type: servlet
 
@@ -30,3 +33,13 @@ management:
   endpoint:
     health:
       show-details: always
+jwt:
+  secret: 1234567890
+  expiration: 3600000 # 1 hour in milliseconds (optional)
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
