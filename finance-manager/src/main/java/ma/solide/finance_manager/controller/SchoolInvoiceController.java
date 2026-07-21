@@ -88,6 +88,15 @@ public class SchoolInvoiceController {
     }
 
     /**
+     * Get a single payment by ID
+     */
+    @GetMapping("/payments/{id}")
+    public ResponseEntity<PaymentDTO> getPaymentById(@PathVariable Integer id) {
+        PaymentDTO payment = paymentService.getPaymentById(id);
+        return ResponseEntity.ok(payment);
+    }
+
+    /**
      * Record a new payment
      * Only finance, admin, and manager roles are allowed
      */
@@ -104,6 +113,45 @@ public class SchoolInvoiceController {
         
         PaymentDTO saved = paymentService.recordPayment(paymentDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+    /**
+     * Update an existing payment
+     * Only finance, admin, and manager roles are allowed
+     */
+    @PutMapping("/payments/{id}")
+    public ResponseEntity<PaymentDTO> updatePayment(
+            @PathVariable Integer id,
+            @RequestBody PaymentDTO paymentDTO,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+        
+        // Check if user has permission to update payments
+        if (!isAuthorizedToCreatePayment(userRolesHeader)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                "Only finance, admin, and manager roles can update payments");
+        }
+        
+        PaymentDTO updated = paymentService.updatePayment(id, paymentDTO);
+        return ResponseEntity.ok(updated);
+    }
+
+    /**
+     * Delete a payment
+     * Only finance, admin, and manager roles are allowed
+     */
+    @DeleteMapping("/payments/{id}")
+    public ResponseEntity<Void> deletePayment(
+            @PathVariable Integer id,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+        
+        // Check if user has permission to delete payments
+        if (!isAuthorizedToCreatePayment(userRolesHeader)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                "Only finance, admin, and manager roles can delete payments");
+        }
+        
+        paymentService.deletePayment(id);
+        return ResponseEntity.noContent().build();
     }
     
     /**

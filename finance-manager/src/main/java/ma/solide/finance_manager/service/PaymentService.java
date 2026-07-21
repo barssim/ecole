@@ -130,7 +130,7 @@ public class PaymentService {
     }
 
     private PaymentDTO toDTO(Payment payment) {
-        return new PaymentDTO(
+        PaymentDTO dto = new PaymentDTO(
                 payment.getId(),
                 payment.getStudentName(),
                 payment.getClassName(),
@@ -139,6 +139,9 @@ public class PaymentService {
                 payment.getMethod(),
                 payment.getPaymentDate()
         );
+        dto.setReference(payment.getReference());
+        dto.setNotes(payment.getNotes());
+        return dto;
     }
 }
 
