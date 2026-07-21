@@ -78,6 +78,8 @@ services:
       dockerfile: Dockerfile
     image: barssim/solide_api_gateway:latest
     container_name: api-gateway
+    ports:
+      - "8085:8085"
     depends_on:
       - usermanagement
       - finance-manager
