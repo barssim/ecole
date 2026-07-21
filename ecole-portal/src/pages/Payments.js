@@ -12,6 +12,7 @@ const Payments = ({ language }) => {
   const [formError, setFormError] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [generatingInvoiceId, setGeneratingInvoiceId] = useState(null);
   const [formData, setFormData] = useState({
     studentName: '',
     className: '',
@@ -23,7 +24,10 @@ const Payments = ({ language }) => {
     notes: ''
   });
 
-  const apiBase = `${process.env.REACT_APP_API_GATEWAY_URL}/api/payments`;
+  const configuredBase = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
+  const apiRoot = configuredBase.endsWith('/api') ? configuredBase : `${configuredBase}/api`;
+  const paymentsApiBase = `${apiRoot}/payments`;
+  const invoiceApiUrl = `${apiRoot}/facture/generate`;
 
   const buildRoleHeader = () => {
     try {
@@ -65,7 +69,7 @@ const Payments = ({ language }) => {
     setError('');
     try {
       console.log('[Payments] Fetching from:', apiBase);
-      const response = await axios.get(apiBase, {
+      const response = await axios.get(paymentsApiBase, {
         timeout: 10000,
         headers: {
           'Accept': 'application/json'
@@ -86,9 +90,56 @@ const Payments = ({ language }) => {
     }
   };
 
+  const handleGenerateFacture = async (payment) => {
+    const amountValue = Number(payment.amount);
+    if (!Number.isFinite(amountValue) || amountValue <= 0) {
+      setError('Cannot generate facture: payment amount is invalid.');
+      return;
+    }
+
+    const description = payment.reference
+      ? `Payment (${payment.method || 'unknown'}) - ${payment.reference}`
+      : `Payment (${payment.method || 'unknown'})`;
+
+    const payload = {
+      studentName: payment.studentName || 'Unknown student',
+      className: payment.className || '-',
+      items: [
+        {
+          description,
+          amount: amountValue
+        }
+      ]
+    };
+
+    setGeneratingInvoiceId(payment.id);
+    setError('');
+
+    try {
+      const response = await axios.post(invoiceApiUrl, payload, {
+        responseType: 'blob',
+        timeout: 15000
+      });
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `facture-payment-${payment.id || 'student'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (invoiceError) {
+      setError(invoiceError.response?.data?.message || 'Unable to generate facture PDF.');
+    } finally {
+      setGeneratingInvoiceId(null);
+    }
+  };
+
   useEffect(() => {
     console.log('[Payments] Component mounted');
-    console.log('[Payments] API URL:', apiBase);
+      console.log('[Payments] API URL:', paymentsApiBase);
     console.log('[Payments] Environment:', {
       REACT_APP_API_GATEWAY_URL: process.env.REACT_APP_API_GATEWAY_URL,
       NODE_ENV: process.env.NODE_ENV
@@ -122,7 +173,7 @@ const Payments = ({ language }) => {
     }
 
     try {
-      await axios.delete(`${apiBase}/${id}`, { headers: getHeaders() });
+      await axios.delete(`${paymentsApiBase}/${id}`, { headers: getHeaders() });
       if (editingId === id) {
         resetForm();
       }
@@ -161,9 +212,9 @@ const Payments = ({ language }) => {
     setSaving(true);
     try {
       if (editingId) {
-        await axios.put(`${apiBase}/${editingId}`, payload, { headers: getHeaders() });
+        await axios.put(`${paymentsApiBase}/${editingId}`, payload, { headers: getHeaders() });
       } else {
-        await axios.post(apiBase, payload, { headers: getHeaders() });
+        await axios.post(paymentsApiBase, payload, { headers: getHeaders() });
       }
       resetForm();
       await fetchPayments();
@@ -218,7 +269,7 @@ const Payments = ({ language }) => {
           <strong>Error:</strong> {error}
           <br />
           <small style={{ color: '#7f1d1d' }}>
-            API Endpoint: {apiBase}
+            API Endpoint: {paymentsApiBase}
             <br />
             Gateway URL: {process.env.REACT_APP_API_GATEWAY_URL || '(not set)'}
             <br />
@@ -256,6 +307,13 @@ const Payments = ({ language }) => {
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button type="button" onClick={() => handleEdit(payment)}>Edit</button>
                       <button type="button" onClick={() => handleDelete(payment.id)}>Delete</button>
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateFacture(payment)}
+                        disabled={generatingInvoiceId === payment.id}
+                      >
+                        {generatingInvoiceId === payment.id ? 'Generating...' : 'Facture'}
+                      </button>
                     </div>
                   </td>
                 </tr>
