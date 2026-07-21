@@ -135,6 +135,8 @@ if (language === "fr") {
 
 			if (error.code === 'ECONNABORTED') {
 				errorMsg = 'Connection timeout. The server is not responding. Please check your internet connection and try again.';
+			} else if (error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_REFUSED') {
+				errorMsg = 'Authentication service is unreachable on port 8085. Please start or restart api-gateway and usermanagement services.';
 			} else if (error.code === 'ENOTFOUND' || error.code === 'ERR_INVALID_URL') {
 				errorMsg = 'Unable to connect to the server. Please check the API endpoint configuration.';
 			} else if (error.response) {
