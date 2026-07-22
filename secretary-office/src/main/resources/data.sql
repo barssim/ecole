@@ -26,6 +26,14 @@ VALUES
 (3, 'Mohamed'),
 (3, 'Hajar');
 
+INSERT IGNORE INTO tb_exam
+(id, subject, class_name, date, start_time, end_time, room, notes)
+VALUES
+(1, 'Mathématiques', '3e A', '2026-08-05', '08:00:00', '10:00:00', 'Salle 101', NULL),
+(2, 'Français',      '3e B', '2026-08-06', '09:00:00', '11:00:00', 'Salle 102', NULL),
+(3, 'Sciences',      '3e A', '2026-08-07', '10:00:00', '12:00:00', 'Salle 103', NULL),
+(4, 'Histoire',      'Terminale C', '2026-08-08', '08:30:00', '10:30:00', 'Amphithéâtre', NULL);
+
 INSERT IGNORE INTO tb_professor_attendance
 (id, teacher_id, teacher_name, attendance_date, scheduled_time, check_in_time, status, notes, updated_at)
 VALUES

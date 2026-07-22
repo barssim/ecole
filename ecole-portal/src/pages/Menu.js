@@ -14,7 +14,7 @@ const Menu = ({ language }) => {
   const userRoles = JSON.parse(localStorage.getItem("user_roles") || "[]");
   const adminRoles = ["admin", "manager", "secretary"];
     const isAdminAuthorized = adminRoles.some(role => userRoles.includes(role));
-    const attestationRoles = ["student", "admin", "manager", "secretary"];
+    const attestationRoles = ["admin", "manager", "secretary"];
     const canAccessAdminAttestations = attestationRoles.some(role => userRoles.includes(role));
 
     const teacherRoles = ["teacher", "manager"];
@@ -40,7 +40,7 @@ const Menu = ({ language }) => {
           canAccessAttestations={canAccessAdminAttestations}
         />
       ),
-      isAuthorized: canAccessAdminAttestations,
+      isAuthorized: isAdminAuthorized,
     },
     { component: <TeacherBlock content={content}  isAuthorized={isTeacherAuthorized}/> , isAuthorized : isTeacherAuthorized},
     { component: <StudentBlock content={content} isAuthorized={isStudentAuthorized}/>,isAuthorized : isStudentAuthorized},
