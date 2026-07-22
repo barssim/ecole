@@ -59,7 +59,7 @@ spring:
         - id: finance-manager
           uri: "http://finance-manager:8094"
           predicates:
-            - Path=/api/facture/**,/api/payments/**,/api/paymentNotices/**
+            - Path=/api/facture/**,/api/factures/**,/api/payments/**,/api/paymentNotice/**,/api/paymentNotices/**
           filters:
             - StripPrefix=0
 
