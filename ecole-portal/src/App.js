@@ -34,6 +34,7 @@ import StudentSchedulePage from "./components/StudentSchedulePage";
 import TeacherCourses  from "./pages/TeacherCourses";
 import OuttingPage  from "./pages/OuttingPage";
 import PaymentsPage from './pages/PaymentsPage';
+import ProfilePage from './pages/ProfilePage';
 
 
 
@@ -142,6 +143,7 @@ const isRtl = language === "ar";
 				      <Route path="/about" element={<About language={language} toggleLanguage={toggleLanguage} />} />
 				      <Route path="/inscription" element={<Inscription language={language} toggleLanguage={toggleLanguage} />} />
 				      <Route path="/contact" element={<Contact language={language} toggleLanguage={toggleLanguage} />} />
+              <Route path="/profile" element={<ProfilePage />} />
 				      <Route path="/students/schedule" element={<StudentSchedulePage language={language} toggleLanguage={toggleLanguage} />} />
 				       <Route path="/parents/inscription" element={<InscriptionForm  isAuthorized={true} language={language} toggleLanguage={toggleLanguage} />} />
                    </Routes>

@@ -63,6 +63,11 @@ if (language === "fr") {
 						Welcome, {loggedIn} {/* Display welcome message styled as an inactive button */}
 					</button>
 				)}
+				{isLoggedIn && (
+					<button className="buttonStyle" onClick={() => (window.location.href = "/profile")}>
+						Mon profil
+					</button>
+				)}
 				<button className="buttonStyle" onClick={() => (window.location.href = isLoggedIn ? "/logout" : "/login")}>
 					{isLoggedIn ? content.logout : content.login}
 				</button>
