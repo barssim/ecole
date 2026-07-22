@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-
 const AdminBlock = ({ isAuthorized, canAccessAttestations = false, content }) => {
   const [showActivites, setShowActivites] = useState(false);
   const canOpenAdministration = isAuthorized || canAccessAttestations;
@@ -57,44 +56,6 @@ const AdminBlock = ({ isAuthorized, canAccessAttestations = false, content }) =>
           </Link>
         </li>
         )}
-        {isAuthorized && (
-        <li>
-          <button
-            onClick={() => setShowActivites(!showActivites)}
-            className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 inline-block w-full text-left"
-          >
-            {content.activités || "Activités"}
-          </button>
-          {showActivites && (
-            <ul className="ml-4 mt-1 list-[circle] space-y-1">
-              <li>
-                <Link
-                  to="/administration/activites/sorties"
-                  className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100 inline-block"
-                >
-                  {content.sorties || "Sorties"}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/administration/activites/fetes"
-                  className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100 inline-block"
-                >
-                  {content.fetes || "Fêtes"}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/administration/activites/reunions"
-                  className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100 inline-block"
-                >
-                  {content.reunions || "Réunions"}
-                </Link>
-              </li>
-            </ul>
-          )}
-        </li>
-        )}
       </ul>
       )}
     </div>
@@ -102,4 +63,3 @@ const AdminBlock = ({ isAuthorized, canAccessAttestations = false, content }) =>
 }
 
 export default AdminBlock
-

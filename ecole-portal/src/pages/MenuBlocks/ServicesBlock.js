@@ -46,6 +46,30 @@ const [showActivites, setShowActivites] = useState(false);
                   {content.sport || "Sport"}
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/administration/activites/sorties"
+                  className="text-xs bg-purple-100 text-purple-800 px-3 py-1 rounded hover:bg-purple-200 inline-block"
+                >
+                  {content.sorties || "Sorties"}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/administration/activites/fetes"
+                  className="text-xs bg-purple-100 text-purple-800 px-3 py-1 rounded hover:bg-purple-200 inline-block"
+                >
+                  {content.fetes || "Fêtes"}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/administration/activites/reunions"
+                  className="text-xs bg-purple-100 text-purple-800 px-3 py-1 rounded hover:bg-purple-200 inline-block"
+                >
+                  {content.reunions || "Réunions"}
+                </Link>
+              </li>
             </ul>
             )}
           </div>
@@ -53,4 +77,3 @@ const [showActivites, setShowActivites] = useState(false);
 }
 
 export default ServicesBlock;
-

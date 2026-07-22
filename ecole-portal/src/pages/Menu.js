@@ -28,7 +28,7 @@ const Menu = ({ language }) => {
         const financeRoles = ["finance", "manager"];
                 const isFinanceAuthorized = financeRoles.some(role => userRoles.includes(role));
 
-     const servicesRoles = ["student", "teacher" , "admin",  "manager"];
+     const servicesRoles = ["student", "teacher", "admin", "manager", "parent", "finance", "secretary"];
             const isServicesAuthorized = servicesRoles.some(role => userRoles.includes(role));
 
   const menuBlocks = [
