@@ -96,32 +96,32 @@ const ProfessorPresence = ({ language }) => {
       ) : presenceList.length === 0 ? (
         <p className="text-gray-500">{content.presence_empty}</p>
       ) : (
-       <table className="w-full text-sm border-separate border-spacing-y-1">
-         <thead  className="bg-blue-100 sticky top-0 shadow-sm z-10">
+       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+         <thead style={{ background: '#dbeafe', color: '#1e3a8a' }}>
            <tr>
-             <th className="px-4 py-2 text-left rounded-tl-md">{content.presence_name}</th>
-             <th className="px-4 py-2 text-left">{content.payment_date || 'Date'}</th>
-             <th className="px-4 py-2 text-left">{content.presence_scheduled}</th>
-             <th className="px-4 py-2 text-left">{content.presence_checkin}</th>
-             <th className="px-4 py-2 text-left">{content.presence_status}</th>
-             <th className="px-4 py-2 text-left rounded-tr-md">{content.presence_notes || 'Notes'}</th>
+             <th style={th}>{content.presence_name}</th>
+             <th style={th}>{content.payment_date || 'Date'}</th>
+             <th style={th}>{content.presence_scheduled}</th>
+             <th style={th}>{content.presence_checkin}</th>
+             <th style={th}>{content.presence_status}</th>
+             <th style={th}>{content.presence_notes || 'Notes'}</th>
            </tr>
          </thead>
          <tbody>
            {presenceList.map((prof, index) => (
              <tr
                key={index}
-               className="bg-white hover:bg-blue-50 transition rounded shadow-sm"
+                style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}
              >
-               <td className="px-4 py-2 font-medium text-gray-800">{prof.teacherName}</td>
-               <td className="px-4 py-2 text-gray-700">{prof.attendanceDate}</td>
-               <td className="px-4 py-2 text-gray-700">{prof.scheduledTime}</td>
-               <td className="px-4 py-2 text-gray-700">
+                <td style={td}>{prof.teacherName}</td>
+                <td style={td}>{prof.attendanceDate}</td>
+                <td style={td}>{prof.scheduledTime}</td>
+                <td style={td}>
                  {prof.checkInTime ? prof.checkInTime : (
                    <span className="text-gray-400" title="Non renseigné">–</span>
                  )}
                </td>
-               <td className="px-4 py-2">
+                <td style={td}>
                  <span className="inline-flex items-center gap-1 font-semibold">
                     {prof.status === "present" && (
                      <>
@@ -143,7 +143,7 @@ const ProfessorPresence = ({ language }) => {
                    )}
                  </span>
                </td>
-               <td className="px-4 py-2 text-gray-700">{prof.notes || '—'}</td>
+                <td style={td}>{prof.notes || '—'}</td>
              </tr>
            ))}
          </tbody>
@@ -153,5 +153,8 @@ const ProfessorPresence = ({ language }) => {
     </div>
   );
 };
+
+const th = { padding: '8px 12px', textAlign: 'left', fontWeight: 600 };
+const td = { padding: '8px 12px' };
 
 export default ProfessorPresence;

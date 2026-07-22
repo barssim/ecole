@@ -269,24 +269,24 @@ const PaymentsPage = ({ language }) => {
         <h2>{content?.payment_paymentHistory || 'Historique des Paiements'}</h2>
         {payments && payments.length > 0 ? (
           <div className="payment-table-wrapper">
-            <table className="payment-table">
-              <thead>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <thead style={{ background: '#dbeafe', color: '#1e3a8a' }}>
                 <tr>
-                  <th>{content?.payment_date || 'Date'}</th>
-                  <th>{content?.payment_studentName || 'Élève'}</th>
-                  <th>{content?.payment_amount || 'Montant'}</th>
-                  <th>{content?.payment_method || 'Méthode'}</th>
-                  <th>{content?.payment_reference || 'Référence'}</th>
+                  <th style={th}>{content?.payment_date || 'Date'}</th>
+                  <th style={th}>{content?.payment_studentName || 'Élève'}</th>
+                  <th style={th}>{content?.payment_amount || 'Montant'}</th>
+                  <th style={th}>{content?.payment_method || 'Méthode'}</th>
+                  <th style={th}>{content?.payment_reference || 'Référence'}</th>
                 </tr>
               </thead>
               <tbody>
-                {payments.map((payment) => (
-                  <tr key={payment.id}>
-                    <td>{formatDate(payment.paymentDate)}</td>
-                    <td>{payment.studentName}</td>
-                    <td className="amount">{payment.amount.toFixed(2)} {payment.currency}</td>
-                    <td>{payment.method}</td>
-                    <td>{payment.reference || '-'}</td>
+                {payments.map((payment, index) => (
+                  <tr key={payment.id} style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}>
+                    <td style={td}>{formatDate(payment.paymentDate)}</td>
+                    <td style={td}>{payment.studentName}</td>
+                    <td style={td}>{payment.amount.toFixed(2)} {payment.currency}</td>
+                    <td style={td}>{payment.method}</td>
+                    <td style={td}>{payment.reference || '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -299,6 +299,9 @@ const PaymentsPage = ({ language }) => {
     </div>
   );
 };
+
+const th = { padding: '8px 12px', textAlign: 'left', fontWeight: 600 };
+const td = { padding: '8px 12px' };
 
 export default PaymentsPage;
 

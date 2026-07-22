@@ -282,28 +282,28 @@ const Payments = ({ language }) => {
         <p className="text-gray-600 text-center mt-4">Loading payments...</p>
       ) : payments.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm text-gray-800 border-collapse">
-            <thead className="bg-blue-100 text-left text-blue-900 uppercase text-xs tracking-wide">
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+            <thead style={{ background: "#dbeafe", color: "#1e3a8a" }}>
               <tr>
-                <th className="px-4 py-3 border">{content.date}</th>
-                <th className="px-4 py-3 border">{content.student}</th>
-                <th className="px-4 py-3 border">Class</th>
-                <th className="px-4 py-3 border">{content.amount}</th>
-                <th className="px-4 py-3 border">{content.method}</th>
-                <th className="px-4 py-3 border">Reference</th>
-                <th className="px-4 py-3 border">Actions</th>
+                <th style={th}>{content.date}</th>
+                <th style={th}>{content.student}</th>
+                <th style={th}>Class</th>
+                <th style={th}>{content.amount}</th>
+                <th style={th}>{content.method}</th>
+                <th style={th}>Reference</th>
+                <th style={th}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {payments.map((payment) => (
-                <tr key={payment.id} className="even:bg-gray-50 hover:bg-blue-50 transition">
-                  <td className="px-4 py-3 border">{payment.paymentDate || '-'}</td>
-                  <td className="px-4 py-3 border">{payment.studentName}</td>
-                  <td className="px-4 py-3 border">{payment.className || '-'}</td>
-                  <td className="px-4 py-3 border">{payment.amount} {payment.currency}</td>
-                  <td className="px-4 py-3 border">{payment.method}</td>
-                  <td className="px-4 py-3 border">{payment.reference || '-'}</td>
-                  <td className="px-4 py-3 border">
+              {payments.map((payment, index) => (
+                <tr key={payment.id} style={{ background: index % 2 === 0 ? "#f0f9ff" : "#fff" }}>
+                  <td style={td}>{payment.paymentDate || '-'}</td>
+                  <td style={td}>{payment.studentName}</td>
+                  <td style={td}>{payment.className || '-'}</td>
+                  <td style={td}>{payment.amount} {payment.currency}</td>
+                  <td style={td}>{payment.method}</td>
+                  <td style={td}>{payment.reference || '-'}</td>
+                  <td style={td}>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button type="button" onClick={() => handleEdit(payment)}>Edit</button>
                       <button type="button" onClick={() => handleDelete(payment.id)}>Delete</button>
@@ -329,5 +329,8 @@ const Payments = ({ language }) => {
     </div>
   );
 };
+
+const th = { padding: "8px 12px", textAlign: "left", fontWeight: 600 };
+const td = { padding: "8px 12px" };
 
 export default Payments;

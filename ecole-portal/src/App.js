@@ -1,5 +1,5 @@
 // src/App.js
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import React, { useState } from "react";
 import { useEffect } from "react";
 import Header from './components/Header';
@@ -90,9 +90,14 @@ useEffect(() => {
 
 const isRtl = language === "ar";
 
+const AppContent = () => {
+  const location = useLocation();
+  const path = (location.pathname || "").toLowerCase();
+  const isHomePage = path === "/" || path === "/home";
 
-	return (
-		<Router>
+
+  return (
+    <>
 			<Header language={language} toggleLanguage={toggleLanguage}/>
       <div className="layout-controls">
         <button
@@ -118,10 +123,13 @@ const isRtl = language === "ar";
                    <h1 style={{ color: "blue" }}>{content.whatWeDo}{ecole.name[language] || ecole.name["fr"]}</h1>
                    <h4 style={{ color: "#00BBFF" }}>{content.whatYouFind}</h4>
                  </div>
+{isHomePage && (
 <div className="bounce-container">
   <div className="bounce-content">
     <img src={ecole.logo} width="300" />
   </div>
+</div>
+)}
                   <div className="routes-wrapper">
 
                     <Routes>
@@ -157,7 +165,6 @@ const isRtl = language === "ar";
 				       <Route path="/parents/inscription" element={<InscriptionForm  isAuthorized={true} language={language} toggleLanguage={toggleLanguage} />} />
                    </Routes>
                  </div>
-                </div>
 </div>
 
                <div
@@ -172,8 +179,15 @@ const isRtl = language === "ar";
 			</div>
 			<br />
 			<Footer language={language} toggleLanguage={toggleLanguage} />
-		</Router>
+    </>
 	);
+};
+
+  return (
+    <Router>
+      <AppContent />
+    </Router>
+  );
 }
 
 export default App;
