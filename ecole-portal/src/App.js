@@ -36,6 +36,7 @@ import OuttingPage  from "./pages/OuttingPage";
 import PaymentsPage from './pages/PaymentsPage';
 import ProfilePage from './pages/ProfilePage';
 import TeacherAttendancePage from './pages/TeacherAttendancePage';
+import TeacherNotesPage from './pages/TeacherNotesPage';
 
 
 
@@ -137,6 +138,7 @@ const isRtl = language === "ar";
                        <Route path="/enseignant/cours" element={<TeacherCourses language={language} toggleLanguage={toggleLanguage} />} />
                       <Route path="/enseignant/attendance" element={<TeacherAttendancePage language={language} />} />
                       <Route path="/enseignant/absence" element={<TeacherAttendancePage language={language} />} />
+                      <Route path="/enseignant/notes" element={<TeacherNotesPage language={language} />} />
                       <Route path="/services/bibliotheque" element={<Bibliotheque />} />
                       <Route path="/services/bibliotheque/catalogue" element={<Catalogue />} />
                       <Route path="/services/bibliotheque/emprunts" element={<Borrow />} />

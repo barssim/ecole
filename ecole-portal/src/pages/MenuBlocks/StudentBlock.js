@@ -24,6 +24,14 @@ const [showActivites, setShowActivites] = useState(false);
               </li>
               <li>
                 <Link
+                  to="/administration/attestations"
+                  className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 inline-block"
+                >
+                  {content.attestation_request || "Attestations"}
+                </Link>
+              </li>
+              <li>
+                <Link
                   to="/students/schedule"
                   className="text-xs bg-green-100 text-green-800 px-3 py-1 rounded hover:bg-green-200 inline-block"
                 >
@@ -53,4 +61,3 @@ const [showActivites, setShowActivites] = useState(false);
 }
 
 export default StudentBlock;
-
