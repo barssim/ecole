@@ -11,5 +11,6 @@ public class SchoolClassResponse {
     private Integer id;
     private String name;
     private List<String> students;
+    private List<String> teachers;
 }
 

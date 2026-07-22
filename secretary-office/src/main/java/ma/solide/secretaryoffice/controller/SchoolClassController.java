@@ -63,5 +63,17 @@ public class SchoolClassController {
                                                              @PathVariable String studentName) {
         return ResponseEntity.ok(schoolClassService.removeStudent(id, studentName));
     }
+
+    @PostMapping("/{id}/teachers")
+    public ResponseEntity<SchoolClassResponse> addTeacher(@PathVariable Integer id,
+                                                           @RequestBody StudentRequestDTO dto) {
+        return ResponseEntity.ok(schoolClassService.addTeacher(id, dto));
+    }
+
+    @DeleteMapping("/{id}/teachers/{teacherName}")
+    public ResponseEntity<SchoolClassResponse> removeTeacher(@PathVariable Integer id,
+                                                              @PathVariable String teacherName) {
+        return ResponseEntity.ok(schoolClassService.removeTeacher(id, teacherName));
+    }
 }
 

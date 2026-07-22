@@ -1,33 +1,41 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import en from "../locales/en.json";
 import fr from "../locales/fr.json";
 import ar from "../locales/ar.json";
 
 const OuttingPage = ({ language, activityType = "sorties" }) => {
-  const content =
-    language === "fr" ? fr :
-    language === "en" ? en :
-    ar;
+  const content = language === "fr" ? fr : language === "en" ? en : ar;
   const userRoles = JSON.parse(localStorage.getItem("user_roles") || "[]");
   const isSecretaryAuthorized = userRoles.includes("secretary");
-  const storageKey = `activities_${activityType}`;
-  const [outings, setOutings] = useState(() => {
-    try {
-      const stored = localStorage.getItem(storageKey);
-      const parsed = stored ? JSON.parse(stored) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  });
+  const userName = localStorage.getItem("LoggedIn") || "";
+  const token = sessionStorage.getItem("jwt_token");
+  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || "http://localhost:8085").replace(/\/$/, "");
+
+  const [activities, setActivities] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
   const [form, setForm] = useState({
     title: "",
     date: "",
+    className: "",
     destination: "",
-    description: ""
+    description: "",
   });
-  const [selectedOuting, setSelectedOuting] = useState(null);
+  const [selectedActivity, setSelectedActivity] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  const headers = useMemo(
+    () => ({
+      "Content-Type": "application/json",
+      "X-User-Roles": userRoles.join(","),
+      "X-User-Name": userName,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    }),
+    [token, userName, userRoles]
+  );
 
   const titleByActivityType = {
     sorties: content.sorties || content.outing_page_title || "Outings",
@@ -36,61 +44,139 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
   };
   const pageTitle = titleByActivityType[activityType] || (content.services || "Activities");
 
-  const saveItems = (items) => {
-    setOutings(items);
-    localStorage.setItem(storageKey, JSON.stringify(items));
+  useEffect(() => {
+    fetchActivities();
+    if (isSecretaryAuthorized) {
+      fetchClasses();
+    }
+  }, [activityType, isSecretaryAuthorized]);
+
+  const fetchActivities = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await fetch(`${baseUrl}/api/activities?type=${encodeURIComponent(activityType)}`, { headers });
+      if (!response.ok) {
+        throw new Error(content.presence_error || "Failed to load activities");
+      }
+      const data = await response.json();
+      setActivities(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message || "Error while loading activities");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchClasses = async () => {
+    try {
+      const response = await fetch(`${baseUrl}/api/classes`, { headers });
+      if (!response.ok) {
+        throw new Error("Failed to load classes");
+      }
+      const data = await response.json();
+      setClasses(Array.isArray(data) ? data : []);
+      if (Array.isArray(data) && data.length > 0) {
+        setForm((prev) => ({ ...prev, className: prev.className || data[0].name }));
+      }
+    } catch {
+      // Keep page usable even when classes are not available.
+    }
   };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const resetForm = () => {
+    setForm({
+      title: "",
+      date: "",
+      className: classes[0]?.name || "",
+      destination: "",
+      description: "",
+    });
+    setSelectedActivity(null);
+    setIsEditing(false);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (!isSecretaryAuthorized) {
       return;
     }
 
-    e.preventDefault();
+    try {
+      setError("");
+      setMessage("");
+      const url = isEditing && selectedActivity
+        ? `${baseUrl}/api/activities/${selectedActivity.id}`
+        : `${baseUrl}/api/activities`;
+      const method = isEditing ? "PUT" : "POST";
 
-    if (isEditing && selectedOuting) {
-      // Update existing outing
-      const updated = outings.map((o) =>
-        o.id === selectedOuting.id ? { ...o, ...form } : o
-      );
-      saveItems(updated);
-      setIsEditing(false);
-      setSelectedOuting(null);
-    } else {
-      // Add new outing
-      const newOuting = { ...form, id: Date.now() };
-      saveItems([...outings, newOuting]);
+      const response = await fetch(url, {
+        method,
+        headers,
+        body: JSON.stringify({
+          type: activityType,
+          title: form.title,
+          date: form.date,
+          className: form.className,
+          destination: form.destination,
+          description: form.description,
+        }),
+      });
+
+      if (!response.ok) {
+        const backendMessage = await response.text();
+        throw new Error(backendMessage || "Unable to save activity");
+      }
+
+      setMessage(isEditing ? content.outing_update_button : content.outing_add_button);
+      resetForm();
+      fetchActivities();
+    } catch (err) {
+      setError(err.message || "Unable to save activity");
     }
-
-    // Reset form
-    setForm({ title: "", date: "", destination: "", description: "" });
   };
 
-  const handleSelect = (outing) => {
-    setSelectedOuting(outing);
+  const handleSelect = (activity) => {
+    if (!isSecretaryAuthorized) {
+      return;
+    }
+    setSelectedActivity(activity);
     setForm({
-      title: outing.title,
-      date: outing.date,
-      destination: outing.destination,
-      description: outing.description
+      title: activity.title,
+      date: activity.date,
+      className: activity.className,
+      destination: activity.destination,
+      description: activity.description || "",
     });
     setIsEditing(true);
   };
 
-  const handleRemove = (id) => {
+  const handleRemove = async (id) => {
     if (!isSecretaryAuthorized) {
       return;
     }
 
-    saveItems(outings.filter((o) => o.id !== id));
-    if (selectedOuting && selectedOuting.id === id) {
-      setSelectedOuting(null);
-      setIsEditing(false);
-      setForm({ title: "", date: "", destination: "", description: "" });
+    try {
+      setError("");
+      const response = await fetch(`${baseUrl}/api/activities/${id}`, {
+        method: "DELETE",
+        headers,
+      });
+
+      if (!response.ok) {
+        throw new Error("Unable to delete activity");
+      }
+
+      if (selectedActivity && selectedActivity.id === id) {
+        resetForm();
+      }
+      fetchActivities();
+    } catch (err) {
+      setError(err.message || "Unable to delete activity");
     }
   };
 
@@ -105,14 +191,19 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
       }}
     >
       <h1>{pageTitle}</h1>
-      <h3>{content.outing_add_title}</h3>
       {!isSecretaryAuthorized && (
         <p style={{ color: "#b45309", marginTop: 4 }}>
           {content.activity_secretary_only || "Only secretary can add and schedule activities."}
         </p>
       )}
 
-      <form onSubmit={handleSubmit}>
+      {message && <p style={{ color: "#15803d" }}>{message}</p>}
+      {error && <p style={{ color: "#b91c1c" }}>{error}</p>}
+
+      {isSecretaryAuthorized && (
+      <>
+      <h3>{content.outing_add_title}</h3>
+      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 8, maxWidth: 500 }}>
         <input
           name="title"
           value={form.title}
@@ -127,6 +218,13 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
           onChange={handleChange}
           required
         />
+        <select name="className" value={form.className} onChange={handleChange} required>
+          {classes.map((schoolClass) => (
+            <option key={schoolClass.id} value={schoolClass.name}>
+              {schoolClass.name}
+            </option>
+          ))}
+        </select>
         <input
           name="destination"
           value={form.destination}
@@ -140,22 +238,25 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
           onChange={handleChange}
           placeholder={content.outing_description}
         />
-        {isSecretaryAuthorized && (
         <button type="submit">
           {isEditing ? content.outing_update_button : content.outing_add_button}
         </button>
-        )}
       </form>
+      </>
+      )}
 
       <hr />
 
+      {loading ? (
+        <p>{content.loading || "Loading..."}</p>
+      ) : (
       <ul style={{ listStyle: "none", padding: 0 }}>
-        {outings.map((outing) => (
+        {activities.map((activity) => (
           <li
-            key={outing.id}
+            key={activity.id}
             style={{
               border:
-                selectedOuting?.id === outing.id
+                selectedActivity?.id === activity.id
                   ? "2px solid blue"
                   : "1px solid #ccc",
               borderRadius: "8px",
@@ -163,17 +264,16 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
               padding: "10px"
             }}
           >
-            <strong>{outing.title}</strong> — {outing.date} —{" "}
-            {outing.destination}
-            <p>{outing.description}</p>
+            <strong>{activity.title}</strong> — {activity.date} — {activity.className} — {activity.destination}
+            <p>{activity.description}</p>
             {isSecretaryAuthorized && (
-            <button onClick={() => handleSelect(outing)}>
+            <button onClick={() => handleSelect(activity)}>
               {content.outing_select_button}
             </button>
             )}
             {isSecretaryAuthorized && (
             <button
-              onClick={() => handleRemove(outing.id)}
+              onClick={() => handleRemove(activity.id)}
               style={{ marginLeft: "10px", color: "red" }}
             >
               {content.outing_remove_button}
@@ -182,14 +282,16 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
           </li>
         ))}
       </ul>
+      )}
 
-      {selectedOuting && (
+      {isSecretaryAuthorized && selectedActivity && (
         <div style={{ borderTop: "2px solid #ddd", paddingTop: "10px" }}>
           <h3>{content.outing_selected_label}:</h3>
-          <p><b>{content.outing_title}:</b> {selectedOuting.title}</p>
-          <p><b>{content.outing_date}:</b> {selectedOuting.date}</p>
-          <p><b>{content.outing_destination}:</b> {selectedOuting.destination}</p>
-          <p><b>{content.outing_description}:</b> {selectedOuting.description}</p>
+          <p><b>{content.outing_title}:</b> {selectedActivity.title}</p>
+          <p><b>{content.outing_date}:</b> {selectedActivity.date}</p>
+          <p><b>{content.class || "Class"}:</b> {selectedActivity.className}</p>
+          <p><b>{content.outing_destination}:</b> {selectedActivity.destination}</p>
+          <p><b>{content.outing_description}:</b> {selectedActivity.description}</p>
         </div>
       )}
     </div>

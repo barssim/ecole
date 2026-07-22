@@ -108,6 +108,37 @@ public class SchoolClassService {
         return toResponse(schoolClassRepository.save(schoolClass));
     }
 
+    public SchoolClassResponse addTeacher(Integer classId, StudentRequestDTO dto) {
+        if (dto == null || !StringUtils.hasText(dto.getName())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le nom de l'enseignant est requis");
+        }
+        SchoolClass schoolClass = schoolClassRepository.findById(classId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Classe introuvable pour l'id " + classId));
+
+        String teacherName = dto.getName().trim();
+        if (schoolClass.getTeachers().stream().anyMatch(t -> t.equalsIgnoreCase(teacherName))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "L'enseignant '" + teacherName + "' est déjà dans cette classe");
+        }
+        schoolClass.getTeachers().add(teacherName);
+        return toResponse(schoolClassRepository.save(schoolClass));
+    }
+
+    public SchoolClassResponse removeTeacher(Integer classId, String teacherName) {
+        SchoolClass schoolClass = schoolClassRepository.findById(classId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Classe introuvable pour l'id " + classId));
+
+        boolean removed = schoolClass.getTeachers()
+                .removeIf(t -> t.equalsIgnoreCase(teacherName));
+        if (!removed) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Enseignant '" + teacherName + "' introuvable dans cette classe");
+        }
+        return toResponse(schoolClassRepository.save(schoolClass));
+    }
+
     public void deleteClass(Integer id) {
         if (!schoolClassRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -121,6 +152,7 @@ public class SchoolClassService {
                 .id(schoolClass.getId())
                 .name(schoolClass.getName())
                 .students(schoolClass.getStudents())
+                .teachers(schoolClass.getTeachers())
                 .build();
     }
 }

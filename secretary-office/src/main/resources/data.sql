@@ -26,6 +26,19 @@ VALUES
 (3, 'Mohamed'),
 (3, 'Hajar');
 
+INSERT IGNORE INTO tb_class_teacher (class_id, teacher_name)
+VALUES
+(1, 'Mme Benali'),
+(2, 'M. Alaoui'),
+(3, 'Mme Idrissi');
+
+INSERT IGNORE INTO tb_activity
+(id, type, title, date, class_name, destination, description, created_by)
+VALUES
+(1, 'sorties', 'Sortie pédagogique au musée', '2026-09-12', '3e A', 'Musée des sciences', 'Sortie encadrée pour découverte scientifique.', 'secretary'),
+(2, 'fetes', 'Fête de rentrée', '2026-09-20', '3e B', 'Cour principale', 'Activité festive de bienvenue.', 'secretary'),
+(3, 'reunions', 'Réunion parents-professeurs', '2026-10-05', 'Terminale C', 'Salle A2', 'Point trimestriel avec les familles.', 'secretary');
+
 INSERT IGNORE INTO tb_exam
 (id, subject, class_name, date, start_time, end_time, room, notes)
 VALUES

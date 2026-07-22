@@ -38,5 +38,11 @@ public class SchoolClass {
     @Column(name = "student_name")
     @Builder.Default
     private List<String> students = new ArrayList<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "tb_class_teacher", joinColumns = @JoinColumn(name = "class_id"))
+    @Column(name = "teacher_name")
+    @Builder.Default
+    private List<String> teachers = new ArrayList<>();
 }
 
