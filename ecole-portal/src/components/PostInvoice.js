@@ -6,6 +6,41 @@ const PostInvoice = () => {
   const [className, setClassName] = useState('');
   const [items, setItems] = useState([{ description: '', amount: '' }]);
   const [pdfUrl, setPdfUrl] = useState(null);
+  const [factures, setFactures] = useState([]);
+  const [loadingFactures, setLoadingFactures] = useState(false);
+  const [error, setError] = useState(null);
+
+  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
+  const token = sessionStorage.getItem('jwt_token');
+
+  React.useEffect(() => {
+    fetchFactures();
+  }, []);
+
+  const fetchFactures = async () => {
+    try {
+      setLoadingFactures(true);
+      setError(null);
+
+      const response = await fetch(`${baseUrl}/api/factures`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors du chargement des factures');
+      }
+
+      const data = await response.json();
+      setFactures(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message || 'Erreur inconnue');
+    } finally {
+      setLoadingFactures(false);
+    }
+  };
 
   const handleItemChange = (index, field, value) => {
     const newItems = [...items];
@@ -19,8 +54,9 @@ const PostInvoice = () => {
 
   const generateInvoice = async () => {
     try {
+      setError(null);
       const response = await axios.post(
-        'http://localhost:8093/api/facture/generate',
+        `${baseUrl}/api/facture/generate`,
         {
           studentName,
           className,
@@ -35,15 +71,22 @@ const PostInvoice = () => {
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
+      await fetchFactures();
     } catch (err) {
-      alert('Erreur lors de la génération de la facture');
+      setError('Erreur lors de la génération de la facture');
       console.error(err);
     }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('fr-FR');
   };
 
   return (
     <div style={{ padding: 20, maxWidth: 600 }}>
       <h2>Générer une Facture Scolaire</h2>
+      {error && <p style={{ color: '#c00' }}>{error}</p>}
 
       <input
         type="text"
@@ -93,6 +136,25 @@ const PostInvoice = () => {
           <a href={pdfUrl} download="facture.pdf">📥 Télécharger</a>
         </div>
       )}
+
+      <div style={{ marginTop: 30 }}>
+        <h3>Toutes les factures enregistrées</h3>
+        {loadingFactures && <p>Chargement...</p>}
+        {!loadingFactures && factures.length === 0 && <p>Aucune facture enregistrée.</p>}
+        {!loadingFactures && factures.length > 0 && (
+          <div style={{ display: 'grid', gap: 10 }}>
+            {factures.map((facture) => (
+              <div key={facture.id} style={{ border: '1px solid #ddd', padding: 12, borderRadius: 6 }}>
+                <div><strong>{facture.invoiceNumber}</strong></div>
+                <div>Élève: {facture.studentName}</div>
+                <div>Classe: {facture.className}</div>
+                <div>Date: {formatDate(facture.generatedDate)}</div>
+                <div>Total: {Number(facture.totalAmount || 0).toFixed(2)} {facture.currency || 'MAD'}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

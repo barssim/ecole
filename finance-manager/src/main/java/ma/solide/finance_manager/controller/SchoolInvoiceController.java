@@ -1,11 +1,13 @@
 package ma.solide.finance_manager.controller;
 
 import ma.solide.finance_manager.dto.PaymentDTO;
+import ma.solide.finance_manager.dto.FactureDTO;
 import ma.solide.finance_manager.dto.PaymentNoticeDTO;
 import ma.solide.finance_manager.dto.InvoiceItemDTO;
 import ma.solide.finance_manager.service.SchoolInvoicePdfService;
 import ma.solide.finance_manager.service.PaymentService;
 import ma.solide.finance_manager.service.PaymentNoticeService;
+import ma.solide.finance_manager.service.FactureService;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -20,13 +22,16 @@ public class SchoolInvoiceController {
     private final SchoolInvoicePdfService pdfService;
     private final PaymentService paymentService;
     private final PaymentNoticeService paymentNoticeService;
+    private final FactureService factureService;
 
     public SchoolInvoiceController(SchoolInvoicePdfService pdfService,
                                    PaymentService paymentService,
-                                   PaymentNoticeService paymentNoticeService) {
+                                   PaymentNoticeService paymentNoticeService,
+                                   FactureService factureService) {
         this.pdfService = pdfService;
         this.paymentService = paymentService;
         this.paymentNoticeService = paymentNoticeService;
+        this.factureService = factureService;
     }
 
     /**
@@ -196,11 +201,20 @@ public class SchoolInvoiceController {
     }
 
     /**
+     * Get all generated factures saved in tb_factures
+     */
+    @GetMapping("/factures")
+    public ResponseEntity<List<FactureDTO>> getAllFactures() {
+        return ResponseEntity.ok(factureService.getAllFactures());
+    }
+
+    /**
      * Generate PDF invoice
      */
     @PostMapping("/facture/generate")
     public ResponseEntity<InputStreamResource> generate(@RequestBody InvoiceRequest request) {
         var pdf = pdfService.generateInvoice(request.getStudentName(), request.getClassName(), request.getItems());
+        factureService.saveGeneratedFacture(request.getStudentName(), request.getClassName(), request.getItems());
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Disposition", "inline; filename=facture.pdf");
