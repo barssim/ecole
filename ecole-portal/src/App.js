@@ -136,6 +136,8 @@ const isRtl = language === "ar";
                       <Route path="/administration/activites/sorties" element={<OuttingPage language={language} activityType="sorties" />} />
                       <Route path="/administration/activites/fetes" element={<OuttingPage language={language} activityType="fetes" />} />
                       <Route path="/administration/activites/reunions" element={<OuttingPage language={language} activityType="reunions" />} />
+                      <Route path="/administration/activities/parties" element={<OuttingPage language={language} activityType="fetes" />} />
+                      <Route path="/administration/activities/meetings" element={<OuttingPage language={language} activityType="reunions" />} />
                       <Route path="/enseignement/parent-meetings" element={<ParentMeetingPage language={language} toggleLanguage={toggleLanguage} />} />
                        <Route path="/enseignant/cours" element={<TeacherCourses language={language} toggleLanguage={toggleLanguage} />} />
                       <Route path="/enseignant/attendance" element={<TeacherAttendancePage language={language} />} />

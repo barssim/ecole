@@ -123,6 +123,12 @@
   "outing_select_button": "تحديد",
   "outing_selected_label": "تفاصيل الرحلة المحددة",
   "activity_secretary_only": "فقط السكرتير يمكنه إضافة وجدولة الأنشطة.",
+	"activity_plan_button": "جدولة نشاط",
+	"activity_edit_button": "تعديل النشاط",
+	"activity_cancel_button": "إلغاء",
+	"activity_created_success": "تم حفظ النشاط بنجاح.",
+	"activity_updated_success": "تم تحديث النشاط بنجاح.",
+	"activity_deleted_success": "تم حذف النشاط بنجاح.",
 
 
 

@@ -32,6 +32,12 @@ VALUES
 (2, 'M. Alaoui'),
 (3, 'Mme Idrissi');
 
+INSERT IGNORE INTO tb_class_teacher (class_id, teacher_name)
+VALUES
+(1, 'benali'),
+(2, 'alaoui'),
+(3, 'idrissi');
+
 INSERT IGNORE INTO tb_activity
 (id, type, title, date, class_name, destination, description, created_by)
 VALUES

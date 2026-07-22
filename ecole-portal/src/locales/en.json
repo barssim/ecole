@@ -122,6 +122,12 @@
   "outing_select_button": "Select",
   "outing_selected_label": "Selected Outing Details",
   "activity_secretary_only": "Only secretary can add and schedule activities.",
+  "activity_plan_button": "Plan an activity",
+  "activity_edit_button": "Edit activity",
+  "activity_cancel_button": "Cancel",
+  "activity_created_success": "Activity saved successfully.",
+  "activity_updated_success": "Activity updated successfully.",
+  "activity_deleted_success": "Activity deleted successfully.",
   "askSchoolAI": "Ask the School AI",
   "submit": "Send",
 

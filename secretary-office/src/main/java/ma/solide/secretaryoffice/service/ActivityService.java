@@ -2,6 +2,7 @@ package ma.solide.secretaryoffice.service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -169,7 +170,7 @@ public class ActivityService {
         }
         if (roles.contains("teacher")) {
             classes.stream()
-                    .filter(c -> c.getTeachers().stream().anyMatch(t -> t.equalsIgnoreCase(userName)))
+                    .filter(c -> c.getTeachers().stream().anyMatch(t -> namesMatch(t, userName)))
                     .map(SchoolClass::getName)
                     .forEach(classNames::add);
         }
@@ -188,6 +189,32 @@ public class ActivityService {
                 .description(activity.getDescription())
                 .createdBy(activity.getCreatedBy())
                 .build();
+    }
+
+    private boolean namesMatch(String storedName, String userName) {
+        if (!StringUtils.hasText(storedName) || !StringUtils.hasText(userName)) {
+            return false;
+        }
+
+        String normalizedStored = normalizePersonName(storedName);
+        String normalizedUser = normalizePersonName(userName);
+
+        return normalizedStored.equals(normalizedUser)
+                || normalizedStored.contains(normalizedUser)
+                || normalizedUser.contains(normalizedStored);
+    }
+
+    private String normalizePersonName(String value) {
+        String normalized = value.toLowerCase(Locale.ROOT)
+                .replace("mme", "")
+                .replace("m.", "")
+                .replace("mr", "")
+                .replace("mrs", "")
+                .replace("ms", "")
+                .replaceAll("[^a-z0-9 ]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+        return normalized;
     }
 }
 

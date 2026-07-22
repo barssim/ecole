@@ -16,6 +16,7 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [showPlanner, setShowPlanner] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -98,6 +99,23 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
     });
     setSelectedActivity(null);
     setIsEditing(false);
+    setShowPlanner(false);
+  };
+
+  const openPlanner = () => {
+    setError("");
+    setMessage("");
+    setSelectedActivity(null);
+    setIsEditing(false);
+    setShowPlanner(true);
+    setForm((prev) => ({
+      ...prev,
+      title: "",
+      date: "",
+      className: prev.className || classes[0]?.name || "",
+      destination: "",
+      description: "",
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -132,7 +150,11 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
         throw new Error(backendMessage || "Unable to save activity");
       }
 
-      setMessage(isEditing ? content.outing_update_button : content.outing_add_button);
+      setMessage(
+        isEditing
+          ? (content.activity_updated_success || content.outing_update_button)
+          : (content.activity_created_success || content.outing_add_button)
+      );
       resetForm();
       fetchActivities();
     } catch (err) {
@@ -153,6 +175,9 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
       description: activity.description || "",
     });
     setIsEditing(true);
+    setShowPlanner(true);
+    setMessage("");
+    setError("");
   };
 
   const handleRemove = async (id) => {
@@ -162,6 +187,7 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
 
     try {
       setError("");
+      setMessage("");
       const response = await fetch(`${baseUrl}/api/activities/${id}`, {
         method: "DELETE",
         headers,
@@ -174,6 +200,7 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
       if (selectedActivity && selectedActivity.id === id) {
         resetForm();
       }
+      setMessage(content.activity_deleted_success || content.outing_remove_button);
       fetchActivities();
     } catch (err) {
       setError(err.message || "Unable to delete activity");
@@ -191,58 +218,70 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
       }}
     >
       <h1>{pageTitle}</h1>
-      {!isSecretaryAuthorized && (
-        <p style={{ color: "#b45309", marginTop: 4 }}>
-          {content.activity_secretary_only || "Only secretary can add and schedule activities."}
-        </p>
-      )}
 
       {message && <p style={{ color: "#15803d" }}>{message}</p>}
       {error && <p style={{ color: "#b91c1c" }}>{error}</p>}
 
       {isSecretaryAuthorized && (
-      <>
-      <h3>{content.outing_add_title}</h3>
-      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 8, maxWidth: 500 }}>
-        <input
-          name="title"
-          value={form.title}
-          onChange={handleChange}
-          placeholder={content.outing_title}
-          required
-        />
-        <input
-          name="date"
-          type="date"
-          value={form.date}
-          onChange={handleChange}
-          required
-        />
-        <select name="className" value={form.className} onChange={handleChange} required>
-          {classes.map((schoolClass) => (
-            <option key={schoolClass.id} value={schoolClass.name}>
-              {schoolClass.name}
-            </option>
-          ))}
-        </select>
-        <input
-          name="destination"
-          value={form.destination}
-          onChange={handleChange}
-          placeholder={content.outing_destination}
-          required
-        />
-        <textarea
-          name="description"
-          value={form.description}
-          onChange={handleChange}
-          placeholder={content.outing_description}
-        />
-        <button type="submit">
-          {isEditing ? content.outing_update_button : content.outing_add_button}
-        </button>
-      </form>
-      </>
+        <>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+            <button type="button" onClick={openPlanner}>
+              {isEditing
+                ? (content.activity_edit_button || content.outing_update_button)
+                : (content.activity_plan_button || content.outing_add_button)}
+            </button>
+            {showPlanner && (
+              <button type="button" onClick={resetForm}>
+                {content.activity_cancel_button || "Cancel"}
+              </button>
+            )}
+          </div>
+
+          {showPlanner && (
+            <>
+              <h3>{isEditing ? (content.activity_edit_button || content.outing_update_button) : content.outing_add_title}</h3>
+              <form onSubmit={handleSubmit} style={{ display: "grid", gap: 8, maxWidth: 500 }}>
+                <input
+                  name="title"
+                  value={form.title}
+                  onChange={handleChange}
+                  placeholder={content.outing_title}
+                  required
+                />
+                <input
+                  name="date"
+                  type="date"
+                  value={form.date}
+                  onChange={handleChange}
+                  required
+                />
+                <select name="className" value={form.className} onChange={handleChange} required>
+                  {classes.map((schoolClass) => (
+                    <option key={schoolClass.id} value={schoolClass.name}>
+                      {schoolClass.name}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  name="destination"
+                  value={form.destination}
+                  onChange={handleChange}
+                  placeholder={content.outing_destination}
+                  required
+                />
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  placeholder={content.outing_description}
+                />
+                <button type="submit">
+                  {isEditing ? content.outing_update_button : content.outing_add_button}
+                </button>
+              </form>
+            </>
+          )}
+        </>
       )}
 
       <hr />
@@ -250,41 +289,39 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
       {loading ? (
         <p>{content.loading || "Loading..."}</p>
       ) : (
-      <ul style={{ listStyle: "none", padding: 0 }}>
-        {activities.map((activity) => (
-          <li
-            key={activity.id}
-            style={{
-              border:
-                selectedActivity?.id === activity.id
-                  ? "2px solid blue"
-                  : "1px solid #ccc",
-              borderRadius: "8px",
-              marginBottom: "10px",
-              padding: "10px"
-            }}
-          >
-            <strong>{activity.title}</strong> — {activity.date} — {activity.className} — {activity.destination}
-            <p>{activity.description}</p>
-            {isSecretaryAuthorized && (
-            <button onClick={() => handleSelect(activity)}>
-              {content.outing_select_button}
-            </button>
-            )}
-            {isSecretaryAuthorized && (
-            <button
-              onClick={() => handleRemove(activity.id)}
-              style={{ marginLeft: "10px", color: "red" }}
+        <ul style={{ listStyle: "none", padding: 0 }}>
+          {activities.map((activity) => (
+            <li
+              key={activity.id}
+              style={{
+                border: selectedActivity?.id === activity.id ? "2px solid blue" : "1px solid #ccc",
+                borderRadius: "8px",
+                marginBottom: "10px",
+                padding: "10px"
+              }}
             >
-              {content.outing_remove_button}
-            </button>
-            )}
-          </li>
-        ))}
-      </ul>
+              <strong>{activity.title}</strong> — {activity.date} — {activity.className} — {activity.destination}
+              <p>{activity.description}</p>
+              {isSecretaryAuthorized && (
+                <button type="button" onClick={() => handleSelect(activity)}>
+                  {content.outing_select_button}
+                </button>
+              )}
+              {isSecretaryAuthorized && (
+                <button
+                  type="button"
+                  onClick={() => handleRemove(activity.id)}
+                  style={{ marginLeft: "10px", color: "red" }}
+                >
+                  {content.outing_remove_button}
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
       )}
 
-      {isSecretaryAuthorized && selectedActivity && (
+      {isSecretaryAuthorized && selectedActivity && showPlanner && (
         <div style={{ borderTop: "2px solid #ddd", paddingTop: "10px" }}>
           <h3>{content.outing_selected_label}:</h3>
           <p><b>{content.outing_title}:</b> {selectedActivity.title}</p>

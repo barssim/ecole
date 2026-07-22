@@ -124,6 +124,12 @@
   "outing_select_button": "Sélectionner",
   "outing_selected_label": "Détails de la sortie sélectionnée",
 	"activity_secretary_only": "Seule la secrétaire peut ajouter et planifier les activités.",
+	"activity_plan_button": "Planifier une activité",
+	"activity_edit_button": "Modifier l'activité",
+	"activity_cancel_button": "Annuler",
+	"activity_created_success": "Activité enregistrée avec succès.",
+	"activity_updated_success": "Activité mise à jour avec succès.",
+	"activity_deleted_success": "Activité supprimée avec succès.",
 
 	"askSchoolAI": "Posez votre question à l’Inteligence artificiel de l’école",
 	"submit": "envoyer",
