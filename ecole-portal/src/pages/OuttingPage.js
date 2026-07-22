@@ -3,15 +3,23 @@ import en from "../locales/en.json";
 import fr from "../locales/fr.json";
 import ar from "../locales/ar.json";
 
-const OuttingPage = ({ language }) => {
+const OuttingPage = ({ language, activityType = "sorties" }) => {
   const content =
     language === "fr" ? fr :
     language === "en" ? en :
     ar;
   const userRoles = JSON.parse(localStorage.getItem("user_roles") || "[]");
-        const adminRoles = ["manager", "admin"];
-        const isAdminAuthorized = adminRoles.some(role => userRoles.includes(role));
-  const [outings, setOutings] = useState([]);
+  const isSecretaryAuthorized = userRoles.includes("secretary");
+  const storageKey = `activities_${activityType}`;
+  const [outings, setOutings] = useState(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      const parsed = stored ? JSON.parse(stored) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
   const [form, setForm] = useState({
     title: "",
     date: "",
@@ -21,27 +29,41 @@ const OuttingPage = ({ language }) => {
   const [selectedOuting, setSelectedOuting] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
+  const titleByActivityType = {
+    sorties: content.sorties || content.outing_page_title || "Outings",
+    fetes: content.fetes || "Parties",
+    reunions: content.reunions || "Meetings",
+  };
+  const pageTitle = titleByActivityType[activityType] || (content.services || "Activities");
+
+  const saveItems = (items) => {
+    setOutings(items);
+    localStorage.setItem(storageKey, JSON.stringify(items));
+  };
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e) => {
+    if (!isSecretaryAuthorized) {
+      return;
+    }
 
     e.preventDefault();
 
     if (isEditing && selectedOuting) {
       // Update existing outing
-      setOutings(
-        outings.map((o) =>
-          o.id === selectedOuting.id ? { ...o, ...form } : o
-        )
+      const updated = outings.map((o) =>
+        o.id === selectedOuting.id ? { ...o, ...form } : o
       );
+      saveItems(updated);
       setIsEditing(false);
       setSelectedOuting(null);
     } else {
       // Add new outing
       const newOuting = { ...form, id: Date.now() };
-      setOutings([...outings, newOuting]);
+      saveItems([...outings, newOuting]);
     }
 
     // Reset form
@@ -60,8 +82,11 @@ const OuttingPage = ({ language }) => {
   };
 
   const handleRemove = (id) => {
+    if (!isSecretaryAuthorized) {
+      return;
+    }
 
-    setOutings(outings.filter((o) => o.id !== id));
+    saveItems(outings.filter((o) => o.id !== id));
     if (selectedOuting && selectedOuting.id === id) {
       setSelectedOuting(null);
       setIsEditing(false);
@@ -79,8 +104,13 @@ const OuttingPage = ({ language }) => {
         textAlign: isArabic ? "right" : "left"
       }}
     >
-      <h1>{content.outing_page_title}</h1>
+      <h1>{pageTitle}</h1>
       <h3>{content.outing_add_title}</h3>
+      {!isSecretaryAuthorized && (
+        <p style={{ color: "#b45309", marginTop: 4 }}>
+          {content.activity_secretary_only || "Only secretary can add and schedule activities."}
+        </p>
+      )}
 
       <form onSubmit={handleSubmit}>
         <input
@@ -110,7 +140,7 @@ const OuttingPage = ({ language }) => {
           onChange={handleChange}
           placeholder={content.outing_description}
         />
-        {isAdminAuthorized && (
+        {isSecretaryAuthorized && (
         <button type="submit">
           {isEditing ? content.outing_update_button : content.outing_add_button}
         </button>
@@ -136,10 +166,12 @@ const OuttingPage = ({ language }) => {
             <strong>{outing.title}</strong> — {outing.date} —{" "}
             {outing.destination}
             <p>{outing.description}</p>
+            {isSecretaryAuthorized && (
             <button onClick={() => handleSelect(outing)}>
               {content.outing_select_button}
             </button>
-            {isAdminAuthorized && (
+            )}
+            {isSecretaryAuthorized && (
             <button
               onClick={() => handleRemove(outing.id)}
               style={{ marginLeft: "10px", color: "red" }}

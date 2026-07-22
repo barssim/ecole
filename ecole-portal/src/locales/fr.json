@@ -123,6 +123,7 @@
   "outing_remove_button": "Supprimer",
   "outing_select_button": "Sélectionner",
   "outing_selected_label": "Détails de la sortie sélectionnée",
+	"activity_secretary_only": "Seule la secrétaire peut ajouter et planifier les activités.",
 
 	"askSchoolAI": "Posez votre question à l’Inteligence artificiel de l’école",
 	"submit": "envoyer",
