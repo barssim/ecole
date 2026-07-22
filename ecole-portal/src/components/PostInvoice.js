@@ -142,21 +142,37 @@ const PostInvoice = () => {
         {loadingFactures && <p>Chargement...</p>}
         {!loadingFactures && factures.length === 0 && <p>Aucune facture enregistrée.</p>}
         {!loadingFactures && factures.length > 0 && (
-          <div style={{ display: 'grid', gap: 10 }}>
-            {factures.map((facture) => (
-              <div key={facture.id} style={{ border: '1px solid #ddd', padding: 12, borderRadius: 6 }}>
-                <div><strong>{facture.invoiceNumber}</strong></div>
-                <div>Élève: {facture.studentName}</div>
-                <div>Classe: {facture.className}</div>
-                <div>Date: {formatDate(facture.generatedDate)}</div>
-                <div>Total: {Number(facture.totalAmount || 0).toFixed(2)} {facture.currency || 'MAD'}</div>
-              </div>
-            ))}
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <thead style={{ background: '#dbeafe', color: '#1e3a8a' }}>
+                <tr>
+                  <th style={th}>Facture</th>
+                  <th style={th}>Élève</th>
+                  <th style={th}>Classe</th>
+                  <th style={th}>Date</th>
+                  <th style={th}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {factures.map((facture, index) => (
+                  <tr key={facture.id} style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}>
+                    <td style={td}><strong>{facture.invoiceNumber}</strong></td>
+                    <td style={td}>{facture.studentName}</td>
+                    <td style={td}>{facture.className}</td>
+                    <td style={td}>{formatDate(facture.generatedDate)}</td>
+                    <td style={td}>{Number(facture.totalAmount || 0).toFixed(2)} {facture.currency || 'MAD'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
     </div>
   );
 };
+
+const th = { padding: '8px 12px', textAlign: 'left', fontWeight: 600 };
+const td = { padding: '8px 12px' };
 
 export default PostInvoice;

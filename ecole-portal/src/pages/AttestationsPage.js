@@ -248,71 +248,88 @@ const AttestationsPage = ({ language }) => {
       />
 
       {/* Attestation list */}
-      <ul className="space-y-4">
-        {filtered.map((attestation) => (
-          <li key={attestation.id} className="bg-gray-100 p-4 rounded flex justify-between items-center">
-            <div>
-              <p className="font-semibold">{attestation.title}</p>
-              <p className="text-sm text-gray-500">🗓 {attestation.date}</p>
-              {attestation.reference && (
-                <p className="text-xs text-gray-400">#{attestation.reference}</p>
-              )}
-              {attestation.status && (
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                  STATUS_COLORS[attestation.status] || 'bg-gray-200 text-gray-600'
-                }`}>
-                  {attestation.status === 'pending'
-                    ? content.attestation_statusPending
-                    : attestation.status === 'rejected'
-                      ? content.attestation_statusRejected
-                      : content.attestation_statusApproved}
-                </span>
-              )}
-            </div>
-            <div className="space-x-2">
-              {canManageAttestations && attestation.status === 'pending' && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => handleStatusUpdate(attestation.id, 'approved')}
-                    className="bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700 text-sm"
-                  >
-                    {content.attestation_approveButton}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleStatusUpdate(attestation.id, 'rejected')}
-                    className="bg-rose-600 text-white px-3 py-1 rounded hover:bg-rose-700 text-sm"
-                  >
-                    {content.attestation_rejectButton}
-                  </button>
-                </>
-              )}
-              <button
-                type="button"
-                disabled={attestation.status === 'pending'}
-                onClick={() => handleView(attestation.id)}
-                className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {content.attestation_viewButton}
-              </button>
-              <button
-                type="button"
-                disabled={attestation.status === 'pending'}
-                onClick={() => handleDownload(attestation.id)}
-                className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {content.attestation_downloadButton}
-              </button>
-            </div>
-          </li>
-        ))}
-        {filtered.length === 0 && (
-          <li className="italic text-gray-500">{content.attestation_noResults}</li>
-        )}
-      </ul>
+      {filtered.length === 0 ? (
+        <p className="italic text-gray-500">{content.attestation_noResults}</p>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+            <thead style={{ background: '#dbeafe', color: '#1e3a8a' }}>
+              <tr>
+                <th style={th}>{content.attestation_title}</th>
+                <th style={th}>{content.date || 'Date'}</th>
+                <th style={th}>{content.payment_reference || 'Référence'}</th>
+                <th style={th}>{content.presence_status || 'Statut'}</th>
+                <th style={th}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((attestation, index) => (
+                <tr key={attestation.id} style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}>
+                  <td style={td}><strong>{attestation.title}</strong></td>
+                  <td style={td}>{attestation.date}</td>
+                  <td style={td}>{attestation.reference ? `#${attestation.reference}` : '-'}</td>
+                  <td style={td}>
+                    {attestation.status && (
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        STATUS_COLORS[attestation.status] || 'bg-gray-200 text-gray-600'
+                      }`}>
+                        {attestation.status === 'pending'
+                          ? content.attestation_statusPending
+                          : attestation.status === 'rejected'
+                            ? content.attestation_statusRejected
+                            : content.attestation_statusApproved}
+                      </span>
+                    )}
+                  </td>
+                  <td style={td}>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {canManageAttestations && attestation.status === 'pending' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleStatusUpdate(attestation.id, 'approved')}
+                            className="bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700 text-sm"
+                          >
+                            {content.attestation_approveButton}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleStatusUpdate(attestation.id, 'rejected')}
+                            className="bg-rose-600 text-white px-3 py-1 rounded hover:bg-rose-700 text-sm"
+                          >
+                            {content.attestation_rejectButton}
+                          </button>
+                        </>
+                      )}
+                      <button
+                        type="button"
+                        disabled={attestation.status === 'pending'}
+                        onClick={() => handleView(attestation.id)}
+                        className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {content.attestation_viewButton}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={attestation.status === 'pending'}
+                        onClick={() => handleDownload(attestation.id)}
+                        className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {content.attestation_downloadButton}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
+
+const th = { padding: '8px 12px', textAlign: 'left', fontWeight: 600 };
+const td = { padding: '8px 12px' };
 
 export default AttestationsPage;

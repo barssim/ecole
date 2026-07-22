@@ -220,46 +220,33 @@ const PaymentsPage = ({ language }) => {
       <section className="all-invoices-section">
         <h2>{content?.payment_allInvoices || 'Toutes les Factures Générées'}</h2>
         {allNotices && allNotices.length > 0 ? (
-          <div className="invoices-list">
-            {allNotices.map((notice) => (
-              <div key={notice.id} className="invoice-item">
-                <div className="invoice-item-header">
-                  <div className="invoice-item-number">
-                    <strong>{notice.invoiceNumber}</strong>
-                  </div>
-                  <div className={`status-badge ${getStatusBadgeClass(notice.status)}`}>
-                    {getStatusLabel(notice.status)}
-                  </div>
-                </div>
-                <div className="invoice-item-details">
-                  <div className="detail-row">
-                    <label>{content?.payment_studentName || 'Élève'}:</label>
-                    <span>{notice.studentName}</span>
-                  </div>
-                  <div className="detail-row">
-                    <label>{content?.payment_class || 'Classe'}:</label>
-                    <span>{notice.className}</span>
-                  </div>
-                  <div className="detail-row">
-                    <label>{content?.payment_invoiceDate || 'Date de facture'}:</label>
-                    <span>{formatDate(notice.invoiceDate)}</span>
-                  </div>
-                  <div className="detail-row">
-                    <label>{content?.payment_dueDate || 'Échéance'}:</label>
-                    <span>{formatDate(notice.dueDate)}</span>
-                  </div>
-                  {notice.paidDate && (
-                    <div className="detail-row">
-                      <label>{content?.payment_paidDate || 'Date de paiement'}:</label>
-                      <span>{formatDate(notice.paidDate)}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="invoice-item-amount">
-                  <strong>{notice.totalAmount.toFixed(2)} {notice.currency}</strong>
-                </div>
-              </div>
-            ))}
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <thead style={{ background: '#dbeafe', color: '#1e3a8a' }}>
+                <tr>
+                  <th style={th}>{content?.payment_reference || 'Facture'}</th>
+                  <th style={th}>{content?.payment_studentName || 'Élève'}</th>
+                  <th style={th}>{content?.payment_class || 'Classe'}</th>
+                  <th style={th}>{content?.payment_invoiceDate || 'Date de facture'}</th>
+                  <th style={th}>{content?.payment_dueDate || 'Échéance'}</th>
+                  <th style={th}>{content?.payment_status || 'Statut'}</th>
+                  <th style={th}>{content?.payment_amount || 'Montant'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allNotices.map((notice, index) => (
+                  <tr key={notice.id} style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}>
+                    <td style={td}><strong>{notice.invoiceNumber}</strong></td>
+                    <td style={td}>{notice.studentName}</td>
+                    <td style={td}>{notice.className}</td>
+                    <td style={td}>{formatDate(notice.invoiceDate)}</td>
+                    <td style={td}>{formatDate(notice.dueDate)}</td>
+                    <td style={td}>{getStatusLabel(notice.status)}</td>
+                    <td style={td}>{notice.totalAmount.toFixed(2)} {notice.currency}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
           <p className="no-data">{content?.payment_noInvoices || 'Aucune facture générée'}</p>

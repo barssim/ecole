@@ -282,140 +282,125 @@ const ClassesPage = ({ language }) => {
         )}
       </form>
 
-      {classes.map((cls) => (
-        <div key={cls.id} className="bg-gray-100 rounded shadow p-4">
-          <div className="flex justify-between items-center">
-            {editingId === cls.id ? (
-              <div className="flex items-center gap-2 flex-1 mr-2">
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSaveEdit(cls);
-                    if (e.key === 'Escape') handleCancelEdit();
-                  }}
-                  className="border rounded px-2 py-1 text-sm flex-1"
-                  autoFocus
-                  disabled={savingId === cls.id}
-                />
-                <button
-                  onClick={() => handleSaveEdit(cls)}
-                  disabled={savingId === cls.id}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-sm disabled:opacity-60"
-                >
-                  {savingId === cls.id ? '...' : content.classes_editSave}
-                </button>
-                <button
-                  onClick={handleCancelEdit}
-                  disabled={savingId === cls.id}
-                  className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded text-sm"
-                >
-                  {content.classes_editCancel}
-                </button>
-              </div>
-            ) : (
-              <span className="font-semibold text-lg">{cls.name}</span>
-            )}
-            <div className="space-x-2">
-              <button
-                onClick={() => toggleExpand(cls.id)}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
-              >
-                {expandedClassId === cls.id
-                  ? content.classes_hideStudents
-                  : content.classes_showStudents}
-              </button>
-              <button
-                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm disabled:opacity-60"
-                onClick={() => handleAddStudentClick(cls)}
-                disabled={addingStudentToClassId === cls.id || editingId === cls.id}
-              >
-                {content.classes_addStudent}
-              </button>
-              <button
-                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm disabled:opacity-60"
-                onClick={() => handleEditClass(cls)}
-                disabled={editingId !== null || deletingId === cls.id}
-              >
-                {content.classes_editClass}
-              </button>
-              <button
-                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm disabled:opacity-60"
-                onClick={() => handleDeleteClass(cls)}
-                disabled={deletingId === cls.id || editingId === cls.id}
-              >
-                {deletingId === cls.id ? '...' : content.classes_removeClass}
-              </button>
-            </div>
-          </div>
-
-          {expandedClassId === cls.id && (
-            <div className="mt-3">
-              <ul className="ml-4 list-disc list-inside text-sm space-y-1">
-                {cls.students.length > 0 ? (
-                  cls.students.map((student, index) => (
-                    <li key={index} className="flex items-center justify-between pr-2">
-                      <span>{student}</span>
-                      <button
-                        onClick={() => handleRemoveStudent(cls, student)}
-                        disabled={
-                          removingStudent?.classId === cls.id &&
-                          removingStudent?.name === student
-                        }
-                        className="ml-2 text-red-400 hover:text-red-600 text-xs disabled:opacity-50"
-                        title={content.classes_removeStudentTooltip}
-                      >
-                        {removingStudent?.classId === cls.id && removingStudent?.name === student
-                          ? '...'
-                          : '✕'}
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+          <thead style={{ background: '#dbeafe', color: '#1e3a8a' }}>
+            <tr>
+              <th style={th}>{content.classes_title}</th>
+              <th style={th}>{content.students}</th>
+              <th style={th}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {classes.map((cls, index) => (
+              <React.Fragment key={cls.id}>
+                <tr style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}>
+                  <td style={td}>
+                    {editingId === cls.id ? (
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveEdit(cls);
+                            if (e.key === 'Escape') handleCancelEdit();
+                          }}
+                          className="border rounded px-2 py-1 text-sm"
+                          autoFocus
+                          disabled={savingId === cls.id}
+                        />
+                        <button onClick={() => handleSaveEdit(cls)} disabled={savingId === cls.id}>
+                          {savingId === cls.id ? '...' : content.classes_editSave}
+                        </button>
+                        <button onClick={handleCancelEdit} disabled={savingId === cls.id}>
+                          {content.classes_editCancel}
+                        </button>
+                      </div>
+                    ) : (
+                      <strong>{cls.name}</strong>
+                    )}
+                  </td>
+                  <td style={td}>{cls.students.length}</td>
+                  <td style={td}>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <button onClick={() => toggleExpand(cls.id)}>
+                        {expandedClassId === cls.id ? content.classes_hideStudents : content.classes_showStudents}
                       </button>
-                    </li>
-                  ))
-                ) : (
-                  <li className="italic text-gray-500">
-                    {content.classes_noStudents}
-                  </li>
-                )}
-              </ul>
+                      <button onClick={() => handleAddStudentClick(cls)} disabled={addingStudentToClassId === cls.id || editingId === cls.id}>
+                        {content.classes_addStudent}
+                      </button>
+                      <button onClick={() => handleEditClass(cls)} disabled={editingId !== null || deletingId === cls.id}>
+                        {content.classes_editClass}
+                      </button>
+                      <button onClick={() => handleDeleteClass(cls)} disabled={deletingId === cls.id || editingId === cls.id}>
+                        {deletingId === cls.id ? '...' : content.classes_removeClass}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {expandedClassId === cls.id && (
+                  <tr style={{ background: '#fff' }}>
+                    <td style={td} colSpan={3}>
+                      <ul className="ml-4 list-disc list-inside text-sm space-y-1">
+                        {cls.students.length > 0 ? (
+                          cls.students.map((student, studentIndex) => (
+                            <li key={studentIndex} className="flex items-center justify-between pr-2">
+                              <span>{student}</span>
+                              <button
+                                onClick={() => handleRemoveStudent(cls, student)}
+                                disabled={
+                                  removingStudent?.classId === cls.id &&
+                                  removingStudent?.name === student
+                                }
+                                className="ml-2 text-red-400 hover:text-red-600 text-xs disabled:opacity-50"
+                                title={content.classes_removeStudentTooltip}
+                              >
+                                {removingStudent?.classId === cls.id && removingStudent?.name === student ? '...' : '✕'}
+                              </button>
+                            </li>
+                          ))
+                        ) : (
+                          <li className="italic text-gray-500">{content.classes_noStudents}</li>
+                        )}
+                      </ul>
 
-              {addingStudentToClassId === cls.id && (
-                <div className="mt-2 flex items-center gap-2 ml-4">
-                  <input
-                    type="text"
-                    value={newStudentName}
-                    onChange={(e) => setNewStudentName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleSaveStudent(cls);
-                      if (e.key === 'Escape') handleCancelAddStudent();
-                    }}
-                    placeholder={content.classes_studentPlaceholder}
-                    className="border rounded px-2 py-1 text-sm flex-1"
-                    autoFocus
-                    disabled={savingStudentId === cls.id}
-                  />
-                  <button
-                    onClick={() => handleSaveStudent(cls)}
-                    disabled={savingStudentId === cls.id}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm disabled:opacity-60"
-                  >
-                    {savingStudentId === cls.id ? '...' : content.classes_studentSave}
-                  </button>
-                  <button
-                    onClick={handleCancelAddStudent}
-                    disabled={savingStudentId === cls.id}
-                    className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded text-sm"
-                  >
-                    {content.classes_editCancel}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      ))}
+                      {addingStudentToClassId === cls.id && (
+                        <div className="mt-2 flex items-center gap-2 ml-4">
+                          <input
+                            type="text"
+                            value={newStudentName}
+                            onChange={(e) => setNewStudentName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleSaveStudent(cls);
+                              if (e.key === 'Escape') handleCancelAddStudent();
+                            }}
+                            placeholder={content.classes_studentPlaceholder}
+                            className="border rounded px-2 py-1 text-sm flex-1"
+                            autoFocus
+                            disabled={savingStudentId === cls.id}
+                          />
+                          <button onClick={() => handleSaveStudent(cls)} disabled={savingStudentId === cls.id}>
+                            {savingStudentId === cls.id ? '...' : content.classes_studentSave}
+                          </button>
+                          <button onClick={handleCancelAddStudent} disabled={savingStudentId === cls.id}>
+                            {content.classes_editCancel}
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
+
+const th = { padding: '8px 12px', textAlign: 'left', fontWeight: 600 };
+const td = { padding: '8px 12px' };
 
 export default ClassesPage;
