@@ -65,7 +65,7 @@ if (language === "fr") {
 				)}
 				{isLoggedIn && (
 					<button className="buttonStyle" onClick={() => (window.location.href = "/profile")}>
-						Mon profil
+						{content.profile}
 					</button>
 				)}
 				<button className="buttonStyle" onClick={() => (window.location.href = isLoggedIn ? "/logout" : "/login")}>

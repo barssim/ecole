@@ -26,3 +26,10 @@ VALUES
 (3, 'Mohamed'),
 (3, 'Hajar');
 
+INSERT IGNORE INTO tb_professor_attendance
+(id, teacher_id, teacher_name, attendance_date, scheduled_time, check_in_time, status, notes, updated_at)
+VALUES
+(1, 101, 'Mme Benali', '2026-07-22', '08:00:00', '07:55:00', 'present', 'Cours de mathématiques', '2026-07-22 07:55:00'),
+(2, 102, 'M. Alaoui', '2026-07-22', '08:30:00', '08:40:00', 'late', 'Retard signalé', '2026-07-22 08:40:00'),
+(3, 103, 'Mme Idrissi', '2026-07-22', '09:00:00', NULL, 'absent', 'Absence déclarée', '2026-07-22 08:15:00');
+

@@ -38,6 +38,8 @@
   "roleTeacher": "معلم",
   "roleAdmin": "مشرف",
   "roleManager": "مدير",
+  "roleSecretary": "سكرتير",
   "roleFinance": "المالية",
-  "roleRequired": "يرجى تحديد دور"
+  "roleRequired": "يرجى تحديد دور",
+  "profile": "ملفي الشخصي"
 }

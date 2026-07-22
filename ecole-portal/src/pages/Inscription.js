@@ -189,6 +189,7 @@ if (language === "fr") {
 					<option value="teacher">{content.roleTeacher || "Teacher"}</option>
 					<option value="admin">{content.roleAdmin || "Admin"}</option>
 					<option value="manager">{content.roleManager || "Manager"}</option>
+					<option value="secretary">{content.roleSecretary || "Secretary"}</option>
 					<option value="finance">{content.roleFinance || "Finance"}</option>
 				</select>
 				{error.role && <p className="field-error">{error.role}</p>}

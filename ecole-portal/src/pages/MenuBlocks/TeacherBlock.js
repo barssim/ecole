@@ -57,10 +57,10 @@ const [showActivites, setShowActivites] = useState(false);
              </li>
 <li>
                <Link
-                 to="/enseignant/absence"
+                  to="/enseignant/attendance"
                  className="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-100 inline-block"
                >
-                 {content.teacher_absence}
+                  {content.teacher_attendance || content.teacher_absence}
                </Link>
              </li>
            </ul>

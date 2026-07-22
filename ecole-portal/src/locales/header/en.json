@@ -38,6 +38,8 @@
   "roleTeacher": "Teacher",
   "roleAdmin": "Admin",
   "roleManager": "Manager",
+  "roleSecretary": "Secretary",
   "roleFinance": "Finance",
-  "roleRequired": "Please select a role"
+  "roleRequired": "Please select a role",
+  "profile": "My profile"
 }

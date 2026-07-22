@@ -66,7 +66,7 @@ spring:
         - id: secretary-office
           uri: "http://secretary-office:8095"
           predicates:
-            - Path=/api/attestations,/api/attestations/**,/api/attestationsproduction,/api/attestationsproduction/**,/api/classes,/api/classes/**
+            - Path=/api/attestations,/api/attestations/**,/api/attestationsproduction,/api/attestationsproduction/**,/api/classes,/api/classes/**,/api/presence/**
           filters:
             - StripPrefix=0
 

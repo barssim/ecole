@@ -12,9 +12,9 @@ import ServicesBlock from "./MenuBlocks/ServicesBlock";
 const Menu = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
   const userRoles = JSON.parse(localStorage.getItem("user_roles") || "[]");
-  const adminRoles = ["admin", "manager"];
+  const adminRoles = ["admin", "manager", "secretary"];
     const isAdminAuthorized = adminRoles.some(role => userRoles.includes(role));
-    const attestationRoles = ["student", "admin", "manager"];
+    const attestationRoles = ["student", "admin", "manager", "secretary"];
     const canAccessAdminAttestations = attestationRoles.some(role => userRoles.includes(role));
 
     const teacherRoles = ["teacher", "manager"];
