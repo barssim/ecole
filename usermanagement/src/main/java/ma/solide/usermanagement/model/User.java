@@ -26,7 +26,7 @@ public class User {
 	@Column(length = 255)  // Allow multiple comma-separated roles
 	String role;
 
-	@Column(name = "tenant_id", nullable = false, length = 64, columnDefinition = "varchar(64) default 'default'")
+	@Column(name = "tenant_id", nullable = false, length = 64)
 	String tenantId;
 	
 	String surname;
