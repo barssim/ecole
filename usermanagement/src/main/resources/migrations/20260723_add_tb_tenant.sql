@@ -7,12 +7,40 @@ CREATE TABLE IF NOT EXISTS tb_tenant (
     CONSTRAINT uq_tb_tenant_name UNIQUE (tenant_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Handle legacy typo column name if table already exists with `tenand_id`.
+SET @has_tenand := (
+    SELECT COUNT(*)
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'tb_tenant'
+      AND COLUMN_NAME = 'tenand_id'
+);
+SET @has_tenant := (
+    SELECT COUNT(*)
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'tb_tenant'
+      AND COLUMN_NAME = 'tenant_id'
+);
+SET @rename_tenant_col_sql := IF(
+    @has_tenand = 1 AND @has_tenant = 0,
+    'ALTER TABLE tb_tenant CHANGE COLUMN tenand_id tenant_id VARCHAR(64) NOT NULL',
+    'SELECT 1'
+);
+PREPARE stmt FROM @rename_tenant_col_sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 INSERT IGNORE INTO tb_tenant (tenant_id, tenant_name) VALUES
 ('gardinia', 'Gardinia'),
 ('qods', 'Qods');
 
 ALTER TABLE tb_user
     ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) NULL;
+
+-- FK columns must have matching type/charset/collation.
+ALTER TABLE tb_tenant
+    MODIFY COLUMN tenant_id VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;
 
 -- Backfill old rows first so NOT NULL + FK can be applied safely.
 UPDATE tb_user
@@ -24,7 +52,7 @@ UPDATE tb_user SET tenant_id = 'qods' WHERE surname IN ('manager', 'teacher', 'f
 UPDATE tb_user SET tenant_id = 'gardinia' WHERE surname IN ('admin', 'parent', 'student');
 
 ALTER TABLE tb_user
-    MODIFY COLUMN tenant_id VARCHAR(64) NOT NULL;
+    MODIFY COLUMN tenant_id VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;
 
 SET @fk_exists := (
     SELECT COUNT(*)
