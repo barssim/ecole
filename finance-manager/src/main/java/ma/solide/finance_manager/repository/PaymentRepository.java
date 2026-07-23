@@ -9,8 +9,14 @@ import java.util.List;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Integer> {
-    List<Payment> findByStudentName(String studentName);
-    List<Payment> findByClassName(String className);
-    List<Payment> findByPaymentDateBetween(LocalDate startDate, LocalDate endDate);
+    List<Payment> findByTenantIdAndStudentName(String tenantId, String studentName);
+
+    List<Payment> findByTenantIdAndClassName(String tenantId, String className);
+
+    List<Payment> findByTenantIdAndPaymentDateBetween(String tenantId, LocalDate startDate, LocalDate endDate);
+
+    List<Payment> findByTenantId(String tenantId);
+
+    java.util.Optional<Payment> findByIdAndTenantId(Integer id, String tenantId);
 }
 

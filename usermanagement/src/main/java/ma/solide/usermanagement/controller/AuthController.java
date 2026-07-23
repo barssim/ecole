@@ -32,7 +32,7 @@ public class AuthController {
         // Mock authentication logic (replace with database/user service in production)
         if (userService.existsBySurnameAndPassword(loginRequest.getUsername(), loginRequest.getPassword())) {
             User user = userService.findBySurname(loginRequest.getUsername());
-            String token = jwtUtil.generateToken(loginRequest.getUsername());
+            String token = jwtUtil.generateToken(loginRequest.getUsername(), user.getTenantId(), user.getRole());
             return ResponseEntity.ok(new AuthResponse(token, user));
         } else
             return ResponseEntity.status(401).body("Invalid username or password");
@@ -69,7 +69,9 @@ public class AuthController {
         User createdUser = userService.createUser(user);
         
         // Return response with user and roles
-        return new ResponseEntity<>(new AuthResponse(jwtUtil.generateToken(userDTO.getEmail()), createdUser), 
+        return new ResponseEntity<>(new AuthResponse(
+                jwtUtil.generateToken(createdUser.getSurname(), createdUser.getTenantId(), createdUser.getRole()),
+                createdUser),
                 HttpStatus.CREATED);
     }
 
@@ -98,6 +100,7 @@ public class AuthController {
         private final String username;
         private final String firstname;
         private final String email;
+        private final String tenantId;
         private final java.util.List<String> roles;
 
         public UserResponse(User user) {
@@ -105,6 +108,7 @@ public class AuthController {
             this.username = user.getSurname();
             this.firstname = user.getFirstname();
             this.email = user.getEmail();
+            this.tenantId = user.getTenantId();
             // Convert single role to list of roles
             this.roles = user.getRole() != null ? 
                 java.util.Arrays.asList(user.getRole().split(",")) : 
@@ -125,6 +129,10 @@ public class AuthController {
 
         public String getEmail() {
             return email;
+        }
+
+        public String getTenantId() {
+            return tenantId;
         }
 
         public java.util.List<String> getRoles() {

@@ -3,6 +3,7 @@ package ma.solide.finance_manager.service;
 import ma.solide.finance_manager.dto.PaymentDTO;
 import ma.solide.finance_manager.entity.Payment;
 import ma.solide.finance_manager.repository.PaymentRepository;
+import ma.solide.finance_manager.tenant.TenantContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -24,7 +25,8 @@ public class PaymentService {
      * Get all payments for a specific student
      */
     public List<PaymentDTO> getPaymentsByStudent(String studentName) {
-        List<Payment> payments = paymentRepository.findByStudentName(studentName);
+        String tenantId = TenantContext.getRequiredTenantId();
+        List<Payment> payments = paymentRepository.findByTenantIdAndStudentName(tenantId, studentName);
         return payments.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -34,7 +36,8 @@ public class PaymentService {
      * Get all payments for a specific class
      */
     public List<PaymentDTO> getPaymentsByClass(String className) {
-        List<Payment> payments = paymentRepository.findByClassName(className);
+        String tenantId = TenantContext.getRequiredTenantId();
+        List<Payment> payments = paymentRepository.findByTenantIdAndClassName(tenantId, className);
         return payments.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -44,7 +47,8 @@ public class PaymentService {
      * Get all payments
      */
     public List<PaymentDTO> getAllPayments() {
-        List<Payment> payments = paymentRepository.findAll();
+        String tenantId = TenantContext.getRequiredTenantId();
+        List<Payment> payments = paymentRepository.findByTenantId(tenantId);
         return payments.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -54,6 +58,7 @@ public class PaymentService {
      * Record a new payment
      */
     public PaymentDTO recordPayment(PaymentDTO paymentDTO) {
+        String tenantId = TenantContext.getRequiredTenantId();
         if (paymentDTO.getStudentName() == null || paymentDTO.getStudentName().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nom de l'élève requis");
         }
@@ -62,6 +67,7 @@ public class PaymentService {
         }
 
         Payment payment = new Payment();
+        payment.setTenantId(tenantId);
         payment.setStudentName(paymentDTO.getStudentName().trim());
         payment.setClassName(paymentDTO.getClassName() != null ? paymentDTO.getClassName() : "-");
         payment.setAmount(paymentDTO.getAmount());
@@ -79,7 +85,8 @@ public class PaymentService {
      * Get payment by ID
      */
     public PaymentDTO getPaymentById(Integer id) {
-        Payment payment = paymentRepository.findById(id)
+        String tenantId = TenantContext.getRequiredTenantId();
+        Payment payment = paymentRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Paiement non trouvé"));
         return toDTO(payment);
     }
@@ -88,7 +95,8 @@ public class PaymentService {
      * Update payment
      */
     public PaymentDTO updatePayment(Integer id, PaymentDTO paymentDTO) {
-        Payment payment = paymentRepository.findById(id)
+        String tenantId = TenantContext.getRequiredTenantId();
+        Payment payment = paymentRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Paiement non trouvé"));
 
         if (paymentDTO.getStudentName() != null && !paymentDTO.getStudentName().trim().isEmpty()) {
@@ -124,7 +132,8 @@ public class PaymentService {
      * Delete payment
      */
     public void deletePayment(Integer id) {
-        Payment payment = paymentRepository.findById(id)
+        String tenantId = TenantContext.getRequiredTenantId();
+        Payment payment = paymentRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Paiement non trouvé"));
         paymentRepository.delete(payment);
     }

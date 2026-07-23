@@ -8,6 +8,8 @@ import java.util.List;
 
 @Repository
 public interface FactureRepository extends JpaRepository<Facture, Integer> {
-    List<Facture> findAllByOrderByGeneratedDateDescIdDesc();
+    List<Facture> findByTenantIdOrderByGeneratedDateDescIdDesc(String tenantId);
+
+    List<Facture> findByTenantId(String tenantId);
 }
 

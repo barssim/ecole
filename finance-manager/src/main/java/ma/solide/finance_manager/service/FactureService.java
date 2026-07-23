@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ma.solide.finance_manager.dto.FactureDTO;
 import ma.solide.finance_manager.entity.Facture;
 import ma.solide.finance_manager.repository.FactureRepository;
+import ma.solide.finance_manager.tenant.TenantContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,7 @@ public class FactureService {
     }
 
     public FactureDTO saveGeneratedFacture(String studentName, String className, List<Map<String, Object>> items) {
+        String tenantId = TenantContext.getRequiredTenantId();
         if (studentName == null || studentName.trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nom de l'eleve requis");
         }
@@ -41,7 +43,8 @@ public class FactureService {
                 .sum();
 
         Facture facture = new Facture();
-        facture.setInvoiceNumber(generateInvoiceNumber());
+        facture.setTenantId(tenantId);
+        facture.setInvoiceNumber(generateInvoiceNumber(tenantId));
         facture.setStudentName(studentName.trim());
         facture.setClassName(className == null || className.trim().isEmpty() ? "-" : className.trim());
         facture.setCurrency("MAD");
@@ -53,7 +56,8 @@ public class FactureService {
     }
 
     public List<FactureDTO> getAllFactures() {
-        return factureRepository.findAllByOrderByGeneratedDateDescIdDesc().stream()
+        String tenantId = TenantContext.getRequiredTenantId();
+        return factureRepository.findByTenantIdOrderByGeneratedDateDescIdDesc(tenantId).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -101,9 +105,9 @@ public class FactureService {
         }
     }
 
-    private String generateInvoiceNumber() {
+    private String generateInvoiceNumber(String tenantId) {
         YearMonth now = YearMonth.now();
-        long count = factureRepository.findAll().stream()
+        long count = factureRepository.findByTenantId(tenantId).stream()
                 .filter(f -> f.getGeneratedDate() != null
                         && f.getGeneratedDate().getYear() == now.getYear()
                         && f.getGeneratedDate().getMonthValue() == now.getMonthValue())

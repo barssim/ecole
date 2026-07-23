@@ -9,9 +9,16 @@ import java.util.Optional;
 
 @Repository
 public interface PaymentNoticeRepository extends JpaRepository<PaymentNotice, Integer> {
-    List<PaymentNotice> findByStudentName(String studentName);
-    List<PaymentNotice> findByClassName(String className);
-    List<PaymentNotice> findByStatus(String status);
-    Optional<PaymentNotice> findByInvoiceNumber(String invoiceNumber);
+    List<PaymentNotice> findByTenantIdAndStudentName(String tenantId, String studentName);
+
+    List<PaymentNotice> findByTenantIdAndClassName(String tenantId, String className);
+
+    List<PaymentNotice> findByTenantIdAndStatus(String tenantId, String status);
+
+    Optional<PaymentNotice> findByTenantIdAndInvoiceNumber(String tenantId, String invoiceNumber);
+
+    List<PaymentNotice> findByTenantId(String tenantId);
+
+    Optional<PaymentNotice> findByIdAndTenantId(Integer id, String tenantId);
 }
 

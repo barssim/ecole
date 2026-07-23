@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 
 import ma.solide.usermanagement.model.User;
 import ma.solide.usermanagement.repository.UserRepository;
+import ma.solide.usermanagement.tenant.TenantContext;
 
 @Service
 public class UserService {
@@ -24,25 +25,29 @@ public class UserService {
 		if (userNo == null) {
 			throw new IllegalArgumentException("User number cannot be null");
 		}
-		return userRepository.findById(userNo);
+		String tenantId = TenantContext.getRequiredTenantId();
+		return userRepository.findByTenantIdAndUserno(tenantId, userNo);
 	}
 
 	public boolean existsBySurnameAndPassword(String username, String password)
 	{
-		return userRepository.existsBySurnameAndPassword(username, password);
+		String tenantId = TenantContext.getRequiredTenantId();
+		return userRepository.existsByTenantIdAndSurnameAndPassword(tenantId, username, password);
 		
 	}
 
 	public User findBySurname(String surname) {
-		return userRepository.findBySurname(surname).orElse(null);
+		String tenantId = TenantContext.getRequiredTenantId();
+		return userRepository.findByTenantIdAndSurname(tenantId, surname).orElse(null);
 	}
 
 	public List<User> findAllUsers() {
-		return userRepository.findAll();
+		String tenantId = TenantContext.getRequiredTenantId();
+		return userRepository.findByTenantId(tenantId);
 	}
 
 	public User createUser(User user) {
-
+		user.setTenantId(TenantContext.getRequiredTenantId());
 		return userRepository.save(user); // Inserts or updates the user
 	}
 
@@ -50,7 +55,8 @@ public class UserService {
 		if (userNo == null) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User id is required");
 		}
-		return userRepository.findById(userNo)
+		String tenantId = TenantContext.getRequiredTenantId();
+		return userRepository.findByTenantIdAndUserno(tenantId, userNo)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 	}
 

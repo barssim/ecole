@@ -3,6 +3,7 @@ package ma.solide.finance_manager.service;
 import ma.solide.finance_manager.dto.PaymentNoticeDTO;
 import ma.solide.finance_manager.entity.PaymentNotice;
 import ma.solide.finance_manager.repository.PaymentNoticeRepository;
+import ma.solide.finance_manager.tenant.TenantContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -25,7 +26,8 @@ public class PaymentNoticeService {
      * Get all payment notices
      */
     public List<PaymentNoticeDTO> getAllNotices() {
-        List<PaymentNotice> notices = paymentNoticeRepository.findAll();
+        String tenantId = TenantContext.getRequiredTenantId();
+        List<PaymentNotice> notices = paymentNoticeRepository.findByTenantId(tenantId);
         return notices.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -35,7 +37,8 @@ public class PaymentNoticeService {
      * Get payment notice by ID
      */
     public PaymentNoticeDTO getNoticeById(Integer id) {
-        PaymentNotice notice = paymentNoticeRepository.findById(id)
+        String tenantId = TenantContext.getRequiredTenantId();
+        PaymentNotice notice = paymentNoticeRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Facture non trouvée"));
         return toDTO(notice);
     }
@@ -44,7 +47,8 @@ public class PaymentNoticeService {
      * Get payment notices for a specific student
      */
     public List<PaymentNoticeDTO> getNoticesByStudent(String studentName) {
-        List<PaymentNotice> notices = paymentNoticeRepository.findByStudentName(studentName);
+        String tenantId = TenantContext.getRequiredTenantId();
+        List<PaymentNotice> notices = paymentNoticeRepository.findByTenantIdAndStudentName(tenantId, studentName);
         return notices.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -54,7 +58,8 @@ public class PaymentNoticeService {
      * Get payment notice for current month/student (the "current" invoice)
      */
     public PaymentNoticeDTO getCurrentNotice(String studentName) {
-        List<PaymentNotice> notices = paymentNoticeRepository.findByStudentName(studentName);
+        String tenantId = TenantContext.getRequiredTenantId();
+        List<PaymentNotice> notices = paymentNoticeRepository.findByTenantIdAndStudentName(tenantId, studentName);
         
         // Return the most recent pending or unpaid notice
         return notices.stream()
@@ -69,6 +74,7 @@ public class PaymentNoticeService {
      * Create a new payment notice
      */
     public PaymentNoticeDTO createNotice(PaymentNoticeDTO noticeDTO) {
+        String tenantId = TenantContext.getRequiredTenantId();
         if (noticeDTO.getStudentName() == null || noticeDTO.getStudentName().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nom de l'élève requis");
         }
@@ -77,7 +83,8 @@ public class PaymentNoticeService {
         }
 
         PaymentNotice notice = new PaymentNotice();
-        notice.setInvoiceNumber(generateInvoiceNumber());
+        notice.setTenantId(tenantId);
+        notice.setInvoiceNumber(generateInvoiceNumber(tenantId));
         notice.setInvoiceDate(noticeDTO.getInvoiceDate() != null ? noticeDTO.getInvoiceDate() : LocalDate.now());
         notice.setDueDate(noticeDTO.getDueDate() != null ? noticeDTO.getDueDate() : LocalDate.now().plusDays(15));
         notice.setStudentName(noticeDTO.getStudentName().trim());
@@ -95,7 +102,8 @@ public class PaymentNoticeService {
      * Update payment notice status
      */
     public PaymentNoticeDTO updateNoticeStatus(Integer id, String status) {
-        PaymentNotice notice = paymentNoticeRepository.findById(id)
+        String tenantId = TenantContext.getRequiredTenantId();
+        PaymentNotice notice = paymentNoticeRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Facture non trouvée"));
 
         if (status == null || status.trim().isEmpty()) {
@@ -120,7 +128,8 @@ public class PaymentNoticeService {
      * Get notices by status
      */
     public List<PaymentNoticeDTO> getNoticesByStatus(String status) {
-        List<PaymentNotice> notices = paymentNoticeRepository.findByStatus(status);
+        String tenantId = TenantContext.getRequiredTenantId();
+        List<PaymentNotice> notices = paymentNoticeRepository.findByTenantIdAndStatus(tenantId, status);
         return notices.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -129,9 +138,9 @@ public class PaymentNoticeService {
     /**
      * Generate unique invoice number
      */
-    private String generateInvoiceNumber() {
+    private String generateInvoiceNumber(String tenantId) {
         YearMonth now = YearMonth.now();
-        long count = paymentNoticeRepository.findAll().stream()
+        long count = paymentNoticeRepository.findByTenantId(tenantId).stream()
                 .filter(n -> n.getInvoiceDate().getYear() == now.getYear() &&
                             n.getInvoiceDate().getMonthValue() == now.getMonthValue())
                 .count();

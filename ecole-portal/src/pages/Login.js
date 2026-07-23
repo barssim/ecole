@@ -5,6 +5,7 @@ import fr from "../locales/header/fr.json";
 import ar from "../locales/header/ar.json";
 import en from "../locales/header/en.json";
 import { useNavigate } from "react-router-dom";
+import { resolveTenantFromHost, setTenantId } from "../tenant";
 
 
 const Login = ({language}) => {
@@ -91,6 +92,7 @@ if (language === "fr") {
 			// Store user roles - always store a valid JSON array
 			const userRoles = (user && Array.isArray(user.roles)) ? user.roles : [];
 			localStorage.setItem("user_roles", JSON.stringify(userRoles));
+			setTenantId(user?.tenantId || response.data?.tenantId || resolveTenantFromHost());
 
 			console.log('Login successful! Stored roles:', userRoles);
 
