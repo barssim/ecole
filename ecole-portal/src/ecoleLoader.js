@@ -1,12 +1,12 @@
-const hostname = window.location.hostname;
+import { getTenantId } from "./tenant";
 
-let ecoleConfig;
-
-if (hostname.includes("gardinia")) {
-  ecoleConfig = require("./customizations/gardinia").default;
-} else {
-  ecoleConfig = require("./customizations/qods").default;
+const customizationMap = {
+  gardinia: () => require("./customizations/gardinia").default,
+  qods: () => require("./customizations/qods").default,
 };
 
-export default ecoleConfig;
+const tenantId = getTenantId();
+const loadCustomization = customizationMap[tenantId] || customizationMap.qods;
+
+export default loadCustomization();
 
