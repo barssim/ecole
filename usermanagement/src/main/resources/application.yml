@@ -35,10 +35,11 @@ management:
     health:
       show-details: always
 jwt:
-  secret: 1234567890
+  secret: 239487234972394e98er023r934o9342oi4uew0923w8734928374
   expiration: 3600000 # 1 hour in milliseconds (optional)
 
 eureka:
+
   client:
     register-with-eureka: true
     fetch-registry: true
