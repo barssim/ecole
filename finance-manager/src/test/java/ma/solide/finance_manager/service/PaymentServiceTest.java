@@ -3,6 +3,8 @@ package ma.solide.finance_manager.service;
 import ma.solide.finance_manager.dto.PaymentDTO;
 import ma.solide.finance_manager.entity.Payment;
 import ma.solide.finance_manager.repository.PaymentRepository;
+import ma.solide.finance_manager.tenant.TenantContext;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +25,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {
 
+    private static final String TENANT_ID = "test-tenant";
+
     @Mock
     private PaymentRepository paymentRepository;
 
@@ -34,17 +38,24 @@ class PaymentServiceTest {
 
     @BeforeEach
     void setUp() {
+        TenantContext.setTenantId(TENANT_ID);
+
         mockPayment = new Payment("John Doe", "5th Grade", 1500.0, "MAD", "Cash", LocalDate.now());
         mockPayment.setId(1);
         
         mockPaymentDTO = new PaymentDTO(1, "John Doe", "5th Grade", 1500.0, "MAD", "Cash", LocalDate.now());
     }
 
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
+    }
+
     @Test
     void testGetPaymentsByStudent() {
         // Arrange
         List<Payment> payments = Arrays.asList(mockPayment);
-        when(paymentRepository.findByStudentName("John Doe")).thenReturn(payments);
+        when(paymentRepository.findByTenantIdAndStudentName(TENANT_ID, "John Doe")).thenReturn(payments);
 
         // Act
         List<PaymentDTO> result = paymentService.getPaymentsByStudent("John Doe");
@@ -53,7 +64,7 @@ class PaymentServiceTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("John Doe", result.get(0).getStudentName());
-        verify(paymentRepository, times(1)).findByStudentName("John Doe");
+        verify(paymentRepository, times(1)).findByTenantIdAndStudentName(TENANT_ID, "John Doe");
     }
 
     @Test
@@ -88,7 +99,7 @@ class PaymentServiceTest {
     @Test
     void testGetPaymentById() {
         // Arrange
-        when(paymentRepository.findById(1)).thenReturn(Optional.of(mockPayment));
+        when(paymentRepository.findByIdAndTenantId(1, TENANT_ID)).thenReturn(Optional.of(mockPayment));
 
         // Act
         PaymentDTO result = paymentService.getPaymentById(1);
@@ -96,13 +107,13 @@ class PaymentServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals("John Doe", result.getStudentName());
-        verify(paymentRepository, times(1)).findById(1);
+        verify(paymentRepository, times(1)).findByIdAndTenantId(1, TENANT_ID);
     }
 
     @Test
     void testGetPaymentByIdNotFound() {
         // Arrange
-        when(paymentRepository.findById(999)).thenReturn(Optional.empty());
+        when(paymentRepository.findByIdAndTenantId(999, TENANT_ID)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(ResponseStatusException.class, () -> paymentService.getPaymentById(999));
@@ -111,7 +122,7 @@ class PaymentServiceTest {
     @Test
     void testDeletePayment() {
         // Arrange
-        when(paymentRepository.findById(1)).thenReturn(Optional.of(mockPayment));
+        when(paymentRepository.findByIdAndTenantId(1, TENANT_ID)).thenReturn(Optional.of(mockPayment));
 
         // Act
         paymentService.deletePayment(1);
