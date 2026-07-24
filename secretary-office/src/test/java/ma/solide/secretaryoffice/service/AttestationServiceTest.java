@@ -9,6 +9,8 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -19,15 +21,28 @@ import org.springframework.web.server.ResponseStatusException;
 import ma.solide.secretaryoffice.dto.AttestationResponse;
 import ma.solide.secretaryoffice.model.Attestation;
 import ma.solide.secretaryoffice.repository.AttestationRepository;
+import ma.solide.secretaryoffice.tenant.TenantContext;
 
 @ExtendWith(MockitoExtension.class)
 class AttestationServiceTest {
+
+    private static final String TENANT = "gardinia";
 
     @Mock
     private AttestationRepository attestationRepository;
 
     @InjectMocks
     private AttestationService attestationService;
+
+    @BeforeEach
+    void setTenant() {
+        TenantContext.setTenantId(TENANT);
+    }
+
+    @AfterEach
+    void clearTenant() {
+        TenantContext.clear();
+    }
 
     @Test
     void updateStatusShouldSetApprovedAndPersist() {
@@ -46,7 +61,7 @@ class AttestationServiceTest {
                 .reference("REF-1")
                 .build();
 
-        when(attestationRepository.findById(10)).thenReturn(Optional.of(attestation));
+        when(attestationRepository.findByIdAndTenantId(10, TENANT)).thenReturn(Optional.of(attestation));
         when(attestationRepository.save(attestation)).thenReturn(attestation);
 
         AttestationResponse response = attestationService.updateStatus(10, "approved");

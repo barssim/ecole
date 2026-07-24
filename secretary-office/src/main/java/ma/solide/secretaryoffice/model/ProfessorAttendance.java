@@ -27,6 +27,9 @@ public class ProfessorAttendance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "tenant_id")
+    private String tenantId;
+
     @Column(nullable = false, name = "teacher_id")
     private Integer teacherId;
 

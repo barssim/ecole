@@ -8,14 +8,16 @@ import ma.solide.secretaryoffice.model.Attestation;
 
 public interface AttestationRepository extends JpaRepository<Attestation, Integer> {
 
-    List<Attestation> findAllByOrderByDateDesc();
+    List<Attestation> findAllByTenantIdOrderByDateDesc(String tenantId);
 
-    List<Attestation> findByTitleContainingIgnoreCaseOrderByDateDesc(String search);
+    List<Attestation> findByTenantIdAndTitleContainingIgnoreCaseOrderByDateDesc(String tenantId, String search);
 
-    List<Attestation> findByUserIdOrderByDateDesc(Integer userId);
+    List<Attestation> findByTenantIdAndUserIdOrderByDateDesc(String tenantId, Integer userId);
 
-    List<Attestation> findByUserIdAndTitleContainingIgnoreCaseOrderByDateDesc(Integer userId, String search);
+    List<Attestation> findByTenantIdAndUserIdAndTitleContainingIgnoreCaseOrderByDateDesc(String tenantId, Integer userId, String search);
 
-    boolean existsByUserIdAndTypeAndStatus(Integer userId, String type, String status);
+    boolean existsByTenantIdAndUserIdAndTypeAndStatus(String tenantId, Integer userId, String type, String status);
+
+    java.util.Optional<Attestation> findByIdAndTenantId(Integer id, String tenantId);
 }
 

@@ -15,6 +15,7 @@ import ma.solide.secretaryoffice.dto.AttestationRequestDTO;
 import ma.solide.secretaryoffice.dto.AttestationResponse;
 import ma.solide.secretaryoffice.model.Attestation;
 import ma.solide.secretaryoffice.repository.AttestationRepository;
+import ma.solide.secretaryoffice.tenant.TenantContext;
 
 @Service
 public class AttestationService {
@@ -36,17 +37,18 @@ public class AttestationService {
     }
 
     public List<AttestationResponse> getAttestations(Integer userId, String search) {
+        String tenantId = TenantContext.getRequiredTenantId();
         List<Attestation> attestations;
         boolean hasSearch = StringUtils.hasText(search);
 
         if (userId != null && hasSearch) {
-            attestations = attestationRepository.findByUserIdAndTitleContainingIgnoreCaseOrderByDateDesc(userId, search.trim());
+            attestations = attestationRepository.findByTenantIdAndUserIdAndTitleContainingIgnoreCaseOrderByDateDesc(tenantId, userId, search.trim());
         } else if (userId != null) {
-            attestations = attestationRepository.findByUserIdOrderByDateDesc(userId);
+            attestations = attestationRepository.findByTenantIdAndUserIdOrderByDateDesc(tenantId, userId);
         } else if (hasSearch) {
-            attestations = attestationRepository.findByTitleContainingIgnoreCaseOrderByDateDesc(search.trim());
+            attestations = attestationRepository.findByTenantIdAndTitleContainingIgnoreCaseOrderByDateDesc(tenantId, search.trim());
         } else {
-            attestations = attestationRepository.findAllByOrderByDateDesc();
+            attestations = attestationRepository.findAllByTenantIdOrderByDateDesc(tenantId);
         }
 
         return attestations.stream().map(this::toResponse).toList();
@@ -57,7 +59,8 @@ public class AttestationService {
     }
 
     public Attestation findEntity(Integer id) {
-        return attestationRepository.findById(id)
+        String tenantId = TenantContext.getRequiredTenantId();
+        return attestationRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Attestation introuvable pour l'id " + id));
     }
@@ -86,6 +89,7 @@ public class AttestationService {
     }
 
     public AttestationResponse requestAttestation(AttestationRequestDTO dto) {
+        String tenantId = TenantContext.getRequiredTenantId();
         if (dto.getUserId() == null || !StringUtils.hasText(dto.getType())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId et type sont requis");
         }
@@ -96,7 +100,7 @@ public class AttestationService {
                     "Type invalide. Valeurs acceptées : " + TYPE_TITLES.keySet());
         }
 
-        if (attestationRepository.existsByUserIdAndTypeAndStatus(dto.getUserId(), type, "pending")) {
+        if (attestationRepository.existsByTenantIdAndUserIdAndTypeAndStatus(tenantId, dto.getUserId(), type, "pending")) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Une demande de type '" + type + "' est déjà en attente pour cet utilisateur");
         }
@@ -106,6 +110,7 @@ public class AttestationService {
                 + "-" + dto.getUserId() + "-" + type.substring(0, 3).toUpperCase();
 
         Attestation attestation = Attestation.builder()
+                .tenantId(tenantId)
                 .userId(dto.getUserId())
                 .studentName(StringUtils.hasText(dto.getStudentName()) ? dto.getStudentName() : "Étudiant " + dto.getUserId())
                 .className(StringUtils.hasText(dto.getClassName()) ? dto.getClassName() : "-")

@@ -13,6 +13,7 @@ import ma.solide.secretaryoffice.dto.SchoolClassResponse;
 import ma.solide.secretaryoffice.dto.StudentRequestDTO;
 import ma.solide.secretaryoffice.model.SchoolClass;
 import ma.solide.secretaryoffice.repository.SchoolClassRepository;
+import ma.solide.secretaryoffice.tenant.TenantContext;
 
 @Service
 public class SchoolClassService {
@@ -24,19 +25,21 @@ public class SchoolClassService {
     }
 
     public List<SchoolClassResponse> getClasses() {
-        return schoolClassRepository.findAllByOrderByNameAsc()
+        String tenantId = TenantContext.getRequiredTenantId();
+        return schoolClassRepository.findAllByTenantIdOrderByNameAsc(tenantId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     public SchoolClassResponse createClass(SchoolClassRequestDTO dto) {
+        String tenantId = TenantContext.getRequiredTenantId();
         if (dto == null || !StringUtils.hasText(dto.getName())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le nom de la classe est requis");
         }
 
         String className = dto.getName().trim();
-        if (schoolClassRepository.existsByNameIgnoreCase(className)) {
+        if (schoolClassRepository.existsByTenantIdAndNameIgnoreCase(tenantId, className)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Une classe avec ce nom existe déjà");
         }
@@ -50,6 +53,7 @@ public class SchoolClassService {
                         .toList();
 
         SchoolClass schoolClass = SchoolClass.builder()
+                .tenantId(tenantId)
                 .name(className)
                 .students(new ArrayList<>(students))
                 .build();
@@ -58,17 +62,18 @@ public class SchoolClassService {
     }
 
     public SchoolClassResponse updateClassName(Integer id, SchoolClassRequestDTO dto) {
+        String tenantId = TenantContext.getRequiredTenantId();
         if (dto == null || !StringUtils.hasText(dto.getName())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le nom de la classe est requis");
         }
 
-        SchoolClass schoolClass = schoolClassRepository.findById(id)
+        SchoolClass schoolClass = schoolClassRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Classe introuvable pour l'id " + id));
 
         String newName = dto.getName().trim();
         if (!schoolClass.getName().equalsIgnoreCase(newName)
-                && schoolClassRepository.existsByNameIgnoreCase(newName)) {
+                && schoolClassRepository.existsByTenantIdAndNameIgnoreCase(tenantId, newName)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Une classe avec ce nom existe déjà");
         }
@@ -78,10 +83,11 @@ public class SchoolClassService {
     }
 
     public SchoolClassResponse addStudent(Integer classId, StudentRequestDTO dto) {
+        String tenantId = TenantContext.getRequiredTenantId();
         if (dto == null || !StringUtils.hasText(dto.getName())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le nom de l'élève est requis");
         }
-        SchoolClass schoolClass = schoolClassRepository.findById(classId)
+        SchoolClass schoolClass = schoolClassRepository.findByIdAndTenantId(classId, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Classe introuvable pour l'id " + classId));
 
@@ -95,7 +101,8 @@ public class SchoolClassService {
     }
 
     public SchoolClassResponse removeStudent(Integer classId, String studentName) {
-        SchoolClass schoolClass = schoolClassRepository.findById(classId)
+        String tenantId = TenantContext.getRequiredTenantId();
+        SchoolClass schoolClass = schoolClassRepository.findByIdAndTenantId(classId, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Classe introuvable pour l'id " + classId));
 
@@ -109,10 +116,11 @@ public class SchoolClassService {
     }
 
     public SchoolClassResponse addTeacher(Integer classId, StudentRequestDTO dto) {
+        String tenantId = TenantContext.getRequiredTenantId();
         if (dto == null || !StringUtils.hasText(dto.getName())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le nom de l'enseignant est requis");
         }
-        SchoolClass schoolClass = schoolClassRepository.findById(classId)
+        SchoolClass schoolClass = schoolClassRepository.findByIdAndTenantId(classId, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Classe introuvable pour l'id " + classId));
 
@@ -126,7 +134,8 @@ public class SchoolClassService {
     }
 
     public SchoolClassResponse removeTeacher(Integer classId, String teacherName) {
-        SchoolClass schoolClass = schoolClassRepository.findById(classId)
+        String tenantId = TenantContext.getRequiredTenantId();
+        SchoolClass schoolClass = schoolClassRepository.findByIdAndTenantId(classId, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Classe introuvable pour l'id " + classId));
 
@@ -140,7 +149,8 @@ public class SchoolClassService {
     }
 
     public void deleteClass(Integer id) {
-        if (!schoolClassRepository.existsById(id)) {
+        String tenantId = TenantContext.getRequiredTenantId();
+        if (!schoolClassRepository.existsByIdAndTenantId(id, tenantId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Classe introuvable pour l'id " + id);
         }

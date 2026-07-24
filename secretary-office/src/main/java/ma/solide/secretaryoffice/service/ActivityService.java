@@ -17,6 +17,7 @@ import ma.solide.secretaryoffice.model.Activity;
 import ma.solide.secretaryoffice.model.SchoolClass;
 import ma.solide.secretaryoffice.repository.ActivityRepository;
 import ma.solide.secretaryoffice.repository.SchoolClassRepository;
+import ma.solide.secretaryoffice.tenant.TenantContext;
 
 @Service
 public class ActivityService {
@@ -33,39 +34,42 @@ public class ActivityService {
     }
 
     public List<ActivityResponseDTO> getActivities(String type, String rolesHeader, String userNameHeader) {
+        String tenantId = TenantContext.getRequiredTenantId();
         String normalizedType = normalizeType(type);
         Set<String> roles = parseRoles(rolesHeader);
 
         List<Activity> activities;
         if (hasAnyRole(roles, "secretary", "admin", "manager")) {
             activities = normalizedType == null
-                    ? activityRepository.findAllByOrderByDateAscIdAsc()
-                    : activityRepository.findByTypeOrderByDateAscIdAsc(normalizedType);
+                    ? activityRepository.findAllByTenantIdOrderByDateAscIdAsc(tenantId)
+                    : activityRepository.findByTenantIdAndTypeOrderByDateAscIdAsc(tenantId, normalizedType);
         } else {
             if (!StringUtils.hasText(userNameHeader)) {
                 return List.of();
             }
-            List<String> classNames = resolveUserClasses(roles, userNameHeader.trim());
+            List<String> classNames = resolveUserClasses(tenantId, roles, userNameHeader.trim());
             if (classNames.isEmpty()) {
                 return List.of();
             }
 
             activities = normalizedType == null
-                    ? activityRepository.findByClassNameInOrderByDateAscIdAsc(classNames)
-                    : activityRepository.findByTypeAndClassNameInOrderByDateAscIdAsc(normalizedType, classNames);
+                    ? activityRepository.findByTenantIdAndClassNameInOrderByDateAscIdAsc(tenantId, classNames)
+                    : activityRepository.findByTenantIdAndTypeAndClassNameInOrderByDateAscIdAsc(tenantId, normalizedType, classNames);
         }
 
         return activities.stream().map(this::toResponse).toList();
     }
 
     public ActivityResponseDTO createActivity(ActivityRequestDTO dto, String createdBy) {
+        String tenantId = TenantContext.getRequiredTenantId();
         validate(dto);
 
-        if (!schoolClassRepository.existsByNameIgnoreCase(dto.getClassName().trim())) {
+        if (!schoolClassRepository.existsByTenantIdAndNameIgnoreCase(tenantId, dto.getClassName().trim())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Class not found");
         }
 
         Activity activity = Activity.builder()
+                .tenantId(tenantId)
                 .type(dto.getType().trim().toLowerCase())
                 .title(dto.getTitle().trim())
                 .date(dto.getDate())
@@ -79,10 +83,11 @@ public class ActivityService {
     }
 
     public ActivityResponseDTO updateActivity(Integer id, ActivityRequestDTO dto) {
+        String tenantId = TenantContext.getRequiredTenantId();
         validate(dto);
-        Activity activity = findById(id);
+        Activity activity = findById(tenantId, id);
 
-        if (!schoolClassRepository.existsByNameIgnoreCase(dto.getClassName().trim())) {
+        if (!schoolClassRepository.existsByTenantIdAndNameIgnoreCase(tenantId, dto.getClassName().trim())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Class not found");
         }
 
@@ -97,12 +102,13 @@ public class ActivityService {
     }
 
     public void deleteActivity(Integer id) {
-        findById(id);
+        String tenantId = TenantContext.getRequiredTenantId();
+        findById(tenantId, id);
         activityRepository.deleteById(id);
     }
 
-    private Activity findById(Integer id) {
-        return activityRepository.findById(id)
+    private Activity findById(String tenantId, Integer id) {
+        return activityRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Activity not found"));
     }
 
@@ -158,8 +164,8 @@ public class ActivityService {
         return false;
     }
 
-    private List<String> resolveUserClasses(Set<String> roles, String userName) {
-        List<SchoolClass> classes = schoolClassRepository.findAll();
+    private List<String> resolveUserClasses(String tenantId, Set<String> roles, String userName) {
+        List<SchoolClass> classes = schoolClassRepository.findAllByTenantIdOrderByNameAsc(tenantId);
         Set<String> classNames = new HashSet<>();
 
         if (roles.contains("student")) {

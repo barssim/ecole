@@ -13,13 +13,17 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "tb_class")
+@Table(
+    name = "tb_class",
+    uniqueConstraints = @UniqueConstraint(name = "uk_class_tenant_name", columnNames = {"tenant_id", "name"})
+)
 @Data
 @Builder
 @NoArgsConstructor
@@ -30,7 +34,10 @@ public class SchoolClass {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "tenant_id")
+    private String tenantId;
+
+    @Column(nullable = false)
     private String name;
 
     @ElementCollection(fetch = FetchType.EAGER)

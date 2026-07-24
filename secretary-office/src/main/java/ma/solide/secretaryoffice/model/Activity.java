@@ -25,6 +25,9 @@ public class Activity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "tenant_id")
+    private String tenantId;
+
     @Column(nullable = false)
     private String type;
 

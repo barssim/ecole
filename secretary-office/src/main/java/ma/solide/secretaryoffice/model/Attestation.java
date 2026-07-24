@@ -8,13 +8,17 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "tb_attestation")
+@Table(
+    name = "tb_attestation",
+    uniqueConstraints = @UniqueConstraint(name = "uk_attestation_tenant_reference", columnNames = {"tenant_id", "reference"})
+)
 @Data
 @Builder
 @NoArgsConstructor
@@ -24,6 +28,9 @@ public class Attestation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    @Column(name = "tenant_id")
+    private String tenantId;
 
     @Column(nullable = false, name = "user_id")
     private Integer userId;
@@ -58,7 +65,7 @@ public class Attestation {
     @Column(name = "valid_until")
     private LocalDate validUntil;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String reference;
 }
 

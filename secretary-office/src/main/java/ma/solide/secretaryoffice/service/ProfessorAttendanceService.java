@@ -15,6 +15,7 @@ import ma.solide.secretaryoffice.dto.ProfessorAttendanceRequestDTO;
 import ma.solide.secretaryoffice.dto.ProfessorAttendanceResponseDTO;
 import ma.solide.secretaryoffice.model.ProfessorAttendance;
 import ma.solide.secretaryoffice.repository.ProfessorAttendanceRepository;
+import ma.solide.secretaryoffice.tenant.TenantContext;
 
 @Service
 public class ProfessorAttendanceService {
@@ -29,25 +30,28 @@ public class ProfessorAttendanceService {
     }
 
     public List<ProfessorAttendanceResponseDTO> getAttendanceForDate(LocalDate attendanceDate) {
+        String tenantId = TenantContext.getRequiredTenantId();
         LocalDate effectiveDate = attendanceDate != null ? attendanceDate : LocalDate.now();
-        return professorAttendanceRepository.findAllByAttendanceDateOrderByTeacherNameAsc(effectiveDate)
+        return professorAttendanceRepository.findAllByTenantIdAndAttendanceDateOrderByTeacherNameAsc(tenantId, effectiveDate)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     public ProfessorAttendanceResponseDTO getTeacherAttendance(Integer teacherId, LocalDate attendanceDate) {
+        String tenantId = TenantContext.getRequiredTenantId();
         if (teacherId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "teacherId is required");
         }
 
         LocalDate effectiveDate = attendanceDate != null ? attendanceDate : LocalDate.now();
-        ProfessorAttendance attendance = professorAttendanceRepository.findByTeacherIdAndAttendanceDate(teacherId, effectiveDate)
+        ProfessorAttendance attendance = professorAttendanceRepository.findByTenantIdAndTeacherIdAndAttendanceDate(tenantId, teacherId, effectiveDate)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Attendance not found for this teacher and date"));
         return toResponse(attendance);
     }
 
     public ProfessorAttendanceResponseDTO saveAttendance(ProfessorAttendanceRequestDTO dto) {
+        String tenantId = TenantContext.getRequiredTenantId();
         if (dto.getTeacherId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "teacherId is required");
         }
@@ -66,8 +70,9 @@ public class ProfessorAttendanceService {
 
         LocalDate effectiveDate = dto.getAttendanceDate() != null ? dto.getAttendanceDate() : LocalDate.now();
         ProfessorAttendance attendance = professorAttendanceRepository
-                .findByTeacherIdAndAttendanceDate(dto.getTeacherId(), effectiveDate)
+                .findByTenantIdAndTeacherIdAndAttendanceDate(tenantId, dto.getTeacherId(), effectiveDate)
                 .orElseGet(() -> ProfessorAttendance.builder()
+                        .tenantId(tenantId)
                         .teacherId(dto.getTeacherId())
                         .attendanceDate(effectiveDate)
                         .build());

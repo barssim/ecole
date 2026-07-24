@@ -8,8 +8,12 @@ import ma.solide.secretaryoffice.model.SchoolClass;
 
 public interface SchoolClassRepository extends JpaRepository<SchoolClass, Integer> {
 
-    List<SchoolClass> findAllByOrderByNameAsc();
+    List<SchoolClass> findAllByTenantIdOrderByNameAsc(String tenantId);
 
-    boolean existsByNameIgnoreCase(String name);
+    boolean existsByTenantIdAndNameIgnoreCase(String tenantId, String name);
+
+    java.util.Optional<SchoolClass> findByIdAndTenantId(Integer id, String tenantId);
+
+    boolean existsByIdAndTenantId(Integer id, String tenantId);
 }
 

@@ -11,6 +11,7 @@ import ma.solide.secretaryoffice.dto.ExamRequestDTO;
 import ma.solide.secretaryoffice.dto.ExamResponseDTO;
 import ma.solide.secretaryoffice.model.Exam;
 import ma.solide.secretaryoffice.repository.ExamRepository;
+import ma.solide.secretaryoffice.tenant.TenantContext;
 
 @Service
 public class ExamService {
@@ -22,7 +23,8 @@ public class ExamService {
     }
 
     public List<ExamResponseDTO> getAllExams() {
-        return examRepository.findAllByOrderByDateAscStartTimeAsc()
+        String tenantId = TenantContext.getRequiredTenantId();
+        return examRepository.findAllByTenantIdOrderByDateAscStartTimeAsc(tenantId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -33,9 +35,11 @@ public class ExamService {
     }
 
     public ExamResponseDTO createExam(ExamRequestDTO dto) {
+        String tenantId = TenantContext.getRequiredTenantId();
         validate(dto);
 
         Exam exam = Exam.builder()
+                .tenantId(tenantId)
                 .subject(dto.getSubject().trim())
                 .className(dto.getClassName().trim())
                 .date(dto.getDate())
@@ -69,7 +73,8 @@ public class ExamService {
     }
 
     private Exam findEntity(Integer id) {
-        return examRepository.findById(id)
+        String tenantId = TenantContext.getRequiredTenantId();
+        return examRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam not found with id " + id));
     }
 
