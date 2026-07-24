@@ -128,6 +128,7 @@
 	"activity_plan_button": "Planifier une activité",
 	"activity_edit_button": "Modifier l'activité",
 	"activity_cancel_button": "Annuler",
+	"activity_delete_confirm": "Êtes-vous sûr de vouloir supprimer cette activité ?",
 	"activity_created_success": "Activité enregistrée avec succès.",
 	"activity_updated_success": "Activité mise à jour avec succès.",
 	"activity_deleted_success": "Activité supprimée avec succès.",

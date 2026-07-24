@@ -126,6 +126,7 @@
   "activity_plan_button": "Plan an activity",
   "activity_edit_button": "Edit activity",
   "activity_cancel_button": "Cancel",
+  "activity_delete_confirm": "Are you sure you want to remove this activity?",
   "activity_created_success": "Activity saved successfully.",
   "activity_updated_success": "Activity updated successfully.",
   "activity_deleted_success": "Activity deleted successfully.",

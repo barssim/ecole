@@ -127,6 +127,7 @@
 	"activity_plan_button": "جدولة نشاط",
 	"activity_edit_button": "تعديل النشاط",
 	"activity_cancel_button": "إلغاء",
+	"activity_delete_confirm": "هل أنت متأكد أنك تريد حذف هذا النشاط؟",
 	"activity_created_success": "تم حفظ النشاط بنجاح.",
 	"activity_updated_success": "تم تحديث النشاط بنجاح.",
 	"activity_deleted_success": "تم حذف النشاط بنجاح.",

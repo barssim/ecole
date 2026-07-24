@@ -59,9 +59,9 @@ if (language === "fr") {
 			<div className="header-actions">
 
 				{isLoggedIn && (
-					<button className="inactiveButton">
+					<span className="inactiveButton">
 						Welcome, {loggedIn} {/* Display welcome message styled as an inactive button */}
-					</button>
+					</span>
 				)}
 				{isLoggedIn && (
 					<button className="buttonStyle header-action-btn" onClick={() => navigate("/profile")}>

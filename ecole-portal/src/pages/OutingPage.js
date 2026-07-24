@@ -190,6 +190,13 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
       return;
     }
 
+    const shouldDelete = window.confirm(
+      content.activity_delete_confirm || "Are you sure you want to remove this activity?"
+    );
+    if (!shouldDelete) {
+      return;
+    }
+
     try {
       setError("");
       setMessage("");
@@ -309,7 +316,7 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
               <p>{activity.description}</p>
               {isSecretaryAuthorized && (
                 <button type="button" onClick={() => handleSelect(activity)}>
-                  {content.outing_select_button}
+                  {content.activity_edit_button || content.outing_update_button || "Edit"}
                 </button>
               )}
               {isSecretaryAuthorized && (
@@ -318,7 +325,7 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
                   onClick={() => handleRemove(activity.id)}
                   style={{ marginLeft: "10px", color: "red" }}
                 >
-                  {content.outing_remove_button}
+                  {content.outing_remove_button || "Remove"}
                 </button>
               )}
             </li>

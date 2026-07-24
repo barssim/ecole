@@ -32,7 +32,8 @@ import SharedDocumentsPage from "./pages/SharedDocumentsPage";
 import ParentMeetingPage from "./pages/ParentMeetingPage";
 import StudentSchedulePage from "./components/StudentSchedulePage";
 import TeacherCourses  from "./pages/TeacherCourses";
-import OuttingPage  from "./pages/OuttingPage";
+import PartiesPage  from "./pages/PartiesPage";
+import MeetingPage  from "./pages/MeetingPage";
 import PaymentsPage from './pages/PaymentsPage';
 import ProfilePage from './pages/ProfilePage';
 import TeacherAttendancePage from './pages/TeacherAttendancePage';
@@ -168,12 +169,9 @@ const AppContent = () => {
                      <Route path="/administration/presence" element={<ProfessorPresence language={language} toggleLanguage={toggleLanguage} />} />
                      <Route path="/administration/classes" element={<ClassesPage language={language} toggleLanguage={toggleLanguage} />} />
                       <Route path="/administration/examens" element={<ExamProgram language={language} toggleLanguage={toggleLanguage} />} />
-                      <Route path="/administration/attestations" element={<AttestationsPage language={language} toggleLanguage={toggleLanguage} />} />
-                      <Route path="/administration/activites/sorties" element={<OuttingPage language={language} activityType="sorties" />} />
-                      <Route path="/administration/activites/fetes" element={<OuttingPage language={language} activityType="fetes" />} />
-                      <Route path="/administration/activites/reunions" element={<OuttingPage language={language} activityType="reunions" />} />
-                      <Route path="/administration/activities/parties" element={<OuttingPage language={language} activityType="fetes" />} />
-                      <Route path="/administration/activities/meetings" element={<OuttingPage language={language} activityType="reunions" />} />
+                      <Route path="/administration/outing" element={<OuttingPage language={language} activityType="sorties" />} />
+                      <Route path="/administration/parties" element={<PartiesPage language={language} />} />
+                      <Route path="/administration/meetings" element={<MeetingPage language={language} />} />
                       <Route path="/enseignement/parent-meetings" element={<ParentMeetingPage language={language} toggleLanguage={toggleLanguage} />} />
                        <Route path="/enseignant/cours" element={<TeacherCourses language={language} toggleLanguage={toggleLanguage} />} />
                       <Route path="/enseignant/attendance" element={<TeacherAttendancePage language={language} />} />
