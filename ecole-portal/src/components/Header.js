@@ -56,7 +56,7 @@ if (language === "fr") {
 			</nav>
 
 			{/* Action Buttons */}
-			<div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+			<div className="header-actions">
 
 				{isLoggedIn && (
 					<button className="inactiveButton">
@@ -64,17 +64,20 @@ if (language === "fr") {
 					</button>
 				)}
 				{isLoggedIn && (
-					<button className="buttonStyle" onClick={() => (window.location.href = "/profile")}>
+					<button className="buttonStyle header-action-btn" onClick={() => navigate("/profile")}>
 						{content.profile}
 					</button>
 				)}
-				<button className="buttonStyle" onClick={() => (window.location.href = isLoggedIn ? "/logout" : "/login")}>
+				<button
+					className={`buttonStyle header-action-btn ${isLoggedIn ? "header-logout-btn" : ""}`.trim()}
+					onClick={() => navigate(isLoggedIn ? "/logout" : "/login")}
+				>
 					{isLoggedIn ? content.logout : content.login}
 				</button>
 				{isLoggedIn && isAdminAuthorized && (
 					<button
-                      className={"buttonStyle"}
-                      onClick={() => window.location.href = "/inscription"}
+                      className={"buttonStyle header-action-btn"}
+                      onClick={() => navigate("/inscription")}
                     >
 						{content.inscription}
 					</button>

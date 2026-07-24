@@ -170,7 +170,10 @@ public class SchoolInvoiceController {
         String[] roles = userRolesHeader.split(",");
         for (String role : roles) {
             String trimmedRole = role.trim().toLowerCase();
-            if ("finance".equals(trimmedRole) || 
+            if (trimmedRole.startsWith("role_")) {
+                trimmedRole = trimmedRole.substring(5);
+            }
+            if ("finance".equals(trimmedRole) ||
                 "admin".equals(trimmedRole) || 
                 "manager".equals(trimmedRole)) {
                 return true;

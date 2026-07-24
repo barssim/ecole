@@ -35,7 +35,9 @@ const Payments = ({ language }) => {
 
   const buildRoleHeader = () => {
     const rawRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
-    return rawRoles.join(',');
+    return rawRoles
+      .map((role) => role.replace(/^role_/, ''))
+      .join(',');
   };
 
   const canManagePayments = hasAnyRole(

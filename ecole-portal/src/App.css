@@ -69,6 +69,39 @@
 	transition: background-color 0.3s ease;
 }
 
+.header-action-btn {
+	min-height: 40px;
+	padding: 10px 14px;
+	line-height: 1;
+}
+
+.header-logout-btn {
+	background-color: #e11d48;
+}
+
+.header-logout-btn:hover {
+	background-color: #be123c;
+}
+
+.header-actions {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+}
+
+.inactiveButton {
+	background-color: #f0f0f0;
+	color: #6b7280;
+	padding: 10px 12px;
+	border: 1px solid #d1d5db;
+	border-radius: 5px;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: default;
+}
+
 .buttonStyle-inactive {
 	background-color: #F0F0F0;
 	color: #999;
@@ -197,7 +230,7 @@
 
 
 .footer {
-	background-color: var(--tenant-primary, #007bff);
+	background-color: var(--tenant-soft, #80dfff);
 	text-align: center;
 	padding: 20px;
 	width: 100%;

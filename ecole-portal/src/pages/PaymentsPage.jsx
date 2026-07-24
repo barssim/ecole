@@ -29,12 +29,13 @@ const PaymentsPage = ({ language }) => {
   const token = sessionStorage.getItem('jwt_token');
   const studentName = localStorage.getItem('userName') || 'Default Student';
   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
+  const roleHeader = userRoles.map((role) => role.replace(/^role_/, '')).join(',');
   const canManagePaymentNotices = hasAnyRole(userRoles, ['finance', 'admin', 'manager']);
 
   const buildHeaders = (includeJson = false) => {
     const headers = {
       'X-Tenant-Id': getTenantId(),
-      ...(userRoles.length > 0 ? { 'X-User-Roles': userRoles.join(',') } : {}),
+      ...(roleHeader ? { 'X-User-Roles': roleHeader } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
     if (includeJson) {
