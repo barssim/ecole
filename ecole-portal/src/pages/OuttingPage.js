@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import en from "../locales/en.json";
 import fr from "../locales/fr.json";
 import ar from "../locales/ar.json";
+import { getTenantId } from "../tenant";
 
 const OuttingPage = ({ language, activityType = "sorties" }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
@@ -31,6 +32,7 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
   const headers = useMemo(
     () => ({
       "Content-Type": "application/json",
+      "X-Tenant-Id": getTenantId(),
       "X-User-Roles": userRoles.join(","),
       "X-User-Name": userName,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),

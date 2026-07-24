@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import fr from "../locales/fr.json";
 import en from "../locales/en.json";
 import ar from "../locales/ar.json";
+import { getTenantId } from '../tenant';
 
 const ClassesPage = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
@@ -22,6 +23,18 @@ const ClassesPage = ({ language }) => {
 
   const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
 
+  const buildHeaders = (includeJson = false) => {
+    const token = sessionStorage.getItem('jwt_token');
+    const headers = {
+      'X-Tenant-Id': getTenantId(),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+    if (includeJson) {
+      headers['Content-Type'] = 'application/json';
+    }
+    return headers;
+  };
+
   const toggleExpand = (id) => {
     setExpandedClassId(expandedClassId === id ? null : id);
   };
@@ -31,7 +44,7 @@ const ClassesPage = ({ language }) => {
       try {
         const url = `${baseUrl}/api/classes`;
 
-        const response = await fetch(url);
+        const response = await fetch(url, { headers: buildHeaders() });
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -71,7 +84,7 @@ const ClassesPage = ({ language }) => {
     try {
       const response = await fetch(`${baseUrl}/api/classes/${cls.id}/students`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildHeaders(true),
         body: JSON.stringify({ name: trimmed }),
       });
       if (!response.ok) {
@@ -103,7 +116,7 @@ const ClassesPage = ({ language }) => {
     try {
       const response = await fetch(
         `${baseUrl}/api/classes/${cls.id}/students/${encodeURIComponent(studentName)}`,
-        { method: 'DELETE' }
+        { method: 'DELETE', headers: buildHeaders() }
       );
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const updated = await response.json();
@@ -144,7 +157,7 @@ const ClassesPage = ({ language }) => {
     try {
       const response = await fetch(`${baseUrl}/api/classes/${cls.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildHeaders(true),
         body: JSON.stringify({ name: trimmed }),
       });
       if (!response.ok) {
@@ -181,6 +194,7 @@ const ClassesPage = ({ language }) => {
     try {
       const response = await fetch(`${baseUrl}/api/classes/${cls.id}`, {
         method: 'DELETE',
+        headers: buildHeaders(),
       });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -210,9 +224,7 @@ const ClassesPage = ({ language }) => {
       setIsSubmitting(true);
       const response = await fetch(`${baseUrl}/api/classes`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: buildHeaders(true),
         body: JSON.stringify({
           name: className,
           students: [],
