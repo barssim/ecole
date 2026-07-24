@@ -5,6 +5,7 @@ import ar from '../locales/ar.json';
 import '../cssFiles/PaymentsPage.css';
 import { getTenantId } from '../tenant';
 import { hasAnyRole, normalizeRoles } from '../utils/roles';
+import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 
 const PaymentsPage = ({ language }) => {
   const content = language === 'fr' ? fr : language === 'en' ? en : ar;
@@ -24,7 +25,7 @@ const PaymentsPage = ({ language }) => {
   const [savingNotice, setSavingNotice] = useState(false);
   const [updatingNoticeId, setUpdatingNoticeId] = useState(null);
 
-  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
+  const baseUrl = resolveApiBaseUrl('http://localhost:8085');
   const token = sessionStorage.getItem('jwt_token');
   const studentName = localStorage.getItem('userName') || 'Default Student';
   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));

@@ -5,6 +5,7 @@ import ar from "../locales/ar.json";
 import en from "../locales/en.json";
 import { getTenantId } from '../tenant';
 import { hasAnyRole, normalizeRoles } from '../utils/roles';
+import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 
 const Payments = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
@@ -26,7 +27,7 @@ const Payments = ({ language }) => {
     notes: ''
   });
 
-  const configuredBase = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
+  const configuredBase = resolveApiBaseUrl('http://localhost:8085');
   const apiRoot = configuredBase.endsWith('/api') ? configuredBase : `${configuredBase}/api`;
   const paymentsApiBase = `${apiRoot}/payments`;
   const invoiceApiUrl = `${apiRoot}/facture/generate`;

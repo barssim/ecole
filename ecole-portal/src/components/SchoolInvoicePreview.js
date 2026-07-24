@@ -5,6 +5,7 @@ import ar from "../locales/ar.json";
 import en from "../locales/en.json";
 import { getTenantId } from '../tenant';
 import { normalizeRoles } from '../utils/roles';
+import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 
 const SchoolInvoicePreview =  ({language}) => {
                              	let content;
@@ -18,7 +19,7 @@ const SchoolInvoicePreview =  ({language}) => {
                              };
   const [invoice, setInvoice] = useState(null);
   const [error, setError] = useState('');
-  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
+  const baseUrl = resolveApiBaseUrl('http://localhost:8085');
   const token = sessionStorage.getItem('jwt_token');
   const studentName = localStorage.getItem('userName') || '';
   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
