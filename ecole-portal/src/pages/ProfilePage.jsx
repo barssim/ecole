@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import fr from '../locales/fr.json';
 import ar from '../locales/ar.json';
 import en from '../locales/en.json';
+import { getTenantId } from '../tenant';
 
 const ProfilePage = ({ language = 'fr' }) => {
   const content = language === 'fr' ? fr : language === 'en' ? en : ar;
@@ -18,6 +19,7 @@ const ProfilePage = ({ language = 'fr' }) => {
 
   const authHeaders = {
     'Content-Type': 'application/json',
+    'X-Tenant-Id': getTenantId(),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
