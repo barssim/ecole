@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import fr from "../locales/fr.json";
 import en from "../locales/en.json";
 import ar from "../locales/ar.json";
+import { getTenantId } from "../tenant";
 
 const ProfessorPresence = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
@@ -26,6 +27,7 @@ const ProfessorPresence = ({ language }) => {
         const response = await fetch(`${baseUrl}/api/presence/professors?date=${selectedDate}`, {
           headers: {
             'Content-Type': 'application/json',
+              'X-Tenant-Id': getTenantId(),
             'X-User-Roles': rolesHeader,
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },

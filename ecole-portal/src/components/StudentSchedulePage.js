@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import fr from "../locales/fr.json";
 import en from "../locales/en.json";
 import ar from "../locales/ar.json";
+import { getTenantId } from "../tenant";
 
 const StudentSchedulePage = ({ language }) => {
   const content =
@@ -17,7 +18,12 @@ const StudentSchedulePage = ({ language }) => {
     const fetchSchedule = async () => {
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_API_GATEWAY_URL}/api/studentschedule?user=${userId}`
+          `${process.env.REACT_APP_API_GATEWAY_URL}/api/studentschedule?user=${userId}`,
+          {
+            headers: {
+              "X-Tenant-Id": getTenantId(),
+            },
+          }
         );
         const data = await response.json();
         setSchedule(data);

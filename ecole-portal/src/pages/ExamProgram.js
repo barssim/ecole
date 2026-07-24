@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import fr from "../locales/fr.json";
 import en from "../locales/en.json";
 import ar from "../locales/ar.json";
+import { getTenantId } from "../tenant";
 
 const EMPTY_FORM = {
   subject: "",
@@ -32,10 +33,16 @@ const ExamProgram = ({ language }) => {
   const userRoles = JSON.parse(localStorage.getItem("user_roles") || "[]");
   const canManage = ["secretary", "admin", "manager"].some((r) => userRoles.includes(r));
 
-  const headers = {
-    "Content-Type": "application/json",
-    "X-User-Roles": userRoles.join(","),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  const buildHeaders = (includeJson = false) => {
+    const headers = {
+      "X-Tenant-Id": getTenantId(),
+      "X-User-Roles": userRoles.join(","),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+    if (includeJson) {
+      headers["Content-Type"] = "application/json";
+    }
+    return headers;
   };
 
   useEffect(() => {
@@ -46,7 +53,7 @@ const ExamProgram = ({ language }) => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`${baseUrl}/api/exams`, { headers });
+      const res = await fetch(`${baseUrl}/api/exams`, { headers: buildHeaders() });
       if (!res.ok) throw new Error(content.exam_error || "Erreur de chargement");
       setExams(await res.json());
     } catch (err) {
@@ -86,7 +93,7 @@ const ExamProgram = ({ language }) => {
     try {
       const url = editId ? `${baseUrl}/api/exams/${editId}` : `${baseUrl}/api/exams`;
       const method = editId ? "PUT" : "POST";
-      const res = await fetch(url, { method, headers, body: JSON.stringify(form) });
+      const res = await fetch(url, { method, headers: buildHeaders(true), body: JSON.stringify(form) });
       if (!res.ok) {
         const msg = await res.text();
         throw new Error(msg || content.exam_saveError || "Erreur d'enregistrement");
@@ -107,7 +114,7 @@ const ExamProgram = ({ language }) => {
 
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`${baseUrl}/api/exams/${id}`, { method: "DELETE", headers });
+      const res = await fetch(`${baseUrl}/api/exams/${id}`, { method: "DELETE", headers: buildHeaders() });
       if (!res.ok) throw new Error(content.exam_deleteError || "Erreur de suppression");
       setDeleteConfirm(null);
       setMessage(content.exam_deleteSuccess || "Examen supprimé.");

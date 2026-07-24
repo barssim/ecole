@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { getTenantId } from '../tenant';
 
 const PostInvoice = () => {
   const [studentName, setStudentName] = useState('');
@@ -13,6 +14,17 @@ const PostInvoice = () => {
   const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
   const token = sessionStorage.getItem('jwt_token');
 
+  const buildHeaders = (includeJson = false) => {
+    const headers = {
+      'X-Tenant-Id': getTenantId(),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+    if (includeJson) {
+      headers['Content-Type'] = 'application/json';
+    }
+    return headers;
+  };
+
   React.useEffect(() => {
     fetchFactures();
   }, []);
@@ -23,10 +35,7 @@ const PostInvoice = () => {
       setError(null);
 
       const response = await fetch(`${baseUrl}/api/factures`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: buildHeaders(),
       });
 
       if (!response.ok) {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import fr from '../locales/fr.json';
 import en from '../locales/en.json';
 import ar from '../locales/ar.json';
+import { getTenantId } from '../tenant';
 
 const ATTESTATION_TYPES = [
   { value: 'enrollment',   labelKey: 'attestation_typeEnrollment' },
@@ -42,16 +43,25 @@ const AttestationsPage = ({ language }) => {
   const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
   const rolesHeaderValue = normalizedRoles.join(',');
 
+  const buildHeaders = (includeJson = false) => {
+    const headers = {
+      'X-Tenant-Id': getTenantId(),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(rolesHeaderValue ? { 'X-User-Roles': rolesHeaderValue } : {}),
+    };
+    if (includeJson) {
+      headers['Content-Type'] = 'application/json';
+    }
+    return headers;
+  };
+
   const fetchAttestations = async () => {
     try {
       const query = !canManageAttestations && userId ? `?userId=${encodeURIComponent(userId)}` : '';
       const response = await fetch(
         `${baseUrl}/api/attestations${query}`,
         {
-          headers: {
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            ...(rolesHeaderValue ? { 'X-User-Roles': rolesHeaderValue } : {}),
-          },
+          headers: buildHeaders(),
         }
       );
       const data = await response.json();
@@ -72,11 +82,7 @@ const AttestationsPage = ({ language }) => {
         `${baseUrl}/api/attestations/request`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            ...(rolesHeaderValue ? { 'X-User-Roles': rolesHeaderValue } : {}),
-          },
+          headers: buildHeaders(true),
           body: JSON.stringify({
             userId: userId ? parseInt(userId) : null,
             studentName: username,
@@ -107,10 +113,19 @@ const AttestationsPage = ({ language }) => {
   };
 
   const handleView = (id) => {
-    window.open(
-      `${baseUrl}/api/attestations/${id}/view`,
-      '_blank', 'noopener,noreferrer'
-    );
+    fetch(`${baseUrl}/api/attestations/${id}/view`, { headers: buildHeaders() })
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.blob();
+      })
+      .then((blob) => {
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank', 'noopener,noreferrer');
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      })
+      .catch((error) => {
+        console.error('Failed to open attestation view:', error);
+      });
   };
 
    const handleStatusUpdate = async (attestationId, status) => {
@@ -118,11 +133,7 @@ const AttestationsPage = ({ language }) => {
      try {
        const response = await fetch(`${baseUrl}/api/attestations/${attestationId}/status`, {
          method: 'PATCH',
-         headers: {
-           'Content-Type': 'application/json',
-           ...(token ? { Authorization: `Bearer ${token}` } : {}),
-           ...(rolesHeaderValue ? { 'X-User-Roles': rolesHeaderValue } : {}),
-         },
+          headers: buildHeaders(true),
          body: JSON.stringify({ status }),
        });
 
@@ -141,13 +152,24 @@ const AttestationsPage = ({ language }) => {
    };
 
    const handleDownload = (id) => {
-     const link = document.createElement('a');
-     link.href = `${baseUrl}/api/attestations/${id}/download`;
-     link.target = '_blank';
-     link.rel = 'noopener noreferrer';
-     document.body.appendChild(link);
-     link.click();
-     document.body.removeChild(link);
+        fetch(`${baseUrl}/api/attestations/${id}/download`, { headers: buildHeaders() })
+          .then((response) => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.blob();
+          })
+          .then((blob) => {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `attestation-${id}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 60_000);
+          })
+          .catch((error) => {
+            console.error('Failed to download attestation:', error);
+          });
    };
 
   const filtered = attestations.filter((a) =>

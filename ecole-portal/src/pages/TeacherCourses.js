@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import FileUpload from "../components/FileUpload";
+import { getTenantId } from "../tenant";
 
 const TeacherCourses = () => {
   const [courses, setCourses] = useState([]);
@@ -11,7 +12,12 @@ const TeacherCourses = () => {
     const fetchCourses = async () => {
       try {
         const res = await fetch(
-          `${process.env.REACT_APP_API_GATEWAY_URL}/api/teachercourses?teacher=${userId}`
+          `${process.env.REACT_APP_API_GATEWAY_URL}/api/teachercourses?teacher=${userId}`,
+          {
+            headers: {
+              "X-Tenant-Id": getTenantId(),
+            },
+          }
         );
         const data = await res.json();
         if (Array.isArray(data)) setCourses(data);

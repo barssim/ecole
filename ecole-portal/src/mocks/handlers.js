@@ -3,6 +3,32 @@ import { http, HttpResponse } from 'msw';
 
 const BASE_URL = 'http://localhost:8085';
 
+const getTenantId = (request) => (request.headers.get('X-Tenant-Id') || 'gardinia').toLowerCase();
+
+const classesByTenant = {
+  gardinia: [
+    { id: 1, name: '3e A', students: ['Yassine', 'Majda', 'Karim'] },
+    { id: 2, name: '3e B', students: ['Sara', 'Nabil', 'Omar'] },
+    { id: 3, name: 'Terminale C', students: ['Lina', 'Mohamed', 'Hajar'] },
+  ],
+  qods: [
+    { id: 11, name: '4ème A', students: ['Aya', 'Youssef'] },
+    { id: 12, name: '4ème B', students: ['Salma', 'Othman'] },
+  ],
+};
+
+const examsByTenant = {
+  gardinia: [
+    { id: 1, subject: 'Mathématiques', className: '3e A', date: '2025-07-22', startTime: '09:00', endTime: '11:00', room: 'Salle 101' },
+    { id: 2, subject: 'Physique', className: '3e A', date: '2025-07-23', startTime: '13:00', endTime: '15:00', room: 'Salle 202' },
+    { id: 3, subject: "l'arabe", className: '3e B', date: '2025-07-24', startTime: '08:30', endTime: '10:30', room: 'Salle 103' },
+  ],
+  qods: [
+    { id: 11, subject: 'Mathématiques', className: '4ème A', date: '2025-07-25', startTime: '10:00', endTime: '12:00', room: 'Salle 1' },
+    { id: 12, subject: 'Français', className: '4ème B', date: '2025-07-26', startTime: '08:30', endTime: '10:00', room: 'Salle 2' },
+  ],
+};
+
 export const handlers = [
   // 💳 Handler for a payment notice
   http.get(`${BASE_URL}/api/paymentNotice`, () => {
@@ -88,54 +114,15 @@ export const handlers = [
   }),
 
   // 🧪 Handler for upcoming exams
-  http.get(`${BASE_URL}/api/exams`, () => {
-    return HttpResponse.json([
-      {
-        subject: 'Mathématiques',
-        className: '3e A',
-        date: '2025-07-22',
-        startTime: '09:00',
-        endTime: '11:00',
-        room: 'Salle 101',
-      },
-      {
-        subject: 'Physique',
-        className: '3e A',
-        date: '2025-07-23',
-        startTime: '13:00',
-        endTime: '15:00',
-        room: 'Salle 202',
-      },
-      {
-        subject: "l'arabe",
-        className: '3e B',
-        date: '2025-07-24',
-        startTime: '08:30',
-        endTime: '10:30',
-        room: 'Salle 103',
-      },
-    ]);
+  http.get(`${BASE_URL}/api/exams`, ({ request }) => {
+    const tenantId = getTenantId(request);
+    return HttpResponse.json(examsByTenant[tenantId] || examsByTenant.gardinia);
   }),
 
    // 🧪 Handler for classes
-    http.get(`${BASE_URL}/api/classes`, () => {
-      return HttpResponse.json([
-      {
-        id: 1,
-        name: "3e A",
-        students: ["Yassine", "Majda", "Karim"]
-      },
-      {
-        id: 2,
-        name: "3e B",
-        students: ["Sara", "Nabil", "Omar"]
-      },
-      {
-        id: 3,
-        name: "Terminale C",
-        students: ["Lina", "Mohamed", "Hajar"]
-      }
-    ]);
+    http.get(`${BASE_URL}/api/classes`, ({ request }) => {
+      const tenantId = getTenantId(request);
+      return HttpResponse.json(classesByTenant[tenantId] || classesByTenant.gardinia);
     }),
     // 🧪 Handler for teacher courses
     http.get(`${BASE_URL}/api/teachercourses`, () => {

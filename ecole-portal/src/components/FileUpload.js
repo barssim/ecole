@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { getTenantId } from "../tenant";
 
 const FileUpload = ({ filename, onUploadSuccess }) => {
   const [file, setFile] = useState(null);
@@ -17,6 +18,9 @@ const FileUpload = ({ filename, onUploadSuccess }) => {
     try {
       const res = await fetch(`${process.env.REACT_APP_API_GATEWAY_URL}/api/upload`, {
         method: "POST",
+        headers: {
+          "X-Tenant-Id": getTenantId(),
+        },
         body: formData,
       });
 
