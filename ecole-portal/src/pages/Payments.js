@@ -3,6 +3,8 @@ import axios from 'axios';
 import fr from "../locales/fr.json";
 import ar from "../locales/ar.json";
 import en from "../locales/en.json";
+import { getTenantId } from '../tenant';
+import { hasAnyRole, normalizeRoles } from '../utils/roles';
 
 const Payments = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
@@ -28,25 +30,25 @@ const Payments = ({ language }) => {
   const apiRoot = configuredBase.endsWith('/api') ? configuredBase : `${configuredBase}/api`;
   const paymentsApiBase = `${apiRoot}/payments`;
   const invoiceApiUrl = `${apiRoot}/facture/generate`;
+  const token = sessionStorage.getItem('jwt_token');
 
   const buildRoleHeader = () => {
-    try {
-      const rawRoles = JSON.parse(localStorage.getItem('user_roles') || '[]');
-      if (!Array.isArray(rawRoles)) {
-        return '';
-      }
-      return rawRoles
-        .map((role) => String(role || '').toLowerCase().replace(/^role_/, ''))
-        .filter((role) => role)
-        .join(',');
-    } catch (_e) {
-      return '';
-    }
+    const rawRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
+    return rawRoles.join(',');
   };
+
+  const canManagePayments = hasAnyRole(
+    normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]')),
+    ['finance', 'admin', 'manager']
+  );
 
   const getHeaders = () => {
     const roleHeader = buildRoleHeader();
-    return roleHeader ? { 'X-User-Roles': roleHeader } : {};
+    return {
+      'X-Tenant-Id': getTenantId(),
+      ...(roleHeader ? { 'X-User-Roles': roleHeader } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
   };
 
   const resetForm = () => {
@@ -91,6 +93,11 @@ const Payments = ({ language }) => {
   };
 
   const handleGenerateFacture = async (payment) => {
+    if (!canManagePayments) {
+      setError('Only finance, admin, and manager roles can generate factures.');
+      return;
+    }
+
     const amountValue = Number(payment.amount);
     if (!Number.isFinite(amountValue) || amountValue <= 0) {
       setError('Cannot generate facture: payment amount is invalid.');
@@ -117,6 +124,7 @@ const Payments = ({ language }) => {
 
     try {
       const response = await axios.post(invoiceApiUrl, payload, {
+        headers: getHeaders(),
         responseType: 'blob',
         timeout: 15000
       });
@@ -131,7 +139,7 @@ const Payments = ({ language }) => {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (invoiceError) {
-      setError(invoiceError.response?.data?.message || 'Unable to generate facture PDF.');
+      setError(invoiceError.response?.data?.message || `Unable to generate facture PDF (HTTP ${invoiceError.response?.status || 'unknown'}).`);
     } finally {
       setGeneratingInvoiceId(null);
     }
@@ -187,6 +195,11 @@ const Payments = ({ language }) => {
     event.preventDefault();
     setFormError('');
 
+    if (!canManagePayments) {
+      setFormError('Only finance, admin, and manager roles can create or update payments.');
+      return;
+    }
+
     if (!formData.studentName.trim()) {
       setFormError('Student name is required.');
       return;
@@ -219,7 +232,7 @@ const Payments = ({ language }) => {
       resetForm();
       await fetchPayments();
     } catch (submitError) {
-      setFormError(submitError.response?.data?.message || 'Unable to save payment.');
+      setFormError(submitError.response?.data?.message || `Unable to save payment (HTTP ${submitError.response?.status || 'unknown'}).`);
     } finally {
       setSaving(false);
     }
@@ -241,6 +254,11 @@ const Payments = ({ language }) => {
       </h2>
 
       <form onSubmit={handleSubmit} className="overflow-x-auto" style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #dbeafe' }}>
+        {!canManagePayments && (
+          <p style={{ color: '#b45309', marginBottom: '10px' }}>
+            Only finance, admin, and manager roles can create or update payments.
+          </p>
+        )}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
           <input name="studentName" value={formData.studentName} onChange={handleInputChange} placeholder="Student name" />
           <input name="className" value={formData.className} onChange={handleInputChange} placeholder="Class name" />
@@ -253,7 +271,7 @@ const Payments = ({ language }) => {
         </div>
         {formError && <p style={{ color: '#b91c1c', marginTop: '10px' }}>{formError}</p>}
         <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-          <button type="submit" disabled={saving}>{saving ? 'Saving...' : (editingId ? 'Update payment' : 'Create payment')}</button>
+          <button type="submit" disabled={saving || !canManagePayments}>{saving ? 'Saving...' : (editingId ? 'Update payment' : 'Create payment')}</button>
           {editingId && <button type="button" onClick={resetForm}>Cancel edit</button>}
         </div>
       </form>
@@ -305,12 +323,12 @@ const Payments = ({ language }) => {
                   <td style={td}>{payment.reference || '-'}</td>
                   <td style={td}>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button type="button" onClick={() => handleEdit(payment)}>Edit</button>
-                      <button type="button" onClick={() => handleDelete(payment.id)}>Delete</button>
+                      <button type="button" onClick={() => handleEdit(payment)} disabled={!canManagePayments}>Edit</button>
+                      <button type="button" onClick={() => handleDelete(payment.id)} disabled={!canManagePayments}>Delete</button>
                       <button
                         type="button"
                         onClick={() => handleGenerateFacture(payment)}
-                        disabled={generatingInvoiceId === payment.id}
+                        disabled={generatingInvoiceId === payment.id || !canManagePayments}
                       >
                         {generatingInvoiceId === payment.id ? 'Generating...' : 'Facture'}
                       </button>

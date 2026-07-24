@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { getTenantId } from '../tenant';
+import { hasAnyRole, normalizeRoles } from '../utils/roles';
 
 const PostInvoice = () => {
   const [studentName, setStudentName] = useState('');
@@ -13,10 +14,14 @@ const PostInvoice = () => {
 
   const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
   const token = sessionStorage.getItem('jwt_token');
+  const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
+  const roleHeader = userRoles.join(',');
+  const canManageFactures = hasAnyRole(userRoles, ['finance', 'admin', 'manager']);
 
   const buildHeaders = (includeJson = false) => {
     const headers = {
       'X-Tenant-Id': getTenantId(),
+      ...(roleHeader ? { 'X-User-Roles': roleHeader } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
     if (includeJson) {
@@ -62,6 +67,11 @@ const PostInvoice = () => {
   };
 
   const generateInvoice = async () => {
+    if (!canManageFactures) {
+      setError('Only finance, admin, and manager roles can generate factures.');
+      return;
+    }
+
     try {
       setError(null);
       const response = await axios.post(
@@ -74,7 +84,10 @@ const PostInvoice = () => {
             amount: parseFloat(item.amount)
           }))
         },
-        { responseType: 'blob' } // important for PDF
+        {
+          headers: buildHeaders(true),
+          responseType: 'blob'
+        } // important for PDF
       );
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
@@ -82,7 +95,7 @@ const PostInvoice = () => {
       setPdfUrl(url);
       await fetchFactures();
     } catch (err) {
-      setError('Erreur lors de la génération de la facture');
+      setError(err.response?.data?.message || `Erreur lors de la génération de la facture (HTTP ${err.response?.status || 'unknown'})`);
       console.error(err);
     }
   };
@@ -95,6 +108,7 @@ const PostInvoice = () => {
   return (
     <div style={{ padding: 20, maxWidth: 600 }}>
       <h2>Générer une Facture Scolaire</h2>
+      {!canManageFactures && <p style={{ color: '#b45309' }}>Only finance, admin, and manager roles can generate factures.</p>}
       {error && <p style={{ color: '#c00' }}>{error}</p>}
 
       <input
@@ -135,7 +149,7 @@ const PostInvoice = () => {
         + Ajouter un service
       </button>
       <br />
-      <button onClick={generateInvoice}>Générer la facture PDF</button>
+      <button onClick={generateInvoice} disabled={!canManageFactures}>Générer la facture PDF</button>
 
       {pdfUrl && (
         <div style={{ marginTop: 20 }}>
