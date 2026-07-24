@@ -34,7 +34,7 @@ management:
     health:
       show-details: always
 jwt:
-  secret: 1234567890
+  secret: 646465464r64646464r654654654f65466
   expiration: 3600000 # 1 hour in milliseconds (optional)
 
 eureka:
