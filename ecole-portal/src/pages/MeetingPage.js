@@ -1,12 +1,12 @@
 import React from "react";
-import OuttingPage from "./OuttingPage";
+import OutingPage from "./OutingPage";
 
 /**
  * MeetingPage — displays the school meetings (réunions) activity management.
- * Delegates all CRUD logic to OuttingPage with activityType="reunions".
+ * Delegates all CRUD logic to OutingPage with activityType="reunions".
  */
 const MeetingPage = ({ language }) => {
-  return <OuttingPage language={language} activityType="reunions" />;
+  return <OutingPage language={language} activityType="reunions" />;
 };
 
 export default MeetingPage;

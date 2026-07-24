@@ -38,6 +38,7 @@ import PaymentsPage from './pages/PaymentsPage';
 import ProfilePage from './pages/ProfilePage';
 import TeacherAttendancePage from './pages/TeacherAttendancePage';
 import TeacherNotesPage from './pages/TeacherNotesPage';
+import OutingPage from './pages/OutingPage';
 
 
 
@@ -169,7 +170,7 @@ const AppContent = () => {
                      <Route path="/administration/presence" element={<ProfessorPresence language={language} toggleLanguage={toggleLanguage} />} />
                      <Route path="/administration/classes" element={<ClassesPage language={language} toggleLanguage={toggleLanguage} />} />
                       <Route path="/administration/examens" element={<ExamProgram language={language} toggleLanguage={toggleLanguage} />} />
-                      <Route path="/administration/outing" element={<OuttingPage language={language} activityType="sorties" />} />
+                      <Route path="/administration/outing" element={<OutingPage language={language} activityType="sorties" />} />
                       <Route path="/administration/parties" element={<PartiesPage language={language} />} />
                       <Route path="/administration/meetings" element={<MeetingPage language={language} />} />
                       <Route path="/enseignement/parent-meetings" element={<ParentMeetingPage language={language} toggleLanguage={toggleLanguage} />} />

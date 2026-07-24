@@ -1,7 +1,8 @@
 -- Insert tenant master data
 INSERT IGNORE INTO tb_tenant (tenant_id, tenant_name) VALUES
 ('gardinia', 'Gardinia'),
-('qods', 'Qods');
+('qods', 'Qods'),
+('amana', 'Amana');
 
 -- Insert test users with roles
 INSERT IGNORE INTO tb_user (userno, surname, firstname, email, adresse, password, role, tenant_id) VALUES

@@ -5,7 +5,7 @@ import ar from "../locales/ar.json";
 import { getTenantId } from "../tenant";
 import { hasAnyRole, normalizeRoles } from "../utils/roles";
 
-const OuttingPage = ({ language, activityType = "sorties" }) => {
+const OutingPage = ({ language, activityType = "sorties" }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
   const userRoles = JSON.parse(localStorage.getItem("user_roles") || "[]");
   const normalizedRoles = normalizeRoles(userRoles);
@@ -347,4 +347,4 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
   );
 };
 
-export default OuttingPage;
+export default OutingPage;

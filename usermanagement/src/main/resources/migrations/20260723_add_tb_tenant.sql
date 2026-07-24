@@ -43,7 +43,8 @@ DEALLOCATE PREPARE stmt;
 -- Ensure tenant master data exists
 INSERT IGNORE INTO tb_tenant (tenant_id, tenant_name) VALUES
 ('gardinia', 'Gardinia'),
-('qods', 'Qods');
+('qods', 'Qods'),
+('amana', 'Amana');
 
 
 -- Add tenant_id to users only if missing
