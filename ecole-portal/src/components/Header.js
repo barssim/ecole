@@ -32,7 +32,7 @@ if (language === "fr") {
 				alignItems: "center",
 				padding: "10px 20px",
 				boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-				backgroundColor: "#80DFFF",
+				backgroundColor: "var(--tenant-soft, #80dfff)",
 			}}
 		>
 			{/* Logo Section */}

@@ -14,7 +14,9 @@ const gardinia = {
     },
     phone: "+123 456 789",
     mail: "gardinia@gmail.com",
-    primaryColor: "#0066cc",
+    primaryColor: "#2e7d32",
+    accentColor: "#4caf50",
+    softColor: "#c8e6c9",
   footerText: "© 2025 Gardinia. All rights reserved.",
 };
 

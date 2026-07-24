@@ -49,10 +49,38 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   return isAuthorized ? children : <Navigate to="/unauthorized" replace />;
 };
 
+const normalizeHex = (color) => {
+  const value = String(color || "").trim();
+  const shortHexMatch = value.match(/^#([0-9a-fA-F]{3})$/);
+  if (shortHexMatch) {
+    const [r, g, b] = shortHexMatch[1].split("");
+    return `#${r}${r}${g}${g}${b}${b}`;
+  }
+  return /^#([0-9a-fA-F]{6})$/.test(value) ? value : null;
+};
+
+const mixWithWhite = (color, ratio) => {
+  const normalized = normalizeHex(color);
+  if (!normalized) {
+    return color;
+  }
+  const channels = [1, 3, 5].map((index) => parseInt(normalized.slice(index, index + 2), 16));
+  const mixed = channels.map((channel) => Math.round(channel + (255 - channel) * ratio));
+  return `rgb(${mixed[0]}, ${mixed[1]}, ${mixed[2]})`;
+};
+
 function App() {
 	const [language, setLanguage] = useState("fr"); // Track current language
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 	let content;
+  const tenantPrimaryColor = normalizeHex(ecole.primaryColor) || "#007bff";
+  const tenantAccentColor = normalizeHex(ecole.accentColor) || mixWithWhite(tenantPrimaryColor, 0.35);
+  const tenantSoftColor = normalizeHex(ecole.softColor) || mixWithWhite(tenantPrimaryColor, 0.7);
+  const tenantThemeStyle = {
+    "--tenant-primary": tenantPrimaryColor,
+    "--tenant-accent": tenantAccentColor,
+    "--tenant-soft": tenantSoftColor,
+  };
 
 if (language === "fr") {
   content = fr;
@@ -97,7 +125,7 @@ const AppContent = () => {
 
 
   return (
-    <>
+    <div style={tenantThemeStyle}>
 			<Header language={language} toggleLanguage={toggleLanguage}/>
       <div className="layout-controls">
         <button
@@ -120,8 +148,8 @@ const AppContent = () => {
 
 
                  <div className="hero-title" style={{ textAlign: "center" }}>
-                   <h1 style={{ color: "blue" }}>{content.whatWeDo}{ecole.name[language] || ecole.name["fr"]}</h1>
-                   <h4 style={{ color: "#00BBFF" }}>{content.whatYouFind}</h4>
+                   <h1 style={{ color: "var(--tenant-primary, #007bff)" }}>{content.whatWeDo}{ecole.name[language] || ecole.name["fr"]}</h1>
+                   <h4 style={{ color: "var(--tenant-accent, #00bbff)" }}>{content.whatYouFind}</h4>
                  </div>
 {isHomePage && (
 <div className="bounce-container">
@@ -179,7 +207,7 @@ const AppContent = () => {
 			</div>
 			<br />
 			<Footer language={language} toggleLanguage={toggleLanguage} />
-    </>
+    </div>
 	);
 };
 

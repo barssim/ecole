@@ -58,7 +58,7 @@
 }
 
 .buttonStyle {
-	background-color: #007bff;
+	background-color: var(--tenant-primary, #007bff);
 	color: #fff;
 	padding: 10px 15px;
 	border: none;
@@ -84,7 +84,7 @@
 
 .linkStyle {
 	text-decoration: none;
-	color: #007bff;
+	color: var(--tenant-primary, #007bff);
 	font-size: 16px;
 	font-weight: bold;
 }
@@ -152,7 +152,7 @@
 	text-align: center;
 	width: 200px;
 	height: 40px;
-	  background-color: #00BBFF;
+	  background-color: var(--tenant-accent, #00bbff);
       color: #fff;
 }
 
@@ -178,12 +178,12 @@
 }
 
 .new-piece {
-	background-color: #007bff;
+	background-color: var(--tenant-primary, #007bff);
 	color: white;
 }
 
 .used-piece {
-	background-color: #007bff;
+	background-color: var(--tenant-primary, #007bff);
 	color: white;
 }
 
@@ -197,7 +197,7 @@
 
 
 .footer {
-	background-color: #007bff;
+	background-color: var(--tenant-primary, #007bff);
 	text-align: center;
 	padding: 20px;
 	width: 100%;
@@ -222,7 +222,7 @@
 }
 
 .left-panel, .right-panel {
-  background-color: #80DFFF;
+  background-color: var(--tenant-soft, #80dfff);
   padding: 1rem;
   border-radius: 8px;
 }
@@ -264,7 +264,7 @@
 }
 
 .mobile-menu-toggle {
-  background-color: #007bff;
+  background-color: var(--tenant-primary, #007bff);
   color: #fff;
   border: none;
   border-radius: 6px;

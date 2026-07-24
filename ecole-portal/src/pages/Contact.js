@@ -94,7 +94,7 @@ const wideInputStyle = {
 
 const buttonStyle = {
   padding: "16px",
-  backgroundColor: "#007bff",
+  backgroundColor: "var(--tenant-primary, #007bff)",
   color: "white",
   border: "none",
   borderRadius: "6px",
