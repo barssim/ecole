@@ -6,6 +6,18 @@ const gardinia = {
    },
  logo: "/logos/gardinia.png",
  image: "/images/gardinia.jpeg",
+ about: {
+     title: {
+         fr: "À propos de l'école Gardinia",
+         en: "About Gardinia School",
+         ar: "حول مدرسة جاردينيا",
+     },
+     description: {
+         fr: "L'école Gardinia accompagne les élèves avec un enseignement de qualité, un suivi administratif continu et une communication simple avec les familles.",
+         en: "Gardinia School supports students with quality education, continuous administrative follow-up, and simple communication with families.",
+         ar: "تدعم مدرسة جاردينيا التلاميذ من خلال تعليم عالي الجودة ومتابعة إدارية مستمرة وتواصل سهل مع الأسر.",
+     },
+ },
  adresse:
     {
          en: "Avenue Zarbia, Building 19, Sala El Jadida",

@@ -6,6 +6,18 @@ const qods = {
      },
    logo: "/logos/qods.png",
    image: "/images/qods.jpeg",
+   about: {
+       title: {
+           fr: "À propos de l'école Qods",
+           en: "About Qods School",
+           ar: "حول مدرسة القدس",
+       },
+       description: {
+           fr: "L'école Qods met l'accent sur l'accompagnement pédagogique, les services scolaires et une relation proche avec les parents.",
+           en: "Qods School focuses on educational support, school services, and a close relationship with parents.",
+           ar: "تركز مدرسة القدس على الدعم التربوي والخدمات المدرسية وبناء علاقة قريبة مع أولياء الأمور.",
+       },
+   },
     adresse:
        {
             en: "Avenue Meknes, Building 1, Sala El Jadida",

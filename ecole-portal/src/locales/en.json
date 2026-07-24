@@ -42,6 +42,7 @@
   "user_already_exist": "The username you chose already exists, please choose another one!",
   "successfull_profile_update": "Your profile has been successfully updated",
   "registration_failed": "Registration failed",
+  "profile_load_error": "Unable to load profile",
   "unsuccessfull_profile_update": "Profile update failed",
   "successfully_logged_out": "You have been successfully logged out",
   "enter": "Enter",

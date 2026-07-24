@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import fr from '../locales/fr.json';
+import ar from '../locales/ar.json';
+import en from '../locales/en.json';
 
-const ProfilePage = () => {
+const ProfilePage = ({ language = 'fr' }) => {
+  const content = language === 'fr' ? fr : language === 'en' ? en : ar;
   const [profile, setProfile] = useState(null);
   const [profileForm, setProfileForm] = useState({ firstname: '', username: '', email: '', adresse: '' });
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });
@@ -38,7 +42,14 @@ const ProfilePage = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Impossible de charger le profil');
+        let backendMessage = '';
+        try {
+          backendMessage = (await response.text()).trim();
+        } catch {
+          // ignore body parse failure
+        }
+        const fallbackMessage = `${content.profile_load_error || 'Impossible de charger le profil'} (HTTP ${response.status})`;
+        throw new Error(backendMessage || fallbackMessage);
       }
 
       const data = await response.json();
@@ -50,7 +61,7 @@ const ProfilePage = () => {
         adresse: data.adresse || '',
       });
     } catch (err) {
-      setError(err.message || 'Erreur lors du chargement du profil');
+      setError(err.message || content.profile_load_error || 'Erreur lors du chargement du profil');
     } finally {
       setLoading(false);
     }

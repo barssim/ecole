@@ -43,6 +43,7 @@
 	"user_already_exist":  "Le nom d'utilisateur que vous avez choisi exist déjà, veuillez choisir un autre svp!",
 	"successfull_profile_update":  "Votre profile a &eacutet&eacute actualis&eacute avec succ&eacutes",
 	"registration_failed":  "Enregistrement echou&eacute",
+	"profile_load_error": "Impossible de charger le profil",
 	"unsuccessfull_profile_update":  "la mise &agrave jour du profile a echou&eacute",
 	"successfully_logged_out":  "Vous étes deconnect&eacute avec succ&eacutes",
 	"enter": "Entrer",

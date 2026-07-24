@@ -42,6 +42,7 @@
 	"user_already_exist": "اسم المستخدم الذي اخترته موجود بالفعل، يرجى اختيار اسم آخر!",
 	"successfull_profile_update": "تم تحديث الملف الشخصي بنجاح",
 	"registration_failed": "فشل في التسجيل",
+	"profile_load_error": "تعذر تحميل الملف الشخصي",
 	"unsuccessfull_profile_update": "فشل في تحديث الملف الشخصي",
 	"successfully_logged_out": "تم تسجيل الخروج بنجاح",
 	"enter": "أدخل",

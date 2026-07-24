@@ -188,7 +188,7 @@ const AppContent = () => {
 				      <Route path="/about" element={<About language={language} toggleLanguage={toggleLanguage} />} />
 				      <Route path="/inscription" element={<Inscription language={language} toggleLanguage={toggleLanguage} />} />
 				      <Route path="/contact" element={<Contact language={language} toggleLanguage={toggleLanguage} />} />
-              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/profile" element={<ProfilePage language={language} />} />
 				      <Route path="/students/schedule" element={<StudentSchedulePage language={language} toggleLanguage={toggleLanguage} />} />
 				       <Route path="/parents/inscription" element={<InscriptionForm  isAuthorized={true} language={language} toggleLanguage={toggleLanguage} />} />
                    </Routes>
