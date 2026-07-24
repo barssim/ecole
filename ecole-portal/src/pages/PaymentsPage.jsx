@@ -3,6 +3,8 @@ import fr from '../locales/fr.json';
 import en from '../locales/en.json';
 import ar from '../locales/ar.json';
 import '../cssFiles/PaymentsPage.css';
+import { getTenantId } from '../tenant';
+import { normalizeRoles } from '../utils/roles';
 
 const PaymentsPage = ({ language }) => {
   const content = language === 'fr' ? fr : language === 'en' ? en : ar;
@@ -16,6 +18,19 @@ const PaymentsPage = ({ language }) => {
   const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
   const token = sessionStorage.getItem('jwt_token');
   const studentName = localStorage.getItem('userName') || 'Default Student';
+  const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
+
+  const buildHeaders = (includeJson = false) => {
+    const headers = {
+      'X-Tenant-Id': getTenantId(),
+      ...(userRoles.length > 0 ? { 'X-User-Roles': userRoles.join(',') } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+    if (includeJson) {
+      headers['Content-Type'] = 'application/json';
+    }
+    return headers;
+  };
 
   useEffect(() => {
     fetchData();
@@ -28,10 +43,7 @@ const PaymentsPage = ({ language }) => {
 
       // Fetch current payment notice
       const noticeResponse = await fetch(`${baseUrl}/api/paymentNotice?studentName=${encodeURIComponent(studentName)}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: buildHeaders(true),
       });
 
       if (noticeResponse.ok) {
@@ -41,10 +53,7 @@ const PaymentsPage = ({ language }) => {
 
       // Fetch all payment notices for this student
       const allNoticesResponse = await fetch(`${baseUrl}/api/paymentNotices?studentName=${encodeURIComponent(studentName)}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: buildHeaders(true),
       });
 
       if (allNoticesResponse.ok) {
@@ -54,16 +63,15 @@ const PaymentsPage = ({ language }) => {
 
       // Fetch payment history
       const paymentsResponse = await fetch(`${baseUrl}/api/payments?studentName=${encodeURIComponent(studentName)}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: buildHeaders(true),
       });
 
-      if (paymentsResponse.ok) {
-        const paymentsData = await paymentsResponse.json();
-        setPayments(Array.isArray(paymentsData) ? paymentsData : []);
+      if (!paymentsResponse.ok) {
+        throw new Error(`Request failed with ${paymentsResponse.status} /api/payments`);
       }
+
+      const paymentsData = await paymentsResponse.json();
+      setPayments(Array.isArray(paymentsData) ? paymentsData : []);
     } catch (err) {
       setError(err.message || 'Erreur lors du chargement des données');
       console.error('Error fetching payment data:', err);
@@ -85,10 +93,7 @@ const PaymentsPage = ({ language }) => {
 
       const response = await fetch(`${baseUrl}/api/facture/generate`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: buildHeaders(true),
         body: JSON.stringify({
           studentName: paymentNotice.studentName,
           className: paymentNotice.className,

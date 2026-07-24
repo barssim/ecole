@@ -3,6 +3,7 @@ import fr from '../locales/fr.json';
 import en from '../locales/en.json';
 import ar from '../locales/ar.json';
 import { getTenantId } from '../tenant';
+import { hasAnyRole, normalizeRoles } from '../utils/roles';
 
 const ATTESTATION_TYPES = [
   { value: 'enrollment',   labelKey: 'attestation_typeEnrollment' },
@@ -36,8 +37,8 @@ const AttestationsPage = ({ language }) => {
   const username  = localStorage.getItem('LoggedIn') || '';
   const token     = sessionStorage.getItem('jwt_token');
   const userRoles = JSON.parse(localStorage.getItem('user_roles') || '[]');
-  const normalizedRoles = userRoles.map((role) => String(role).toLowerCase());
-  const canManageAttestations = normalizedRoles.includes('admin') || normalizedRoles.includes('manager');
+  const normalizedRoles = normalizeRoles(userRoles);
+  const canManageAttestations = hasAnyRole(normalizedRoles, ['admin', 'manager']);
   const canRequestAttestation = !canManageAttestations;
 
   const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');

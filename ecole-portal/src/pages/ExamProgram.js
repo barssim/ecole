@@ -3,6 +3,7 @@ import fr from "../locales/fr.json";
 import en from "../locales/en.json";
 import ar from "../locales/ar.json";
 import { getTenantId } from "../tenant";
+import { hasAnyRole, normalizeRoles } from "../utils/roles";
 
 const EMPTY_FORM = {
   subject: "",
@@ -31,12 +32,14 @@ const ExamProgram = ({ language }) => {
   const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || "http://localhost:8085").replace(/\/$/, "");
   const token = sessionStorage.getItem("jwt_token");
   const userRoles = JSON.parse(localStorage.getItem("user_roles") || "[]");
-  const canManage = ["secretary", "admin", "manager"].some((r) => userRoles.includes(r));
+  const normalizedRoles = normalizeRoles(userRoles);
+  const rolesHeader = normalizedRoles.join(",");
+  const canManage = hasAnyRole(normalizedRoles, ["secretary", "admin", "manager"]);
 
   const buildHeaders = (includeJson = false) => {
     const headers = {
       "X-Tenant-Id": getTenantId(),
-      "X-User-Roles": userRoles.join(","),
+      "X-User-Roles": rolesHeader,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
     if (includeJson) {

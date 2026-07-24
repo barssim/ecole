@@ -8,28 +8,23 @@ import StudentBlock from "./MenuBlocks/StudentBlock";
 import ParentBlock from "./MenuBlocks/ParentBlock";
 import FinanceBlock from "./MenuBlocks/FinanceBlock";
 import ServicesBlock from "./MenuBlocks/ServicesBlock";
+import { hasAnyRole, normalizeRoles } from "../utils/roles";
 
 const Menu = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
   const userRoles = JSON.parse(localStorage.getItem("user_roles") || "[]");
-  const adminRoles = ["admin", "manager", "secretary"];
-    const isAdminAuthorized = adminRoles.some(role => userRoles.includes(role));
-    const attestationRoles = ["admin", "manager", "secretary"];
-    const canAccessAdminAttestations = attestationRoles.some(role => userRoles.includes(role));
+  const normalizedRoles = normalizeRoles(userRoles);
+  const isAdminAuthorized = hasAnyRole(normalizedRoles, ["admin", "manager", "secretary"]);
+  const canAccessAdminAttestations = hasAnyRole(normalizedRoles, ["admin", "manager", "secretary"]);
 
-    const teacherRoles = ["teacher", "manager"];
-    const isTeacherAuthorized = teacherRoles.some(role => userRoles.includes(role));
+  const isTeacherAuthorized = hasAnyRole(normalizedRoles, ["teacher", "manager"]);
 
-    const studentRoles = ["student", "manager"];
-    const isStudentAuthorized = studentRoles.some(role => userRoles.includes(role));
+  const isStudentAuthorized = hasAnyRole(normalizedRoles, ["student", "manager"]);
 
-    const parentRoles = ["parent", "manager"];
-        const isParentAuthorized = parentRoles.some(role => userRoles.includes(role));
-        const financeRoles = ["finance", "manager"];
-                const isFinanceAuthorized = financeRoles.some(role => userRoles.includes(role));
+  const isParentAuthorized = hasAnyRole(normalizedRoles, ["parent", "manager"]);
+  const isFinanceAuthorized = hasAnyRole(normalizedRoles, ["finance", "manager"]);
 
-     const servicesRoles = ["student", "teacher", "admin", "manager", "parent", "finance", "secretary"];
-            const isServicesAuthorized = servicesRoles.some(role => userRoles.includes(role));
+  const isServicesAuthorized = hasAnyRole(normalizedRoles, ["student", "teacher", "admin", "manager", "parent", "finance", "secretary"]);
 
   const menuBlocks = [
     {

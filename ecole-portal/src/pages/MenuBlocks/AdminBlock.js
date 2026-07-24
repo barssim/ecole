@@ -56,6 +56,36 @@ const AdminBlock = ({ isAuthorized, canAccessAttestations = false, content }) =>
           </Link>
         </li>
         )}
+        {isAuthorized && (
+        <li>
+          <Link
+            to="/administration/activites/sorties"
+            className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 inline-block"
+          >
+            {content.sorties}
+          </Link>
+        </li>
+        )}
+        {isAuthorized && (
+        <li>
+          <Link
+            to="/administration/activites/fetes"
+            className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 inline-block"
+          >
+            {content.fetes}
+          </Link>
+        </li>
+        )}
+        {isAuthorized && (
+        <li>
+          <Link
+            to="/administration/activites/reunions"
+            className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 inline-block"
+          >
+            {content.reunions}
+          </Link>
+        </li>
+        )}
       </ul>
       )}
     </div>

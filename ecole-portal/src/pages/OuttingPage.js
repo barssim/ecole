@@ -3,11 +3,14 @@ import en from "../locales/en.json";
 import fr from "../locales/fr.json";
 import ar from "../locales/ar.json";
 import { getTenantId } from "../tenant";
+import { hasAnyRole, normalizeRoles } from "../utils/roles";
 
 const OuttingPage = ({ language, activityType = "sorties" }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
   const userRoles = JSON.parse(localStorage.getItem("user_roles") || "[]");
-  const isSecretaryAuthorized = userRoles.includes("secretary");
+  const normalizedRoles = normalizeRoles(userRoles);
+  const rolesHeader = normalizedRoles.join(",");
+  const isSecretaryAuthorized = hasAnyRole(normalizedRoles, ["secretary"]);
   const userName = localStorage.getItem("LoggedIn") || "";
   const token = sessionStorage.getItem("jwt_token");
   const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || "http://localhost:8085").replace(/\/$/, "");
@@ -33,11 +36,11 @@ const OuttingPage = ({ language, activityType = "sorties" }) => {
     () => ({
       "Content-Type": "application/json",
       "X-Tenant-Id": getTenantId(),
-      "X-User-Roles": userRoles.join(","),
+      "X-User-Roles": rolesHeader,
       "X-User-Name": userName,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     }),
-    [token, userName, userRoles]
+    [token, userName, rolesHeader]
   );
 
   const titleByActivityType = {
