@@ -29,7 +29,7 @@ public class Attestation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "tenant_id")
+    @Column(name = "tenant_id", nullable = false)
     private String tenantId;
 
     @Column(nullable = false, name = "user_id")
