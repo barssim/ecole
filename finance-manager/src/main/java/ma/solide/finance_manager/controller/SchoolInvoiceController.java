@@ -183,7 +183,13 @@ public class SchoolInvoiceController {
      * Create a new payment notice
      */
     @PostMapping("/paymentNotices")
-    public ResponseEntity<PaymentNoticeDTO> createPaymentNotice(@RequestBody PaymentNoticeDTO noticeDTO) {
+    public ResponseEntity<PaymentNoticeDTO> createPaymentNotice(
+            @RequestBody PaymentNoticeDTO noticeDTO,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+        if (!isAuthorizedToCreatePayment(userRolesHeader)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only finance, admin, and manager roles can create payment notices");
+        }
         PaymentNoticeDTO created = paymentNoticeService.createNotice(noticeDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -194,7 +200,12 @@ public class SchoolInvoiceController {
     @PatchMapping("/paymentNotices/{id}/status")
     public ResponseEntity<PaymentNoticeDTO> updatePaymentNoticeStatus(
             @PathVariable Integer id,
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, String> request,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+        if (!isAuthorizedToCreatePayment(userRolesHeader)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only finance, admin, and manager roles can update payment notices");
+        }
         String status = request.get("status");
         PaymentNoticeDTO updated = paymentNoticeService.updateNoticeStatus(id, status);
         return ResponseEntity.ok(updated);

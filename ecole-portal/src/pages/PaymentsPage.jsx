@@ -4,7 +4,7 @@ import en from '../locales/en.json';
 import ar from '../locales/ar.json';
 import '../cssFiles/PaymentsPage.css';
 import { getTenantId } from '../tenant';
-import { normalizeRoles } from '../utils/roles';
+import { hasAnyRole, normalizeRoles } from '../utils/roles';
 
 const PaymentsPage = ({ language }) => {
   const content = language === 'fr' ? fr : language === 'en' ? en : ar;
@@ -13,12 +13,22 @@ const PaymentsPage = ({ language }) => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedNoticeId, setSelectedNoticeId] = useState(null);
+  const [noticeForm, setNoticeForm] = useState({
+    studentName: '',
+    className: '',
+    totalAmount: '',
+    currency: 'MAD',
+    dueDate: '',
+    description: '',
+  });
+  const [savingNotice, setSavingNotice] = useState(false);
+  const [updatingNoticeId, setUpdatingNoticeId] = useState(null);
 
   const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
   const token = sessionStorage.getItem('jwt_token');
   const studentName = localStorage.getItem('userName') || 'Default Student';
   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
+  const canManagePaymentNotices = hasAnyRole(userRoles, ['finance', 'admin', 'manager']);
 
   const buildHeaders = (includeJson = false) => {
     const headers = {
@@ -34,6 +44,10 @@ const PaymentsPage = ({ language }) => {
 
   useEffect(() => {
     fetchData();
+  }, [studentName]);
+
+  useEffect(() => {
+    setNoticeForm((current) => ({ ...current, studentName }));
   }, [studentName]);
 
   const fetchData = async () => {
@@ -121,6 +135,91 @@ const PaymentsPage = ({ language }) => {
     }
   };
 
+  const handleNoticeInputChange = (event) => {
+    const { name, value } = event.target;
+    setNoticeForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleCreateNotice = async (event) => {
+    event.preventDefault();
+    setError(null);
+
+    if (!canManagePaymentNotices) {
+      setError('Only finance, admin, and manager roles can create payment notices.');
+      return;
+    }
+
+    const amountValue = Number(noticeForm.totalAmount);
+    if (!Number.isFinite(amountValue) || amountValue <= 0) {
+      setError('Total amount must be greater than 0.');
+      return;
+    }
+
+    if (!noticeForm.studentName.trim()) {
+      setError('Student name is required.');
+      return;
+    }
+
+    try {
+      setSavingNotice(true);
+      const response = await fetch(`${baseUrl}/api/paymentNotices`, {
+        method: 'POST',
+        headers: buildHeaders(true),
+        body: JSON.stringify({
+          studentName: noticeForm.studentName.trim(),
+          className: noticeForm.className.trim() || '-',
+          totalAmount: amountValue,
+          currency: noticeForm.currency.trim() || 'MAD',
+          dueDate: noticeForm.dueDate || null,
+          description: noticeForm.description.trim() || null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with ${response.status} /api/paymentNotices`);
+      }
+
+      setNoticeForm((current) => ({
+        ...current,
+        className: '',
+        totalAmount: '',
+        dueDate: '',
+        description: '',
+      }));
+      await fetchData();
+    } catch (createError) {
+      setError(createError.message || 'Unable to create payment notice.');
+    } finally {
+      setSavingNotice(false);
+    }
+  };
+
+  const handleUpdateNoticeStatus = async (noticeId, status) => {
+    if (!canManagePaymentNotices) {
+      setError('Only finance, admin, and manager roles can update payment notices.');
+      return;
+    }
+
+    try {
+      setUpdatingNoticeId(noticeId);
+      const response = await fetch(`${baseUrl}/api/paymentNotices/${noticeId}/status`, {
+        method: 'PATCH',
+        headers: buildHeaders(true),
+        body: JSON.stringify({ status }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with ${response.status} /api/paymentNotices/${noticeId}/status`);
+      }
+
+      await fetchData();
+    } catch (updateError) {
+      setError(updateError.message || 'Unable to update payment notice status.');
+    } finally {
+      setUpdatingNoticeId(null);
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
@@ -166,6 +265,58 @@ const PaymentsPage = ({ language }) => {
       <h1>{content?.payments_title || 'Factures et Paiements'}</h1>
 
       {error && <div className="alert alert-error">{error}</div>}
+
+      {canManagePaymentNotices && (
+        <section className="invoice-section">
+          <h2>{content?.payment_noticeCreateTitle || 'Créer une facture'}</h2>
+          <form onSubmit={handleCreateNotice} style={{ display: 'grid', gap: 10, maxWidth: 680 }}>
+            <input
+              name="studentName"
+              value={noticeForm.studentName}
+              onChange={handleNoticeInputChange}
+              placeholder={content?.payment_studentName || 'Élève'}
+              required
+            />
+            <input
+              name="className"
+              value={noticeForm.className}
+              onChange={handleNoticeInputChange}
+              placeholder={content?.payment_class || 'Classe'}
+            />
+            <input
+              name="totalAmount"
+              type="number"
+              min="0"
+              step="0.01"
+              value={noticeForm.totalAmount}
+              onChange={handleNoticeInputChange}
+              placeholder={content?.payment_amount || 'Montant'}
+              required
+            />
+            <input
+              name="currency"
+              value={noticeForm.currency}
+              onChange={handleNoticeInputChange}
+              placeholder="Currency"
+            />
+            <input
+              name="dueDate"
+              type="date"
+              value={noticeForm.dueDate}
+              onChange={handleNoticeInputChange}
+            />
+            <input
+              name="description"
+              value={noticeForm.description}
+              onChange={handleNoticeInputChange}
+              placeholder={content?.payment_description || 'Description'}
+            />
+            <button type="submit" disabled={savingNotice} className="btn-download">
+              {savingNotice ? (content?.loading || 'Loading...') : (content?.payment_noticeCreateButton || 'Créer la facture')}
+            </button>
+          </form>
+        </section>
+      )}
 
       {/* Current Invoice Section */}
       <section className="invoice-section">
@@ -236,6 +387,7 @@ const PaymentsPage = ({ language }) => {
                   <th style={th}>{content?.payment_dueDate || 'Échéance'}</th>
                   <th style={th}>{content?.payment_status || 'Statut'}</th>
                   <th style={th}>{content?.payment_amount || 'Montant'}</th>
+                  {canManagePaymentNotices && <th style={th}>Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -248,6 +400,24 @@ const PaymentsPage = ({ language }) => {
                     <td style={td}>{formatDate(notice.dueDate)}</td>
                     <td style={td}>{getStatusLabel(notice.status)}</td>
                     <td style={td}>{notice.totalAmount.toFixed(2)} {notice.currency}</td>
+                    {canManagePaymentNotices && (
+                      <td style={td}>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          {['pending', 'paid', 'unpaid', 'overdue'].map((status) => (
+                            <button
+                              key={status}
+                              type="button"
+                              onClick={() => handleUpdateNoticeStatus(notice.id, status)}
+                              disabled={updatingNoticeId === notice.id || notice.status === status}
+                              className="btn-download"
+                              style={{ opacity: notice.status === status ? 0.6 : 1 }}
+                            >
+                              {updatingNoticeId === notice.id ? '...' : getStatusLabel(status)}
+                            </button>
+                          ))}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
