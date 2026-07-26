@@ -161,11 +161,11 @@ const OutingPage = ({ language }) => {
         throw new Error(backendMessage || "Unable to save activity");
       }
 
-      setMessage(
-        isEditing
-          ? (content.activity_updated_success || content.outing_update_button)
-          : (content.activity_created_success || content.outing_add_button)
-      );
+       setMessage(
+         isEditing
+           ? (content.outing_update_button || "Outing updated successfully")
+           : (content.outing_add_button || "Outing created successfully")
+       );
       resetForm();
       fetchActivities();
     } catch (err) {
@@ -218,7 +218,7 @@ const OutingPage = ({ language }) => {
       if (selectedActivity && selectedActivity.id === id) {
         resetForm();
       }
-      setMessage(content.activity_deleted_success || content.outing_remove_button);
+      setMessage(content.outing_remove_button || "Outing deleted successfully");
       fetchActivities();
     } catch (err) {
       setError(err.message || "Unable to delete activity");

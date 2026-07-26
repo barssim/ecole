@@ -78,11 +78,14 @@ public class SchoolInvoiceController {
 
     /**
      * Get all payments history
+     * Accessible to users with valid tenant ID
      */
     @GetMapping("/payments")
     public ResponseEntity<List<PaymentDTO>> getPayments(
             @RequestParam(value = "studentName", required = false) String studentName,
-            @RequestParam(value = "className", required = false) String className) {
+            @RequestParam(value = "className", required = false) String className,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+        // Allow access to any authenticated user (tenant ID is already validated by TenantFilter)
         if (studentName != null && !studentName.trim().isEmpty()) {
             return ResponseEntity.ok(paymentService.getPaymentsByStudent(studentName));
         }
@@ -94,9 +97,13 @@ public class SchoolInvoiceController {
 
     /**
      * Get a single payment by ID
+     * Accessible to users with valid tenant ID
      */
     @GetMapping("/payments/{id}")
-    public ResponseEntity<PaymentDTO> getPaymentById(@PathVariable Integer id) {
+    public ResponseEntity<PaymentDTO> getPaymentById(
+            @PathVariable Integer id,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+        // Allow access to any authenticated user (tenant ID is already validated by TenantFilter)
         PaymentDTO payment = paymentService.getPaymentById(id);
         return ResponseEntity.ok(payment);
     }
@@ -179,8 +186,8 @@ public class SchoolInvoiceController {
                 return true;
             }
         }
-        return false;
-    }
+         return false;
+     }
 
     /**
      * Create a new payment notice

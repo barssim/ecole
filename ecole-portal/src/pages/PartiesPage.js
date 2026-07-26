@@ -160,8 +160,8 @@ const PartiesPage = ({ language }) => {
 
       setMessage(
         isEditing
-          ? (content.activity_updated_success || "Party updated successfully")
-          : (content.activity_created_success || "Party created successfully")
+          ? `${content.fetes} updated successfully`
+          : `${content.fetes} created successfully`
       );
       resetForm();
       fetchActivities();
@@ -215,7 +215,7 @@ const PartiesPage = ({ language }) => {
       if (selectedActivity && selectedActivity.id === id) {
         resetForm();
       }
-      setMessage(content.activity_deleted_success || "Party deleted successfully");
+      setMessage(`${content.fetes} deleted successfully`);
       fetchActivities();
     } catch (err) {
       setError(err.message || "Unable to delete activity");
@@ -241,7 +241,7 @@ const PartiesPage = ({ language }) => {
         <>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
             <button type="button" onClick={openPlanner}>
-              {isEditing ? "Update Party" : "Add Party"}
+              {isEditing ? `Update ${content.fetes}` : `Add ${content.fetes}`}
             </button>
             {showPlanner && (
               <button type="button" onClick={resetForm}>
@@ -252,7 +252,7 @@ const PartiesPage = ({ language }) => {
 
           {showPlanner && (
             <>
-              <h3>{isEditing ? "Update Party" : "Add Party"}</h3>
+              <h3>{isEditing ? `Update ${content.fetes}` : `Add ${content.fetes}`}</h3>
               <form onSubmit={handleSubmit} style={{ display: "grid", gap: 8, maxWidth: 500 }}>
                 <input
                   name="title"
@@ -289,7 +289,7 @@ const PartiesPage = ({ language }) => {
                   placeholder="Description"
                 />
                 <button type="submit">
-                  {isEditing ? "Update Party" : "Add Party"}
+                  {isEditing ? `Update ${content.fetes}` : `Add ${content.fetes}`}
                 </button>
               </form>
             </>
@@ -336,7 +336,7 @@ const PartiesPage = ({ language }) => {
 
       {canManageActivities && selectedActivity && showPlanner && (
         <div style={{ borderTop: "2px solid #ddd", paddingTop: "10px" }}>
-          <h3>Selected Party:</h3>
+          <h3>Selected {content.fetes}:</h3>
           <p><b>Title:</b> {selectedActivity.title}</p>
           <p><b>Date:</b> {selectedActivity.date}</p>
           <p><b>{content.class || "Class"}:</b> {selectedActivity.className}</p>

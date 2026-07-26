@@ -160,8 +160,8 @@ const MeetingPage = ({ language }) => {
 
       setMessage(
         isEditing
-          ? (content.activity_updated_success || "Meeting updated successfully")
-          : (content.activity_created_success || "Meeting created successfully")
+          ? `${content.reunions} updated successfully`
+          : `${content.reunions} created successfully`
       );
       resetForm();
       fetchActivities();
@@ -215,7 +215,7 @@ const MeetingPage = ({ language }) => {
       if (selectedActivity && selectedActivity.id === id) {
         resetForm();
       }
-      setMessage(content.activity_deleted_success || "Meeting deleted successfully");
+      setMessage(`${content.reunions} deleted successfully`);
       fetchActivities();
     } catch (err) {
       setError(err.message || "Unable to delete activity");
@@ -241,7 +241,7 @@ const MeetingPage = ({ language }) => {
         <>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
             <button type="button" onClick={openPlanner}>
-              {isEditing ? "Update Meeting" : "Add Meeting"}
+              {isEditing ? `Update ${content.reunions}` : `Add ${content.reunions}`}
             </button>
             {showPlanner && (
               <button type="button" onClick={resetForm}>
@@ -252,7 +252,7 @@ const MeetingPage = ({ language }) => {
 
           {showPlanner && (
             <>
-              <h3>{isEditing ? "Update Meeting" : "Add Meeting"}</h3>
+              <h3>{isEditing ? `Update ${content.reunions}` : `Add ${content.reunions}`}</h3>
               <form onSubmit={handleSubmit} style={{ display: "grid", gap: 8, maxWidth: 500 }}>
                 <input
                   name="title"
@@ -289,7 +289,7 @@ const MeetingPage = ({ language }) => {
                   placeholder="Description"
                 />
                 <button type="submit">
-                  {isEditing ? "Update Meeting" : "Add Meeting"}
+                  {isEditing ? `Update ${content.reunions}` : `Add ${content.reunions}`}
                 </button>
               </form>
             </>
@@ -336,7 +336,7 @@ const MeetingPage = ({ language }) => {
 
       {canManageActivities && selectedActivity && showPlanner && (
         <div style={{ borderTop: "2px solid #ddd", paddingTop: "10px" }}>
-          <h3>Selected Meeting:</h3>
+          <h3>Selected {content.reunions}:</h3>
           <p><b>Title:</b> {selectedActivity.title}</p>
           <p><b>Date:</b> {selectedActivity.date}</p>
           <p><b>{content.class || "Class"}:</b> {selectedActivity.className}</p>
