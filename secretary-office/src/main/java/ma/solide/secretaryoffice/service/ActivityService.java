@@ -156,9 +156,14 @@ public class ActivityService {
     }
 
     private boolean hasAnyRole(Set<String> roles, String... expected) {
-        for (String role : expected) {
-            if (roles.contains(role)) {
-                return true;
+        for (String assignedRole : roles) {
+            for (String expectedRole : expected) {
+                String normalizedExpected = expectedRole.toLowerCase(Locale.ROOT);
+                if (assignedRole.equals(normalizedExpected)
+                        || assignedRole.equals("role_" + normalizedExpected)
+                        || assignedRole.endsWith("_" + normalizedExpected)) {
+                    return true;
+                }
             }
         }
         return false;

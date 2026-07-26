@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import en from "../locales/en.json";
 import fr from "../locales/fr.json";
 import ar from "../locales/ar.json";
@@ -7,10 +8,16 @@ import { hasAnyRole, normalizeRoles } from "../utils/roles";
 
 const OutingPage = ({ language, activityType = "sorties" }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
+  const location = useLocation();
   const userRoles = JSON.parse(localStorage.getItem("user_roles") || "[]");
   const normalizedRoles = normalizeRoles(userRoles);
   const rolesHeader = normalizedRoles.join(",");
+  const isAdministrationPath = (location.pathname || "").toLowerCase().startsWith("/administration/");
   const isSecretaryAuthorized = hasAnyRole(normalizedRoles, ["secretary"]);
+  const isAdminAuthorized = hasAnyRole(normalizedRoles, ["admin", "manager"]);
+  const canManageActivities = isAdministrationPath
+    ? (isSecretaryAuthorized || isAdminAuthorized)
+    : isSecretaryAuthorized;
   const userName = localStorage.getItem("LoggedIn") || "";
   const token = sessionStorage.getItem("jwt_token");
   const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || "http://localhost:8085").replace(/\/$/, "");
@@ -52,10 +59,10 @@ const OutingPage = ({ language, activityType = "sorties" }) => {
 
   useEffect(() => {
     fetchActivities();
-    if (isSecretaryAuthorized) {
+    if (canManageActivities) {
       fetchClasses();
     }
-  }, [activityType, isSecretaryAuthorized]);
+  }, [activityType, canManageActivities]);
 
   const fetchActivities = async () => {
     try {
@@ -125,7 +132,7 @@ const OutingPage = ({ language, activityType = "sorties" }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isSecretaryAuthorized) {
+    if (!canManageActivities) {
       return;
     }
 
@@ -168,7 +175,7 @@ const OutingPage = ({ language, activityType = "sorties" }) => {
   };
 
   const handleSelect = (activity) => {
-    if (!isSecretaryAuthorized) {
+    if (!canManageActivities) {
       return;
     }
     setSelectedActivity(activity);
@@ -186,7 +193,7 @@ const OutingPage = ({ language, activityType = "sorties" }) => {
   };
 
   const handleRemove = async (id) => {
-    if (!isSecretaryAuthorized) {
+    if (!canManageActivities) {
       return;
     }
 
@@ -234,7 +241,7 @@ const OutingPage = ({ language, activityType = "sorties" }) => {
       {message && <p style={{ color: "#15803d" }}>{message}</p>}
       {error && <p style={{ color: "#b91c1c" }}>{error}</p>}
 
-      {isSecretaryAuthorized && (
+      {canManageActivities && (
         <>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
             <button type="button" onClick={openPlanner}>
@@ -314,12 +321,12 @@ const OutingPage = ({ language, activityType = "sorties" }) => {
             >
               <strong>{activity.title}</strong> — {activity.date} — {activity.className} — {activity.destination}
               <p>{activity.description}</p>
-              {isSecretaryAuthorized && (
+              {canManageActivities && (
                 <button type="button" onClick={() => handleSelect(activity)}>
                   {content.activity_edit_button || content.outing_update_button || "Edit"}
                 </button>
               )}
-              {isSecretaryAuthorized && (
+              {canManageActivities && (
                 <button
                   type="button"
                   onClick={() => handleRemove(activity.id)}
@@ -333,7 +340,7 @@ const OutingPage = ({ language, activityType = "sorties" }) => {
         </ul>
       )}
 
-      {isSecretaryAuthorized && selectedActivity && showPlanner && (
+      {canManageActivities && selectedActivity && showPlanner && (
         <div style={{ borderTop: "2px solid #ddd", paddingTop: "10px" }}>
           <h3>{content.outing_selected_label}:</h3>
           <p><b>{content.outing_title}:</b> {selectedActivity.title}</p>

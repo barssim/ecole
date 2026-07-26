@@ -1,6 +1,7 @@
 package ma.solide.secretaryoffice.controller;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,7 +46,7 @@ public class ActivityController {
             @RequestBody ActivityRequestDTO dto,
             @RequestHeader(value = "X-User-Roles", required = false) String rolesHeader,
             @RequestHeader(value = "X-User-Name", required = false) String userNameHeader) {
-        requireSecretary(rolesHeader);
+        requireActivityManager(rolesHeader);
         return activityService.createActivity(dto, userNameHeader);
     }
 
@@ -54,7 +55,7 @@ public class ActivityController {
             @PathVariable Integer id,
             @RequestBody ActivityRequestDTO dto,
             @RequestHeader(value = "X-User-Roles", required = false) String rolesHeader) {
-        requireSecretary(rolesHeader);
+        requireActivityManager(rolesHeader);
         return ResponseEntity.ok(activityService.updateActivity(id, dto));
     }
 
@@ -63,15 +64,39 @@ public class ActivityController {
     public void deleteActivity(
             @PathVariable Integer id,
             @RequestHeader(value = "X-User-Roles", required = false) String rolesHeader) {
-        requireSecretary(rolesHeader);
+        requireActivityManager(rolesHeader);
         activityService.deleteActivity(id);
     }
 
-    private void requireSecretary(String rolesHeader) {
-        if (rolesHeader == null || rolesHeader.isBlank() || !rolesHeader.toLowerCase().contains("secretary")) {
+    private void requireActivityManager(String rolesHeader) {
+        if (!hasAnyRole(rolesHeader, "secretary", "admin", "manager")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Only secretary can add and schedule activities");
+                    "Only secretary, admin, or manager can manage activities");
         }
+    }
+
+    private boolean hasAnyRole(String rolesHeader, String... expectedRoles) {
+        if (rolesHeader == null || rolesHeader.isBlank()) {
+            return false;
+        }
+
+        String[] rawRoles = rolesHeader.split(",");
+        for (String rawRole : rawRoles) {
+            String role = rawRole.trim().toLowerCase(Locale.ROOT);
+            if (role.isEmpty()) {
+                continue;
+            }
+            for (String expected : expectedRoles) {
+                String normalizedExpected = expected.trim().toLowerCase(Locale.ROOT);
+                if (role.equals(normalizedExpected)
+                        || role.equals("role_" + normalizedExpected)
+                        || role.endsWith("_" + normalizedExpected)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }
 
