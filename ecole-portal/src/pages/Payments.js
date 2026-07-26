@@ -74,11 +74,13 @@ const Payments = ({ language }) => {
     setError('');
     try {
       console.log('[Payments] Fetching from:', paymentsApiBase);
+      const headers = {
+        ...getHeaders(),
+        Accept: 'application/json'
+      };
       const response = await axios.get(paymentsApiBase, {
         timeout: 10000,
-        headers: {
-          'Accept': 'application/json'
-        }
+        headers
       });
       console.log('[Payments] Success:', response.data);
       setPayments(Array.isArray(response.data) ? response.data : []);
