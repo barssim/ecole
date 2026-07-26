@@ -6,7 +6,8 @@ import ar from "../locales/ar.json";
 import { getTenantId } from "../tenant";
 import { hasAnyRole, normalizeRoles } from "../utils/roles";
 
-const OutingPage = ({ language, activityType = "sorties" }) => {
+const OutingPage = ({ language }) => {
+  const activityType = "sorties";
   const content = language === "fr" ? fr : language === "en" ? en : ar;
   const location = useLocation();
   const userRoles = JSON.parse(localStorage.getItem("user_roles") || "[]");
@@ -50,19 +51,17 @@ const OutingPage = ({ language, activityType = "sorties" }) => {
     [token, userName, rolesHeader]
   );
 
-  const titleByActivityType = {
-    sorties: content.sorties || content.outing_page_title || "Outings",
-    fetes: content.fetes || "Parties",
-    reunions: content.reunions || "Meetings",
-  };
-  const pageTitle = titleByActivityType[activityType] || (content.services || "Activities");
+   const titleByActivityType = {
+     sorties: content.sorties || content.outing_page_title || "Outings",
+   };
+   const pageTitle = titleByActivityType[activityType] || (content.services || "Activities");
 
-  useEffect(() => {
-    fetchActivities();
-    if (canManageActivities) {
-      fetchClasses();
-    }
-  }, [activityType, canManageActivities]);
+   useEffect(() => {
+     fetchActivities();
+     if (canManageActivities) {
+       fetchClasses();
+     }
+   }, [canManageActivities]);
 
   const fetchActivities = async () => {
     try {
