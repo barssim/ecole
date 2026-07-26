@@ -14,6 +14,7 @@ public class SecurityConfig {
                         auth -> auth
                                 .requestMatchers("/api/auth/**").permitAll()
                                 .requestMatchers("/api/users/**").permitAll()
+                                .requestMatchers("/api/tenant-customization/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .formLogin(form -> form.disable())

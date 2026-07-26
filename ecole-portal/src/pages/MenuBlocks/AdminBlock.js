@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-const AdminBlock = ({ isAuthorized, canAccessAttestations = false, content }) => {
+const AdminBlock = ({ isAuthorized, canAccessAttestations = false, canManageCustomization = false, content }) => {
   const [showActivites, setShowActivites] = useState(false);
   const canOpenAdministration = isAuthorized || canAccessAttestations;
 
@@ -83,6 +83,16 @@ const AdminBlock = ({ isAuthorized, canAccessAttestations = false, content }) =>
             className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 inline-block"
           >
             {content.reunions}
+          </Link>
+        </li>
+        )}
+        {canManageCustomization && (
+        <li>
+          <Link
+            to="/administration/customization"
+            className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 inline-block"
+          >
+            Tenant customization
           </Link>
         </li>
         )}

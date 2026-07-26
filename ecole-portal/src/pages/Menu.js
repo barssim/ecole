@@ -16,6 +16,7 @@ const Menu = ({ language }) => {
   const normalizedRoles = normalizeRoles(userRoles);
   const isAdminAuthorized = hasAnyRole(normalizedRoles, ["admin", "manager", "secretary"]);
   const canAccessAdminAttestations = hasAnyRole(normalizedRoles, ["admin", "manager", "secretary"]);
+  const canManageCustomization = hasAnyRole(normalizedRoles, ["manager"]);
 
   const isTeacherAuthorized = hasAnyRole(normalizedRoles, ["teacher", "manager"]);
 
@@ -33,6 +34,7 @@ const Menu = ({ language }) => {
           content={content}
           isAuthorized={isAdminAuthorized}
           canAccessAttestations={canAccessAdminAttestations}
+          canManageCustomization={canManageCustomization}
         />
       ),
       isAuthorized: isAdminAuthorized,

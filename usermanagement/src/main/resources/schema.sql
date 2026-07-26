@@ -19,6 +19,13 @@ CREATE TABLE IF NOT EXISTS tb_user (
     CONSTRAINT uq_tb_user_tenant_email UNIQUE (tenant_id, email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Store tenant-specific UI customization variables as JSON
+CREATE TABLE IF NOT EXISTS tb_tenant_customization (
+    tenant_id VARCHAR(64) PRIMARY KEY,
+    customization_json TEXT NOT NULL,
+    CONSTRAINT fk_tb_tenant_customization_tenant FOREIGN KEY (tenant_id) REFERENCES tb_tenant (tenant_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Create indexes for better query performance
 CREATE INDEX idx_surname ON tb_user(surname);
 CREATE INDEX idx_email ON tb_user(email);

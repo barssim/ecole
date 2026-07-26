@@ -15,7 +15,7 @@ import fr from "./locales/fr.json";
 import ar from "./locales/ar.json";
 import en from "./locales/en.json";
 import "./App.css";
-import ecole from './ecoleLoader';
+import ecole, { fetchTenantCustomization } from './ecoleLoader';
 import SchoolInvoicePreview from './components/SchoolInvoicePreview';
 import Payments from './pages/Payments';
 import ExamProgram  from './pages/ExamProgram';
@@ -39,6 +39,7 @@ import ProfilePage from './pages/ProfilePage';
 import TeacherAttendancePage from './pages/TeacherAttendancePage';
 import TeacherNotesPage from './pages/TeacherNotesPage';
 import OutingPage from './pages/OutingPage';
+import TenantCustomizationPage from './pages/TenantCustomizationPage';
 
 
 
@@ -74,10 +75,11 @@ const mixWithWhite = (color, ratio) => {
 function App() {
 	const [language, setLanguage] = useState("fr"); // Track current language
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [tenantCustomization, setTenantCustomization] = useState(ecole);
 	let content;
-  const tenantPrimaryColor = normalizeHex(ecole.primaryColor) || "#007bff";
-  const tenantAccentColor = normalizeHex(ecole.accentColor) || mixWithWhite(tenantPrimaryColor, 0.35);
-  const tenantSoftColor = normalizeHex(ecole.softColor) || mixWithWhite(tenantPrimaryColor, 0.7);
+  const tenantPrimaryColor = normalizeHex(tenantCustomization.primaryColor) || "#007bff";
+  const tenantAccentColor = normalizeHex(tenantCustomization.accentColor) || mixWithWhite(tenantPrimaryColor, 0.35);
+  const tenantSoftColor = normalizeHex(tenantCustomization.softColor) || mixWithWhite(tenantPrimaryColor, 0.7);
   const tenantThemeStyle = {
     "--tenant-primary": tenantPrimaryColor,
     "--tenant-accent": tenantAccentColor,
@@ -105,6 +107,18 @@ useEffect(() => {
     localStorage.removeItem("LoggedIn");
     localStorage.removeItem("user_roles");
   }
+}, []);
+
+useEffect(() => {
+  let mounted = true;
+  fetchTenantCustomization().then((customization) => {
+    if (mounted && customization) {
+      setTenantCustomization(customization);
+    }
+  });
+  return () => {
+    mounted = false;
+  };
 }, []);
 
 useEffect(() => {
@@ -150,13 +164,13 @@ const AppContent = () => {
 
 
                  <div className="hero-title" style={{ textAlign: "center" }}>
-                   <h1 style={{ color: "var(--tenant-primary, #007bff)" }}>{content.whatWeDo}{ecole.name[language] || ecole.name["fr"]}</h1>
+                   <h1 style={{ color: "var(--tenant-primary, #007bff)" }}>{content.whatWeDo}{tenantCustomization.name?.[language] || tenantCustomization.name?.["fr"]}</h1>
                    <h4 style={{ color: "var(--tenant-accent, #00bbff)" }}>{content.whatYouFind}</h4>
                  </div>
 {isHomePage && (
 <div className="bounce-container">
   <div className="bounce-content">
-    <img src={ecole.logo} width="300" />
+    <img src={tenantCustomization.logo} width="300" />
   </div>
 </div>
 )}
@@ -173,6 +187,7 @@ const AppContent = () => {
                       <Route path="/administration/outings" element={<OutingPage language={language} />} />
                       <Route path="/administration/parties" element={<PartiesPage language={language} />} />
                       <Route path="/administration/meetings" element={<MeetingPage language={language} />} />
+                      <Route path="/administration/customization" element={<TenantCustomizationPage language={language} />} />
                       <Route path="/services/outings" element={<OutingPage language={language} />} />
                       <Route path="/services/parties" element={<PartiesPage language={language} />} />
                       <Route path="/services/meetings" element={<MeetingPage language={language} />} />
@@ -201,7 +216,7 @@ const AppContent = () => {
                  className="right-panel"
                >
                  <img
-                   src={ecole.image}
+                    src={tenantCustomization.image}
                    alt="ecole image"
                    style={{ width: "100%", height: "auto" }}
                  />
