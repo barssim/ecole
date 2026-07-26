@@ -170,9 +170,12 @@ const AppContent = () => {
                      <Route path="/administration/presence" element={<ProfessorPresence language={language} toggleLanguage={toggleLanguage} />} />
                      <Route path="/administration/classes" element={<ClassesPage language={language} toggleLanguage={toggleLanguage} />} />
                       <Route path="/administration/examens" element={<ExamProgram language={language} toggleLanguage={toggleLanguage} />} />
-                      <Route path="/administration/outing" element={<OutingPage language={language} activityType="sorties" />} />
+                      <Route path="/administration/outings" element={<OutingPage language={language} activityType="sorties" />} />
                       <Route path="/administration/parties" element={<PartiesPage language={language} />} />
                       <Route path="/administration/meetings" element={<MeetingPage language={language} />} />
+                      <Route path="/services/outings" element={<OutingPage language={language} activityType="sorties" />} />
+                      <Route path="/services/parties" element={<PartiesPage language={language} />} />
+                      <Route path="/services/meetings" element={<MeetingPage language={language} />} />
                       <Route path="/enseignement/parent-meetings" element={<ParentMeetingPage language={language} toggleLanguage={toggleLanguage} />} />
                        <Route path="/enseignant/cours" element={<TeacherCourses language={language} toggleLanguage={toggleLanguage} />} />
                       <Route path="/enseignant/attendance" element={<TeacherAttendancePage language={language} />} />

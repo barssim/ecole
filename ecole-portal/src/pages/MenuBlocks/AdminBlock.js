@@ -59,7 +59,7 @@ const AdminBlock = ({ isAuthorized, canAccessAttestations = false, content }) =>
         {isAuthorized && (
         <li>
           <Link
-            to="/administration/activites/sorties"
+            to="/administration/outings"
             className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 inline-block"
           >
             {content.sorties}
@@ -69,7 +69,7 @@ const AdminBlock = ({ isAuthorized, canAccessAttestations = false, content }) =>
         {isAuthorized && (
         <li>
           <Link
-            to="/administration/activites/fetes"
+            to="/administration/parties"
             className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 inline-block"
           >
             {content.fetes}
@@ -79,7 +79,7 @@ const AdminBlock = ({ isAuthorized, canAccessAttestations = false, content }) =>
         {isAuthorized && (
         <li>
           <Link
-            to="/administration/activites/reunions"
+            to="/administration/meetings"
             className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 inline-block"
           >
             {content.reunions}

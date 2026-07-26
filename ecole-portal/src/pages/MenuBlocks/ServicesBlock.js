@@ -48,7 +48,7 @@ const [showActivites, setShowActivites] = useState(false);
               </li>
               <li>
                 <Link
-                  to="/administration/activites/sorties"
+                  to="/services/outings"
                   className="text-xs bg-purple-100 text-purple-800 px-3 py-1 rounded hover:bg-purple-200 inline-block"
                 >
                   {content.sorties || "Sorties"}
@@ -56,7 +56,7 @@ const [showActivites, setShowActivites] = useState(false);
               </li>
               <li>
                 <Link
-                  to="/administration/activites/fetes"
+                  to="/services/parties"
                   className="text-xs bg-purple-100 text-purple-800 px-3 py-1 rounded hover:bg-purple-200 inline-block"
                 >
                   {content.fetes || "Fêtes"}
@@ -64,7 +64,7 @@ const [showActivites, setShowActivites] = useState(false);
               </li>
               <li>
                 <Link
-                  to="/administration/activites/reunions"
+                  to="/services/meetings"
                   className="text-xs bg-purple-100 text-purple-800 px-3 py-1 rounded hover:bg-purple-200 inline-block"
                 >
                   {content.reunions || "Réunions"}
