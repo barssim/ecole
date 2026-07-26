@@ -177,17 +177,28 @@ public class SchoolInvoiceController {
         String[] roles = userRolesHeader.split(",");
         for (String role : roles) {
             String trimmedRole = role.trim().toLowerCase();
-            if (trimmedRole.startsWith("role_")) {
-                trimmedRole = trimmedRole.substring(5);
-            }
-            if ("finance".equals(trimmedRole) ||
-                "admin".equals(trimmedRole) || 
-                "manager".equals(trimmedRole)) {
+            if (matchesRole(trimmedRole, "finance") ||
+                matchesRole(trimmedRole, "admin") || 
+                matchesRole(trimmedRole, "manager")) {
                 return true;
             }
         }
          return false;
      }
+
+    private boolean matchesRole(String assignedRole, String expectedRole) {
+        if (assignedRole == null || expectedRole == null) {
+            return false;
+        }
+        String normalizedAssigned = assignedRole.trim().toLowerCase();
+        String normalizedExpected = expectedRole.trim().toLowerCase();
+        if (normalizedAssigned.isEmpty() || normalizedExpected.isEmpty()) {
+            return false;
+        }
+        return normalizedAssigned.equals(normalizedExpected)
+                || normalizedAssigned.equals("role_" + normalizedExpected)
+                || normalizedAssigned.endsWith("_" + normalizedExpected);
+    }
 
     /**
      * Create a new payment notice
