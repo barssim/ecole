@@ -35,7 +35,8 @@ export const fetchTenantCustomization = async () => {
   const tenantId = getTenantId();
   const fallback = getFallbackCustomization(tenantId);
   const token = sessionStorage.getItem("jwt_token");
-  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || "http://localhost:8085").replace(/\/$/, "");
+  const rawBase = (process.env.REACT_APP_API_GATEWAY_URL || "http://localhost:8085").trim();
+  const baseUrl = (/^https?:\/\//i.test(rawBase) ? rawBase : `http://${rawBase}`).replace(/\/$/, "");
 
   try {
     const response = await fetch(`${baseUrl}/api/tenant-customization`, {
