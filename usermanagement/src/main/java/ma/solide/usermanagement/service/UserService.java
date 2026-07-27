@@ -2,11 +2,13 @@ package ma.solide.usermanagement.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Arrays;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
+import ma.solide.usermanagement.model.TeacherSummaryDTO;
 import ma.solide.usermanagement.model.User;
 import ma.solide.usermanagement.repository.UserRepository;
 import ma.solide.usermanagement.tenant.TenantContext;
@@ -44,6 +46,15 @@ public class UserService {
 	public List<User> findAllUsers() {
 		String tenantId = TenantContext.getRequiredTenantId();
 		return userRepository.findByTenantId(tenantId);
+	}
+
+	public List<TeacherSummaryDTO> findAllTeachers() {
+		String tenantId = TenantContext.getRequiredTenantId();
+		return userRepository.findByTenantId(tenantId)
+				.stream()
+				.filter(this::isTeacher)
+				.map(this::toTeacherSummary)
+				.toList();
 	}
 
 	public User createUser(User user) {
@@ -97,5 +108,26 @@ public class UserService {
 
 		user.setPassword(newPassword);
 		userRepository.save(user);
+	}
+
+	private boolean isTeacher(User user) {
+		if (user == null || user.getRole() == null) {
+			return false;
+		}
+
+		return Arrays.stream(user.getRole().split(","))
+				.map(role -> role == null ? "" : role.trim().toLowerCase())
+				.anyMatch(role -> role.equals("teacher") || role.equals("role_teacher") || role.endsWith("_teacher"));
+	}
+
+	private TeacherSummaryDTO toTeacherSummary(User user) {
+		String firstName = user.getFirstname() == null ? "" : user.getFirstname().trim();
+		String lastName = user.getSurname() == null ? "" : user.getSurname().trim();
+		String fullName = (firstName + " " + lastName).trim();
+		if (fullName.isEmpty()) {
+			fullName = lastName.isEmpty() ? "Teacher #" + user.getUserno() : lastName;
+		}
+
+		return new TeacherSummaryDTO(user.getUserno(), fullName, lastName);
 	}
 }

@@ -3,6 +3,7 @@ import fr from "../locales/fr.json";
 import en from "../locales/en.json";
 import ar from "../locales/ar.json";
 import { getTenantId } from '../tenant';
+import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 
 const ClassesPage = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
@@ -18,10 +19,16 @@ const ClassesPage = ({ language }) => {
   const [newStudentName, setNewStudentName] = useState('');
   const [savingStudentId, setSavingStudentId] = useState(null);
   const [removingStudent, setRemovingStudent] = useState(null); // { classId, name }
+  const [teachers, setTeachers] = useState([]);
+  const [teachersLoading, setTeachersLoading] = useState(false);
+  const [addingTeacherToClassId, setAddingTeacherToClassId] = useState(null);
+  const [selectedTeacherName, setSelectedTeacherName] = useState('');
+  const [savingTeacherId, setSavingTeacherId] = useState(null);
+  const [removingTeacher, setRemovingTeacher] = useState(null); // { classId, name }
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
 
-  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
+  const baseUrl = resolveApiBaseUrl('http://localhost:8085');
 
   const buildHeaders = (includeJson = false) => {
     const token = sessionStorage.getItem('jwt_token');
@@ -56,7 +63,25 @@ const ClassesPage = ({ language }) => {
       }
     };
 
+    const fetchTeachers = async () => {
+      setTeachersLoading(true);
+      try {
+        const response = await fetch(`${baseUrl}/api/users/teachers`, { headers: buildHeaders() });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        const data = await response.json();
+        setTeachers(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Failed to fetch teachers:', error);
+        setTeachers([]);
+      } finally {
+        setTeachersLoading(false);
+      }
+    };
+
     fetchClasses();
+    fetchTeachers();
   }, [baseUrl]);
 
   const handleAddStudentClick = (cls) => {
@@ -70,6 +95,19 @@ const ClassesPage = ({ language }) => {
   const handleCancelAddStudent = () => {
     setAddingStudentToClassId(null);
     setNewStudentName('');
+  };
+
+  const handleAddTeacherClick = (cls) => {
+    setAddingTeacherToClassId(cls.id);
+    setExpandedClassId(cls.id);
+    setSelectedTeacherName('');
+    setSubmitError('');
+    setSubmitSuccess('');
+  };
+
+  const handleCancelAddTeacher = () => {
+    setAddingTeacherToClassId(null);
+    setSelectedTeacherName('');
   };
 
   const handleSaveStudent = async (cls) => {
@@ -125,6 +163,64 @@ const ClassesPage = ({ language }) => {
       setSubmitError(content.classes_studentRemoveError);
     } finally {
       setRemovingStudent(null);
+    }
+  };
+
+  const handleSaveTeacher = async (cls) => {
+    const trimmed = selectedTeacherName.trim();
+    if (!trimmed) {
+      setSubmitError('Please select a teacher.');
+      return;
+    }
+
+    setSavingTeacherId(cls.id);
+    setSubmitError('');
+    setSubmitSuccess('');
+    try {
+      const response = await fetch(`${baseUrl}/api/classes/${cls.id}/teachers`, {
+        method: 'POST',
+        headers: buildHeaders(true),
+        body: JSON.stringify({ name: trimmed }),
+      });
+      if (!response.ok) {
+        let message = 'Unable to assign teacher to class.';
+        try {
+          const payload = await response.json();
+          message = payload.message || message;
+        } catch {
+          if (response.status === 409) message = 'Teacher is already assigned to this class.';
+        }
+        throw new Error(message);
+      }
+      const updated = await response.json();
+      setClasses((current) => current.map((c) => (c.id === updated.id ? updated : c)));
+      setAddingTeacherToClassId(null);
+      setSelectedTeacherName('');
+      setSubmitSuccess('Teacher assigned successfully.');
+    } catch (error) {
+      setSubmitError(error.message || 'Unable to assign teacher to class.');
+    } finally {
+      setSavingTeacherId(null);
+    }
+  };
+
+  const handleRemoveTeacher = async (cls, teacherName) => {
+    setRemovingTeacher({ classId: cls.id, name: teacherName });
+    setSubmitError('');
+    setSubmitSuccess('');
+    try {
+      const response = await fetch(
+        `${baseUrl}/api/classes/${cls.id}/teachers/${encodeURIComponent(teacherName)}`,
+        { method: 'DELETE', headers: buildHeaders() }
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const updated = await response.json();
+      setClasses((current) => current.map((c) => (c.id === updated.id ? updated : c)));
+      setSubmitSuccess('Teacher removed from class.');
+    } catch {
+      setSubmitError('Unable to remove teacher from class.');
+    } finally {
+      setRemovingTeacher(null);
     }
   };
 
@@ -300,6 +396,7 @@ const ClassesPage = ({ language }) => {
             <tr>
               <th style={th}>{content.classes_title}</th>
               <th style={th}>{content.students}</th>
+              <th style={th}>Teachers</th>
               <th style={th}>Actions</th>
             </tr>
           </thead>
@@ -334,6 +431,7 @@ const ClassesPage = ({ language }) => {
                     )}
                   </td>
                   <td style={td}>{cls.students.length}</td>
+                  <td style={td}>{(cls.teachers || []).length}</td>
                   <td style={td}>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <button onClick={() => toggleExpand(cls.id)}>
@@ -341,6 +439,9 @@ const ClassesPage = ({ language }) => {
                       </button>
                       <button onClick={() => handleAddStudentClick(cls)} disabled={addingStudentToClassId === cls.id || editingId === cls.id}>
                         {content.classes_addStudent}
+                      </button>
+                      <button onClick={() => handleAddTeacherClick(cls)} disabled={addingTeacherToClassId === cls.id || editingId === cls.id || teachersLoading || teachers.length === 0}>
+                        Assign teacher
                       </button>
                       <button onClick={() => handleEditClass(cls)} disabled={editingId !== null || deletingId === cls.id}>
                         {content.classes_editClass}
@@ -353,7 +454,7 @@ const ClassesPage = ({ language }) => {
                 </tr>
                 {expandedClassId === cls.id && (
                   <tr style={{ background: '#fff' }}>
-                    <td style={td} colSpan={3}>
+                    <td style={td} colSpan={4}>
                       <ul className="ml-4 list-disc list-inside text-sm space-y-1">
                         {cls.students.length > 0 ? (
                           cls.students.map((student, studentIndex) => (
@@ -377,6 +478,32 @@ const ClassesPage = ({ language }) => {
                         )}
                       </ul>
 
+                      <div className="ml-4 mt-3">
+                        <strong style={{ fontSize: 13 }}>Teachers</strong>
+                        <ul className="ml-4 list-disc list-inside text-sm space-y-1 mt-1">
+                          {(cls.teachers || []).length > 0 ? (
+                            (cls.teachers || []).map((teacher, teacherIndex) => (
+                              <li key={`${teacher}-${teacherIndex}`} className="flex items-center justify-between pr-2">
+                                <span>{teacher}</span>
+                                <button
+                                  onClick={() => handleRemoveTeacher(cls, teacher)}
+                                  disabled={
+                                    removingTeacher?.classId === cls.id &&
+                                    removingTeacher?.name === teacher
+                                  }
+                                  className="ml-2 text-red-400 hover:text-red-600 text-xs disabled:opacity-50"
+                                  title="Remove teacher"
+                                >
+                                  {removingTeacher?.classId === cls.id && removingTeacher?.name === teacher ? '...' : '✕'}
+                                </button>
+                              </li>
+                            ))
+                          ) : (
+                            <li className="italic text-gray-500">No teacher assigned</li>
+                          )}
+                        </ul>
+                      </div>
+
                       {addingStudentToClassId === cls.id && (
                         <div className="mt-2 flex items-center gap-2 ml-4">
                           <input
@@ -396,6 +523,32 @@ const ClassesPage = ({ language }) => {
                             {savingStudentId === cls.id ? '...' : content.classes_studentSave}
                           </button>
                           <button onClick={handleCancelAddStudent} disabled={savingStudentId === cls.id}>
+                            {content.classes_editCancel}
+                          </button>
+                        </div>
+                      )}
+
+                      {addingTeacherToClassId === cls.id && (
+                        <div className="mt-2 flex items-center gap-2 ml-4">
+                          <select
+                            value={selectedTeacherName}
+                            onChange={(e) => setSelectedTeacherName(e.target.value)}
+                            className="border rounded px-2 py-1 text-sm flex-1"
+                            disabled={savingTeacherId === cls.id || teachersLoading}
+                          >
+                            <option value="">Select teacher</option>
+                            {teachers
+                              .filter((teacher) => !(cls.teachers || []).some((assigned) => assigned.toLowerCase() === String(teacher.name || '').toLowerCase()))
+                              .map((teacher) => (
+                                <option key={teacher.id || teacher.name} value={teacher.name}>
+                                  {teacher.name}
+                                </option>
+                              ))}
+                          </select>
+                          <button onClick={() => handleSaveTeacher(cls)} disabled={savingTeacherId === cls.id || !selectedTeacherName}>
+                            {savingTeacherId === cls.id ? '...' : 'Assign'}
+                          </button>
+                          <button onClick={handleCancelAddTeacher} disabled={savingTeacherId === cls.id}>
                             {content.classes_editCancel}
                           </button>
                         </div>

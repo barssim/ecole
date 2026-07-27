@@ -7,13 +7,25 @@ const getTenantId = (request) => (request.headers.get('X-Tenant-Id') || 'gardini
 
 const classesByTenant = {
   gardinia: [
-    { id: 1, name: '3e A', students: ['Yassine', 'Majda', 'Karim'] },
-    { id: 2, name: '3e B', students: ['Sara', 'Nabil', 'Omar'] },
-    { id: 3, name: 'Terminale C', students: ['Lina', 'Mohamed', 'Hajar'] },
+    { id: 1, name: '3e A', students: ['Yassine', 'Majda', 'Karim'], teachers: ['Mme El Idrissi'] },
+    { id: 2, name: '3e B', students: ['Sara', 'Nabil', 'Omar'], teachers: [] },
+    { id: 3, name: 'Terminale C', students: ['Lina', 'Mohamed', 'Hajar'], teachers: ['M. Bensalah'] },
   ],
   qods: [
-    { id: 11, name: '4ème A', students: ['Aya', 'Youssef'] },
-    { id: 12, name: '4ème B', students: ['Salma', 'Othman'] },
+    { id: 11, name: '4ème A', students: ['Aya', 'Youssef'], teachers: [] },
+    { id: 12, name: '4ème B', students: ['Salma', 'Othman'], teachers: ['Mme Rahmani'] },
+  ],
+};
+
+const teachersByTenant = {
+  gardinia: [
+    { id: 8, name: 'Mme El Idrissi', username: 'teacher' },
+    { id: 9, name: 'M. Bensalah', username: 'teacher2' },
+    { id: 10, name: 'Mme Karimi', username: 'teacher3' },
+  ],
+  qods: [
+    { id: 18, name: 'Mme Rahmani', username: 'teacher-qods-1' },
+    { id: 19, name: 'M. Alami', username: 'teacher-qods-2' },
   ],
 };
 
@@ -123,6 +135,52 @@ export const handlers = [
     http.get(`${BASE_URL}/api/classes`, ({ request }) => {
       const tenantId = getTenantId(request);
       return HttpResponse.json(classesByTenant[tenantId] || classesByTenant.gardinia);
+    }),
+
+    http.get(`${BASE_URL}/api/users/teachers`, ({ request }) => {
+      const tenantId = getTenantId(request);
+      return HttpResponse.json(teachersByTenant[tenantId] || teachersByTenant.gardinia);
+    }),
+
+    http.post(`${BASE_URL}/api/classes/:id/teachers`, async ({ request, params }) => {
+      const tenantId = getTenantId(request);
+      const body = await request.json();
+      const classId = Number(params.id);
+      const teacherName = String(body?.name || '').trim();
+      const classList = classesByTenant[tenantId] || classesByTenant.gardinia;
+      const schoolClass = classList.find((cls) => cls.id === classId);
+
+      if (!schoolClass || !teacherName) {
+        return HttpResponse.json({ message: 'Classe ou enseignant introuvable' }, { status: 404 });
+      }
+
+      if ((schoolClass.teachers || []).some((teacher) => teacher.toLowerCase() === teacherName.toLowerCase())) {
+        return HttpResponse.json({ message: `L'enseignant '${teacherName}' est déjà dans cette classe` }, { status: 409 });
+      }
+
+      schoolClass.teachers = [...(schoolClass.teachers || []), teacherName];
+      return HttpResponse.json(schoolClass);
+    }),
+
+    http.delete(`${BASE_URL}/api/classes/:id/teachers/:teacherName`, ({ request, params }) => {
+      const tenantId = getTenantId(request);
+      const classId = Number(params.id);
+      const teacherName = decodeURIComponent(String(params.teacherName || ''));
+      const classList = classesByTenant[tenantId] || classesByTenant.gardinia;
+      const schoolClass = classList.find((cls) => cls.id === classId);
+
+      if (!schoolClass) {
+        return HttpResponse.json({ message: 'Classe introuvable' }, { status: 404 });
+      }
+
+      const before = (schoolClass.teachers || []).length;
+      schoolClass.teachers = (schoolClass.teachers || []).filter((teacher) => teacher.toLowerCase() !== teacherName.toLowerCase());
+
+      if (schoolClass.teachers.length === before) {
+        return HttpResponse.json({ message: `Enseignant '${teacherName}' introuvable dans cette classe` }, { status: 404 });
+      }
+
+      return HttpResponse.json(schoolClass);
     }),
     // 🧪 Handler for teacher courses
     http.get(`${BASE_URL}/api/teachercourses`, () => {

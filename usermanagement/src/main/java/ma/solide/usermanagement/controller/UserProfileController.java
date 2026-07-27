@@ -1,6 +1,7 @@
 package ma.solide.usermanagement.controller;
 
 import ma.solide.usermanagement.model.PasswordChangeRequest;
+import ma.solide.usermanagement.model.TeacherSummaryDTO;
 import ma.solide.usermanagement.model.User;
 import ma.solide.usermanagement.model.UserProfileDTO;
 import ma.solide.usermanagement.model.UserProfileUpdateRequest;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -24,6 +26,11 @@ public class UserProfileController {
     public ResponseEntity<UserProfileDTO> getProfile(@PathVariable Integer id) {
         User user = userService.getUserOrThrow(id);
         return ResponseEntity.ok(UserProfileDTO.fromUser(user));
+    }
+
+    @GetMapping("/teachers")
+    public ResponseEntity<List<TeacherSummaryDTO>> getTeachers() {
+        return ResponseEntity.ok(userService.findAllTeachers());
     }
 
     @PutMapping("/{id}/profile")

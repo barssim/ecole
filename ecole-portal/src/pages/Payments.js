@@ -27,6 +27,39 @@ const Payments = ({ language }) => {
     notes: ''
   });
 
+  const readStoredRoles = () => {
+    const raw = localStorage.getItem('user_roles');
+    if (!raw) {
+      return [];
+    }
+
+    try {
+      return normalizeRoles(JSON.parse(raw));
+    } catch {
+      return normalizeRoles(String(raw).split(','));
+    }
+  };
+
+  const extractApiError = (apiError, fallback) => {
+    const data = apiError?.response?.data;
+    if (typeof data === 'string' && data.trim()) {
+      return data;
+    }
+    if (data?.message) {
+      return data.message;
+    }
+    if (data?.error) {
+      return data.error;
+    }
+    if (apiError?.response?.statusText) {
+      return apiError.response.statusText;
+    }
+    if (apiError?.message) {
+      return apiError.message;
+    }
+    return fallback;
+  };
+
   const configuredBase = resolveApiBaseUrl('http://localhost:8085');
   const apiRoot = configuredBase.endsWith('/api') ? configuredBase : `${configuredBase}/api`;
   const paymentsApiBase = `${apiRoot}/payments`;
@@ -34,16 +67,13 @@ const Payments = ({ language }) => {
   const token = sessionStorage.getItem('jwt_token');
 
   const buildRoleHeader = () => {
-    const rawRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
+    const rawRoles = readStoredRoles();
     return rawRoles
       .map((role) => role.replace(/^role_/, ''))
       .join(',');
   };
 
-  const canManagePayments = hasAnyRole(
-    normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]')),
-    ['finance', 'admin', 'manager']
-  );
+  const canManagePayments = hasAnyRole(readStoredRoles(), ['finance', 'admin', 'manager']);
 
   const getHeaders = () => {
     const roleHeader = buildRoleHeader();
@@ -223,8 +253,9 @@ const Payments = ({ language }) => {
       amount: amountValue,
       currency: formData.currency.trim() || 'MAD',
       method: formData.method.trim() || 'cash',
-      reference: formData.reference.trim(),
-      notes: formData.notes.trim()
+      paymentDate: formData.paymentDate ? formData.paymentDate : null,
+      reference: formData.reference.trim() || null,
+      notes: formData.notes.trim() || null
     };
 
     setSaving(true);
@@ -237,7 +268,11 @@ const Payments = ({ language }) => {
       resetForm();
       await fetchPayments();
     } catch (submitError) {
-      setFormError(submitError.response?.data?.message || `Unable to save payment (HTTP ${submitError.response?.status || 'unknown'}).`);
+      const message = extractApiError(
+        submitError,
+        `Unable to save payment (HTTP ${submitError.response?.status || 'unknown'}).`
+      );
+      setFormError(message);
     } finally {
       setSaving(false);
     }
