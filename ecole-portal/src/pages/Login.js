@@ -6,6 +6,7 @@ import ar from "../locales/header/ar.json";
 import en from "../locales/header/en.json";
 import { useNavigate } from "react-router-dom";
 import { resolveTenantFromHost, setTenantId } from "../tenant";
+import { resolveApiBaseUrl } from "../utils/apiBaseUrl";
 
 const decodeJwtPayload = (token) => {
 	try {
@@ -68,9 +69,10 @@ if (language === "fr") {
 		setErrorMessage('');
 
 		const userCredentials = { username, password };
-		const configuredBase = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
+		const configuredBase = resolveApiBaseUrl('http://localhost:8085');
 		const apiBase = configuredBase.endsWith('/api') ? configuredBase : `${configuredBase}/api`;
 		const apiUrl = `${apiBase}/auth/login`;
+		const tenantHint = resolveTenantFromHost();
 
 		// Log API details for debugging
 		console.log('Login attempt - API URL:', apiUrl);
@@ -84,7 +86,8 @@ if (language === "fr") {
 				{
 					timeout: 10000,
 					headers: {
-						'Content-Type': 'application/json'
+						'Content-Type': 'application/json',
+						'X-Tenant-Id': tenantHint
 					}
 				}
 			);
