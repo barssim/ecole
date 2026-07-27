@@ -14,13 +14,15 @@ public class WebConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**") // Apply to all endpoints
-                        .allowedOrigins(
-                                "http://localhost:3000",
-                                "http://localhost:8080",
-                                "http://127.0.0.1:3000",
-                                "http://127.0.0.1:8080",
+                        .allowedOriginPatterns(
+                                "http://localhost:*",
+                                "http://127.0.0.1:*",
                                 "http://v95566.1blu.de",
-                                "https://v95566.1blu.de"
+                                "https://v95566.1blu.de",
+                                "http://www.v95566.1blu.de",
+                                "https://www.v95566.1blu.de",
+                                "http://*.1blu.de",
+                                "https://*.1blu.de"
                         )
                         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("*")

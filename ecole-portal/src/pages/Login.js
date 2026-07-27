@@ -7,6 +7,43 @@ import en from "../locales/header/en.json";
 import { useNavigate } from "react-router-dom";
 import { resolveTenantFromHost, setTenantId } from "../tenant";
 
+const decodeJwtPayload = (token) => {
+	try {
+		const payload = token.split('.')[1];
+		if (!payload) return null;
+		const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+		const decoded = decodeURIComponent(
+			atob(normalized)
+				.split('')
+				.map((char) => `%${(`00${char.charCodeAt(0).toString(16)}`).slice(-2)}`)
+				.join('')
+		);
+		return JSON.parse(decoded);
+	} catch {
+		return null;
+	}
+};
+
+const resolveTenantFromLoginResponse = (token, user, topLevelTenantId) => {
+	const normalizedUserTenant = String(user?.tenantId || '').trim().toLowerCase();
+	if (normalizedUserTenant) {
+		return normalizedUserTenant;
+	}
+
+	const normalizedTopLevelTenant = String(topLevelTenantId || '').trim().toLowerCase();
+	if (normalizedTopLevelTenant) {
+		return normalizedTopLevelTenant;
+	}
+
+	const jwtPayload = decodeJwtPayload(token);
+	const normalizedJwtTenant = String(jwtPayload?.tenant_id || '').trim().toLowerCase();
+	if (normalizedJwtTenant) {
+		return normalizedJwtTenant;
+	}
+
+	return resolveTenantFromHost();
+};
+
 
 const Login = ({language}) => {
 	let content;
@@ -92,7 +129,7 @@ if (language === "fr") {
 			// Store user roles - always store a valid JSON array
 			const userRoles = (user && Array.isArray(user.roles)) ? user.roles : [];
 			localStorage.setItem("user_roles", JSON.stringify(userRoles));
-			setTenantId(user?.tenantId || response.data?.tenantId || resolveTenantFromHost());
+			setTenantId(resolveTenantFromLoginResponse(token, user, response.data?.tenantId));
 
 			console.log('Login successful! Stored roles:', userRoles);
 

@@ -22,6 +22,8 @@ spring:
               - "http://v95566.1blu.de"
               - "http://v95566.1blu.de:80"
               - "https://v95566.1blu.de"
+              - "http://www.v95566.1blu.de"
+              - "https://www.v95566.1blu.de"
               - "http://localhost:80"
               - "http://localhost:8080"
               - "http://localhost:3000"
@@ -29,7 +31,16 @@ spring:
               - "http://127.0.0.1:80"
               - "http://127.0.0.1:8080"
               - "http://127.0.0.1:3000"
-            allowedMethods: "*"
+            allowedOriginPatterns:
+              - "https://*.1blu.de"
+              - "http://*.1blu.de"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
             allowedHeaders: "*"
             allowCredentials: true
 

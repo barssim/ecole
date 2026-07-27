@@ -32,8 +32,14 @@ public class TenantFilter extends OncePerRequestFilter {
             return;
         }
 
+        String normalizedTenantId = tenantId.trim().toLowerCase();
+        if ("default".equals(normalizedTenantId)) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid X-Tenant-Id header");
+            return;
+        }
+
         try {
-            TenantContext.setTenantId(tenantId.trim().toLowerCase());
+            TenantContext.setTenantId(normalizedTenantId);
             filterChain.doFilter(request, response);
         } finally {
             TenantContext.clear();

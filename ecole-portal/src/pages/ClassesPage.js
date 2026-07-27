@@ -169,7 +169,7 @@ const ClassesPage = ({ language }) => {
   const handleSaveTeacher = async (cls) => {
     const trimmed = selectedTeacherName.trim();
     if (!trimmed) {
-      setSubmitError('Please select a teacher.');
+      setSubmitError(content.classes_teacherSelectValidation || 'Please select a teacher.');
       return;
     }
 
@@ -183,12 +183,12 @@ const ClassesPage = ({ language }) => {
         body: JSON.stringify({ name: trimmed }),
       });
       if (!response.ok) {
-        let message = 'Unable to assign teacher to class.';
+        let message = content.classes_teacherAssignError || 'Unable to assign teacher to class.';
         try {
           const payload = await response.json();
           message = payload.message || message;
         } catch {
-          if (response.status === 409) message = 'Teacher is already assigned to this class.';
+          if (response.status === 409) message = content.classes_teacherAlreadyAssigned || 'Teacher is already assigned to this class.';
         }
         throw new Error(message);
       }
@@ -196,9 +196,9 @@ const ClassesPage = ({ language }) => {
       setClasses((current) => current.map((c) => (c.id === updated.id ? updated : c)));
       setAddingTeacherToClassId(null);
       setSelectedTeacherName('');
-      setSubmitSuccess('Teacher assigned successfully.');
+      setSubmitSuccess(content.classes_teacherAssignSuccess || 'Teacher assigned successfully.');
     } catch (error) {
-      setSubmitError(error.message || 'Unable to assign teacher to class.');
+      setSubmitError(error.message || content.classes_teacherAssignError || 'Unable to assign teacher to class.');
     } finally {
       setSavingTeacherId(null);
     }
@@ -216,9 +216,9 @@ const ClassesPage = ({ language }) => {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const updated = await response.json();
       setClasses((current) => current.map((c) => (c.id === updated.id ? updated : c)));
-      setSubmitSuccess('Teacher removed from class.');
+      setSubmitSuccess(content.classes_teacherRemoveSuccess || 'Teacher removed from class.');
     } catch {
-      setSubmitError('Unable to remove teacher from class.');
+      setSubmitError(content.classes_teacherRemoveError || 'Unable to remove teacher from class.');
     } finally {
       setRemovingTeacher(null);
     }
@@ -396,7 +396,7 @@ const ClassesPage = ({ language }) => {
             <tr>
               <th style={th}>{content.classes_title}</th>
               <th style={th}>{content.students}</th>
-              <th style={th}>Teachers</th>
+              <th style={th}>{content.classes_teachers || 'Teachers'}</th>
               <th style={th}>Actions</th>
             </tr>
           </thead>
@@ -441,7 +441,7 @@ const ClassesPage = ({ language }) => {
                         {content.classes_addStudent}
                       </button>
                       <button onClick={() => handleAddTeacherClick(cls)} disabled={addingTeacherToClassId === cls.id || editingId === cls.id || teachersLoading || teachers.length === 0}>
-                        Assign teacher
+                        {content.classes_assignTeacher || 'Assign teacher'}
                       </button>
                       <button onClick={() => handleEditClass(cls)} disabled={editingId !== null || deletingId === cls.id}>
                         {content.classes_editClass}
@@ -479,7 +479,7 @@ const ClassesPage = ({ language }) => {
                       </ul>
 
                       <div className="ml-4 mt-3">
-                        <strong style={{ fontSize: 13 }}>Teachers</strong>
+                        <strong style={{ fontSize: 13 }}>{content.classes_teachers || 'Teachers'}</strong>
                         <ul className="ml-4 list-disc list-inside text-sm space-y-1 mt-1">
                           {(cls.teachers || []).length > 0 ? (
                             (cls.teachers || []).map((teacher, teacherIndex) => (
@@ -492,14 +492,14 @@ const ClassesPage = ({ language }) => {
                                     removingTeacher?.name === teacher
                                   }
                                   className="ml-2 text-red-400 hover:text-red-600 text-xs disabled:opacity-50"
-                                  title="Remove teacher"
+                                  title={content.classes_removeTeacherTooltip || 'Remove teacher'}
                                 >
                                   {removingTeacher?.classId === cls.id && removingTeacher?.name === teacher ? '...' : '✕'}
                                 </button>
                               </li>
                             ))
                           ) : (
-                            <li className="italic text-gray-500">No teacher assigned</li>
+                            <li className="italic text-gray-500">{content.classes_noTeachers || 'No teacher assigned'}</li>
                           )}
                         </ul>
                       </div>
@@ -536,7 +536,7 @@ const ClassesPage = ({ language }) => {
                             className="border rounded px-2 py-1 text-sm flex-1"
                             disabled={savingTeacherId === cls.id || teachersLoading}
                           >
-                            <option value="">Select teacher</option>
+                            <option value="">{content.classes_selectTeacherPlaceholder || 'Select teacher'}</option>
                             {teachers
                               .filter((teacher) => !(cls.teachers || []).some((assigned) => assigned.toLowerCase() === String(teacher.name || '').toLowerCase()))
                               .map((teacher) => (
@@ -546,7 +546,7 @@ const ClassesPage = ({ language }) => {
                               ))}
                           </select>
                           <button onClick={() => handleSaveTeacher(cls)} disabled={savingTeacherId === cls.id || !selectedTeacherName}>
-                            {savingTeacherId === cls.id ? '...' : 'Assign'}
+                            {savingTeacherId === cls.id ? '...' : (content.classes_teacherSave || 'Assign')}
                           </button>
                           <button onClick={handleCancelAddTeacher} disabled={savingTeacherId === cls.id}>
                             {content.classes_editCancel}

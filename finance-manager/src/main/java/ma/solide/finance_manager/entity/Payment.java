@@ -11,7 +11,7 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "tenant_id", nullable = false, length = 64, columnDefinition = "varchar(64) default 'default'")
+    @Column(name = "tenant_id", nullable = false, length = 64)
     private String tenantId;
 
     @Column(nullable = false)
