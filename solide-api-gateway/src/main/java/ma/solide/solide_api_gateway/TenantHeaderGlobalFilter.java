@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 public class TenantHeaderGlobalFilter implements GlobalFilter, Ordered {
 
     private static final String TENANT_HEADER = "X-Tenant-Id";
+    private static final String ROLE_HEADER   = "X-User-Roles";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -32,8 +33,19 @@ public class TenantHeaderGlobalFilter implements GlobalFilter, Ordered {
             return response.setComplete();
         }
 
+        // Preserve the role header that was sent by the client so downstream
+        // services can perform their own role-based checks.
+        final String existingRoleHeader = exchange.getRequest().getHeaders().getFirst(ROLE_HEADER);
+
         ServerHttpRequest request = exchange.getRequest().mutate()
-                .headers(headers -> headers.set(TENANT_HEADER, tenantId))
+                .headers(headers -> {
+                    headers.set(TENANT_HEADER, tenantId);
+                    // Re-set to guarantee it survives the immutable-header wrapping in
+                    // some Spring Cloud Gateway versions.
+                    if (existingRoleHeader != null && !existingRoleHeader.isBlank()) {
+                        headers.set(ROLE_HEADER, existingRoleHeader);
+                    }
+                })
                 .build();
 
         return chain.filter(exchange.mutate().request(request).build());
