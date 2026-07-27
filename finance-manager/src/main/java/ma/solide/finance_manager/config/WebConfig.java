@@ -1,33 +1,15 @@
 package ma.solide.finance_manager.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * CORS is handled exclusively by the API Gateway (solide-api-gateway).
+ * Configuring CORS here as well produces duplicate Access-Control-Allow-Origin
+ * headers on responses that pass through the gateway, which browsers
+ * reject as "Invalid CORS request".
+ *
+ * This class is intentionally empty. Do NOT add CORS mappings here.
+ */
 @Configuration
 public class WebConfig {
-
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**") // Apply to all endpoints
-                        .allowedOriginPatterns(
-                                "http://localhost:*",
-                                "http://127.0.0.1:*",
-                                "http://v95566.1blu.de",
-                                "https://v95566.1blu.de",
-                                "http://www.v95566.1blu.de",
-                                "https://www.v95566.1blu.de",
-                                "http://*.1blu.de",
-                                "https://*.1blu.de"
-                        )
-                        .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
-                        .allowCredentials(true);
-            }
-        };
-    }
 }

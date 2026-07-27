@@ -15,7 +15,9 @@ spring:
       globalcors:
         corsConfigurations:
           '[/**]':
+            # Exact origins (no wildcard – required when allowCredentials is true)
             allowedOrigins:
+              - "http://ecole-portal"
               - "http://ecole-portal:80"
               - "http://ecole-portal-dev:8080"
               - "http://ecole-portal-test:8081"
@@ -24,16 +26,20 @@ spring:
               - "https://v95566.1blu.de"
               - "http://www.v95566.1blu.de"
               - "https://www.v95566.1blu.de"
+              - "http://localhost"
               - "http://localhost:80"
-              - "http://localhost:8080"
               - "http://localhost:3000"
+              - "http://localhost:8080"
               - "http://localhost:8081"
-              - "http://127.0.0.1:80"
-              - "http://127.0.0.1:8080"
+              - "http://127.0.0.1"
               - "http://127.0.0.1:3000"
+              - "http://127.0.0.1:8080"
+            # Pattern-based fallback (covers sub-domains / CI environments)
             allowedOriginPatterns:
-              - "https://*.1blu.de"
               - "http://*.1blu.de"
+              - "https://*.1blu.de"
+              - "http://localhost:*"
+              - "http://127.0.0.1:*"
             allowedMethods:
               - GET
               - POST
@@ -41,7 +47,11 @@ spring:
               - PATCH
               - DELETE
               - OPTIONS
-            allowedHeaders: "*"
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - "Content-Disposition"
+              - "X-Tenant-Id"
             allowCredentials: true
 
       default-filters:
