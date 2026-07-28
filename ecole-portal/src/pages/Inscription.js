@@ -37,7 +37,7 @@ const Inscription = ({ language }) => {
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState("");
-  const [editingUserId, setEditingUserId] = useState(null);
+  const [selectedUserId, setSelectedUserId] = useState(null);
   const [editingUser, setEditingUser] = useState({
     surname: "",
     firstname: "",
@@ -45,8 +45,8 @@ const Inscription = ({ language }) => {
     adresse: "",
     role: "student",
   });
-  const [savingUserId, setSavingUserId] = useState(null);
-  const [deletingUserId, setDeletingUserId] = useState(null);
+  const [savingManagedUser, setSavingManagedUser] = useState(false);
+  const [deletingManagedUser, setDeletingManagedUser] = useState(false);
 
   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem("user_roles") || "[]"));
   const canManageTenantUsers = hasAnyRole(userRoles, ["manager"]);
@@ -194,9 +194,9 @@ const Inscription = ({ language }) => {
     }
   };
 
-  const startEditUser = (user) => {
+  const startManageUser = (user) => {
     const firstRole = Array.isArray(user.roles) && user.roles.length > 0 ? String(user.roles[0]).trim().toLowerCase() : "student";
-    setEditingUserId(user.id);
+    setSelectedUserId(user.id);
     setEditingUser({
       surname: user.username || "",
       firstname: user.firstname || "",
@@ -206,16 +206,19 @@ const Inscription = ({ language }) => {
     });
   };
 
-  const cancelEditUser = () => {
-    setEditingUserId(null);
+  const cancelManageUser = () => {
+    setSelectedUserId(null);
     setEditingUser({ surname: "", firstname: "", email: "", adresse: "", role: "student" });
   };
 
-  const saveUser = async (id) => {
-    setSavingUserId(id);
+  const saveManagedUser = async () => {
+    if (!selectedUserId) {
+      return;
+    }
+    setSavingManagedUser(true);
     setUsersError("");
     try {
-      const response = await fetch(apiUrlFor(`/users/${id}`), {
+      const response = await fetch(apiUrlFor(`/users/${selectedUserId}`), {
         method: "PUT",
         headers: buildHeaders(true),
         body: JSON.stringify(editingUser),
@@ -224,45 +227,48 @@ const Inscription = ({ language }) => {
         throw new Error(`HTTP ${response.status}`);
       }
       const updated = await response.json();
-      setUsers((current) => current.map((user) => (user.id === id ? updated : user)));
-      cancelEditUser();
+      setUsers((current) => current.map((user) => (user.id === selectedUserId ? updated : user)));
+      startManageUser(updated);
     } catch {
       setUsersError(content.registrationError || "Failed to update user.");
     } finally {
-      setSavingUserId(null);
+      setSavingManagedUser(false);
     }
   };
 
-  const deleteUser = async (id, username) => {
+  const deleteManagedUser = async () => {
+    if (!selectedUserId) {
+      return;
+    }
+    const selectedUser = users.find((user) => user.id === selectedUserId);
+    const username = selectedUser?.username || "";
     if (!window.confirm(`${content.deleteUserConfirm || "Delete user"} \"${username}\"?`)) {
       return;
     }
 
-    setDeletingUserId(id);
+    setDeletingManagedUser(true);
     setUsersError("");
     try {
-      const response = await fetch(apiUrlFor(`/users/${id}`), {
+      const response = await fetch(apiUrlFor(`/users/${selectedUserId}`), {
         method: "DELETE",
         headers: buildHeaders(),
       });
       if (!response.ok && response.status !== 204) {
         throw new Error(`HTTP ${response.status}`);
       }
-      setUsers((current) => current.filter((user) => user.id !== id));
-      if (editingUserId === id) {
-        cancelEditUser();
-      }
+      setUsers((current) => current.filter((user) => user.id !== selectedUserId));
+      cancelManageUser();
     } catch {
       setUsersError(content.registrationError || "Failed to delete user.");
     } finally {
-      setDeletingUserId(null);
+      setDeletingManagedUser(false);
     }
   };
 
   return (
     <div className="signup-container">
       <form className="signup-form" onSubmit={handleSubmit}>
-        <h2>{content.register}</h2>
+        <h2>{content.userManagementTitle || "User management"}</h2>
         {error.general && <p className="error-message">{error.general}</p>}
         {success && <p className="success-message">{success}</p>}
 
@@ -322,7 +328,7 @@ const Inscription = ({ language }) => {
         </div>
 
         <button type="submit" className="signup-button" disabled={loading}>
-          {loading ? content.loading : content.submit}
+          {loading ? content.loading : (content.addUserLabel || "Add user")}
         </button>
       </form>
 
@@ -355,76 +361,18 @@ const Inscription = ({ language }) => {
                   </tr>
                 ) : (
                   users.map((user) => {
-                    const isEditing = editingUserId === user.id;
                     const currentRole = Array.isArray(user.roles) && user.roles.length > 0 ? String(user.roles[0]).trim().toLowerCase() : "student";
                     return (
                       <tr key={user.id}>
+                        <td style={td}>{user.username}</td>
+                        <td style={td}>{user.firstname}</td>
+                        <td style={td}>{user.email}</td>
+                        <td style={td}>{user.adresse}</td>
+                        <td style={td}>{roleLabelMap[currentRole] || currentRole}</td>
                         <td style={td}>
-                          {isEditing ? (
-                            <input value={editingUser.surname} onChange={(e) => setEditingUser((c) => ({ ...c, surname: e.target.value }))} />
-                          ) : (
-                            user.username
-                          )}
-                        </td>
-                        <td style={td}>
-                          {isEditing ? (
-                            <input value={editingUser.firstname} onChange={(e) => setEditingUser((c) => ({ ...c, firstname: e.target.value }))} />
-                          ) : (
-                            user.firstname
-                          )}
-                        </td>
-                        <td style={td}>
-                          {isEditing ? (
-                            <input value={editingUser.email} onChange={(e) => setEditingUser((c) => ({ ...c, email: e.target.value }))} />
-                          ) : (
-                            user.email
-                          )}
-                        </td>
-                        <td style={td}>
-                          {isEditing ? (
-                            <input value={editingUser.adresse} onChange={(e) => setEditingUser((c) => ({ ...c, adresse: e.target.value }))} />
-                          ) : (
-                            user.adresse
-                          )}
-                        </td>
-                        <td style={td}>
-                          {isEditing ? (
-                            <select value={editingUser.role} onChange={(e) => setEditingUser((c) => ({ ...c, role: e.target.value }))}>
-                              {roleOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                  {content[option.labelKey] || option.fallback}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            roleLabelMap[currentRole] || currentRole
-                          )}
-                        </td>
-                        <td style={td}>
-                          {isEditing ? (
-                            <>
-                              <button type="button" onClick={() => saveUser(user.id)} disabled={savingUserId === user.id}>
-                                {savingUserId === user.id ? "..." : (content.saveLabel || "Save")}
-                              </button>
-                              <button type="button" onClick={cancelEditUser} style={{ marginLeft: 8 }}>
-                                {content.cancelLabel || "Cancel"}
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button type="button" onClick={() => startEditUser(user)}>
-                                {content.editLabel || "Edit"}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => deleteUser(user.id, user.username || "")}
-                                style={{ marginLeft: 8 }}
-                                disabled={deletingUserId === user.id}
-                              >
-                                {deletingUserId === user.id ? "..." : (content.deleteLabel || "Delete")}
-                              </button>
-                            </>
-                          )}
+                          <button type="button" onClick={() => startManageUser(user)}>
+                            {content.manageLabel || "Manage"}
+                          </button>
                         </td>
                       </tr>
                     );
@@ -433,6 +381,49 @@ const Inscription = ({ language }) => {
               </tbody>
             </table>
           </div>
+
+          {selectedUserId && (
+            <div style={{ marginTop: 16, borderTop: "1px solid #ddd", paddingTop: 16 }}>
+              <h3 style={{ marginBottom: 10 }}>{content.manageSelectedUserTitle || "Manage selected user"}</h3>
+              <div className="form-group">
+                <label>{content.surname}:</label>
+                <input value={editingUser.surname} onChange={(e) => setEditingUser((c) => ({ ...c, surname: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label>{content.firstname}:</label>
+                <input value={editingUser.firstname} onChange={(e) => setEditingUser((c) => ({ ...c, firstname: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label>{content.email}:</label>
+                <input value={editingUser.email} onChange={(e) => setEditingUser((c) => ({ ...c, email: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label>{content.adresse}:</label>
+                <input value={editingUser.adresse} onChange={(e) => setEditingUser((c) => ({ ...c, adresse: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label>{content.role}:</label>
+                <select value={editingUser.role} onChange={(e) => setEditingUser((c) => ({ ...c, role: e.target.value }))}>
+                  {roleOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {content[option.labelKey] || option.fallback}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" onClick={saveManagedUser} disabled={savingManagedUser}>
+                  {savingManagedUser ? "..." : (content.saveLabel || "Save")}
+                </button>
+                <button type="button" onClick={cancelManageUser}>
+                  {content.cancelLabel || "Cancel"}
+                </button>
+                <button type="button" onClick={deleteManagedUser} disabled={deletingManagedUser}>
+                  {deletingManagedUser ? "..." : (content.deleteLabel || "Delete")}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

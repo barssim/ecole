@@ -3,6 +3,7 @@ package ma.solide.usermanagement.controller;
 import ma.solide.usermanagement.model.PasswordChangeRequest;
 import ma.solide.usermanagement.model.ManagerUserUpdateRequest;
 import ma.solide.usermanagement.model.TeacherSummaryDTO;
+import ma.solide.usermanagement.model.StudentSummaryDTO;
 import ma.solide.usermanagement.model.User;
 import ma.solide.usermanagement.model.UserProfileDTO;
 import ma.solide.usermanagement.model.UserProfileUpdateRequest;
@@ -42,6 +43,11 @@ public class UserProfileController {
     @GetMapping("/teachers")
     public ResponseEntity<List<TeacherSummaryDTO>> getTeachers() {
         return ResponseEntity.ok(userService.findAllTeachers());
+    }
+
+    @GetMapping("/students")
+    public ResponseEntity<List<StudentSummaryDTO>> getStudents() {
+        return ResponseEntity.ok(userService.findAllStudents());
     }
 
     @PutMapping("/{id}/profile")

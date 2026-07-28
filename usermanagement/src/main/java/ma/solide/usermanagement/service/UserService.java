@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
 import ma.solide.usermanagement.model.TeacherSummaryDTO;
+import ma.solide.usermanagement.model.StudentSummaryDTO;
 import ma.solide.usermanagement.model.User;
 import ma.solide.usermanagement.model.UserProfileDTO;
 import ma.solide.usermanagement.repository.UserRepository;
@@ -60,6 +61,15 @@ public class UserService {
 				.stream()
 				.filter(this::isTeacher)
 				.map(this::toTeacherSummary)
+				.toList();
+	}
+
+	public List<StudentSummaryDTO> findAllStudents() {
+		String tenantId = TenantContext.getRequiredTenantId();
+		return userRepository.findByTenantId(tenantId)
+				.stream()
+				.filter(this::isStudent)
+				.map(this::toStudentSummary)
 				.toList();
 	}
 
@@ -167,6 +177,16 @@ public class UserService {
 				.anyMatch(role -> role.equals("teacher") || role.equals("role_teacher") || role.endsWith("_teacher"));
 	}
 
+	private boolean isStudent(User user) {
+		if (user == null || user.getRole() == null) {
+			return false;
+		}
+
+		return Arrays.stream(user.getRole().split(","))
+				.map(role -> role == null ? "" : role.trim().toLowerCase())
+				.anyMatch(role -> role.equals("student") || role.equals("role_student") || role.endsWith("_student"));
+	}
+
 	private TeacherSummaryDTO toTeacherSummary(User user) {
 		String firstName = user.getFirstname() == null ? "" : user.getFirstname().trim();
 		String lastName = user.getSurname() == null ? "" : user.getSurname().trim();
@@ -176,5 +196,16 @@ public class UserService {
 		}
 
 		return new TeacherSummaryDTO(user.getUserno(), fullName, lastName);
+	}
+
+	private StudentSummaryDTO toStudentSummary(User user) {
+		String firstName = user.getFirstname() == null ? "" : user.getFirstname().trim();
+		String lastName = user.getSurname() == null ? "" : user.getSurname().trim();
+		String fullName = (firstName + " " + lastName).trim();
+		if (fullName.isEmpty()) {
+			fullName = lastName.isEmpty() ? "Student #" + user.getUserno() : lastName;
+		}
+
+		return new StudentSummaryDTO(user.getUserno(), fullName, lastName);
 	}
 }
