@@ -41,5 +41,14 @@
   "roleSecretary": "Secrétaire",
   "roleFinance": "Finance",
   "roleRequired": "Veuillez sélectionner un rôle",
+  "usersTitle": "Utilisateurs du tenant",
+  "usersHint": "En tant que manager, vous pouvez gérer tous les utilisateurs de votre tenant.",
+  "actionsLabel": "Actions",
+  "editLabel": "Modifier",
+  "saveLabel": "Enregistrer",
+  "cancelLabel": "Annuler",
+  "deleteLabel": "Supprimer",
+  "noUsersLabel": "Aucun utilisateur trouvé.",
+  "deleteUserConfirm": "Supprimer l'utilisateur",
   "profile": "Mon profil"
 }

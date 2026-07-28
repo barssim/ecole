@@ -3,6 +3,7 @@ package ma.solide.usermanagement.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 
 import ma.solide.usermanagement.model.TeacherSummaryDTO;
 import ma.solide.usermanagement.model.User;
+import ma.solide.usermanagement.model.UserProfileDTO;
 import ma.solide.usermanagement.repository.UserRepository;
 import ma.solide.usermanagement.tenant.TenantContext;
 
@@ -46,6 +48,10 @@ public class UserService {
 	public List<User> findAllUsers() {
 		String tenantId = TenantContext.getRequiredTenantId();
 		return userRepository.findByTenantId(tenantId);
+	}
+
+	public List<UserProfileDTO> findAllUserProfiles() {
+		return findAllUsers().stream().map(UserProfileDTO::fromUser).toList();
 	}
 
 	public List<TeacherSummaryDTO> findAllTeachers() {
@@ -108,6 +114,47 @@ public class UserService {
 
 		user.setPassword(newPassword);
 		userRepository.save(user);
+	}
+
+	public User updateUserByManager(Integer userNo, String surname, String firstname, String email, String adresse, String role) {
+		User user = getUserOrThrow(userNo);
+
+		if (surname != null && !surname.trim().isEmpty()) {
+			user.setSurname(surname.trim());
+		}
+		if (firstname != null && !firstname.trim().isEmpty()) {
+			user.setFirstname(firstname.trim());
+		}
+		if (email != null && !email.trim().isEmpty()) {
+			user.setEmail(email.trim());
+		}
+		if (adresse != null) {
+			user.setAdresse(adresse.trim());
+		}
+		if (role != null && !role.trim().isEmpty()) {
+			user.setRole(normalizeRole(role));
+		}
+
+		return userRepository.save(user);
+	}
+
+	public void deleteUserByManager(Integer userNo) {
+		User user = getUserOrThrow(userNo);
+		userRepository.delete(user);
+	}
+
+	private String normalizeRole(String roleCsv) {
+		String normalized = Arrays.stream(String.valueOf(roleCsv).split(","))
+				.map(value -> value == null ? "" : value.trim().toLowerCase())
+				.filter(value -> !value.isBlank())
+				.distinct()
+				.collect(Collectors.joining(","));
+
+		if (normalized.isBlank()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Role is required");
+		}
+
+		return normalized;
 	}
 
 	private boolean isTeacher(User user) {

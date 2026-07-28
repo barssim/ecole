@@ -41,5 +41,14 @@
   "roleSecretary": "سكرتير",
   "roleFinance": "المالية",
   "roleRequired": "يرجى تحديد دور",
+  "usersTitle": "مستخدمو المستأجر",
+  "usersHint": "بصفتك مديرًا، يمكنك إدارة جميع مستخدمي المستأجر.",
+  "actionsLabel": "الإجراءات",
+  "editLabel": "تعديل",
+  "saveLabel": "حفظ",
+  "cancelLabel": "إلغاء",
+  "deleteLabel": "حذف",
+  "noUsersLabel": "لا يوجد مستخدمون.",
+  "deleteUserConfirm": "حذف المستخدم",
   "profile": "ملفي الشخصي"
 }
