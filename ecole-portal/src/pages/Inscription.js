@@ -38,6 +38,7 @@ const Inscription = ({ language }) => {
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState("");
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [showAddUserForm, setShowAddUserForm] = useState(false);
   const [editingUser, setEditingUser] = useState({
     surname: "",
     firstname: "",
@@ -186,6 +187,9 @@ const Inscription = ({ language }) => {
       setError({});
       resetForm();
       await fetchUsers();
+      if (canManageTenantUsers) {
+        setShowAddUserForm(false);
+      }
     } catch (err) {
       console.error("Error:", err);
       setError({ general: content.registrationError });
@@ -265,9 +269,8 @@ const Inscription = ({ language }) => {
     }
   };
 
-  return (
-    <div className="signup-container">
-      <form className="signup-form" onSubmit={handleSubmit}>
+  const addUserForm = (
+    <form className="signup-form" onSubmit={handleSubmit}>
         <h2>{content.userManagementTitle || "User management"}</h2>
         {error.general && <p className="error-message">{error.general}</p>}
         {success && <p className="success-message">{success}</p>}
@@ -331,10 +334,29 @@ const Inscription = ({ language }) => {
           {loading ? content.loading : (content.addUserLabel || "Add user")}
         </button>
       </form>
+  );
+
+  return (
+    <div className="signup-container">
+      {!canManageTenantUsers && addUserForm}
 
       {canManageTenantUsers && (
         <div className="signup-form" style={{ marginTop: 24 }}>
-          <h2>{content.usersTitle || "Tenant users"}</h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+            <h2>{content.usersTitle || "Users"}</h2>
+            <button
+              type="button"
+              className="signup-button"
+              style={{ width: "auto", padding: "8px 14px" }}
+              onClick={() => {
+                setShowAddUserForm((prev) => !prev);
+                setError({});
+                setSuccess("");
+              }}
+            >
+              {showAddUserForm ? (content.cancelLabel || "Cancel") : (content.addUserLabel || "Add user")}
+            </button>
+          </div>
           <p style={{ marginBottom: 10 }}>{content.usersHint || "You can manage all users in your tenant."}</p>
           {usersError && <p className="error-message">{usersError}</p>}
 
@@ -422,6 +444,12 @@ const Inscription = ({ language }) => {
                   {deletingManagedUser ? "..." : (content.deleteLabel || "Delete")}
                 </button>
               </div>
+            </div>
+          )}
+
+          {showAddUserForm && (
+            <div style={{ marginTop: 16, borderTop: "1px solid #ddd", paddingTop: 16 }}>
+              {addUserForm}
             </div>
           )}
         </div>
