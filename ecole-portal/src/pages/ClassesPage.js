@@ -34,7 +34,7 @@ const ClassesPage = ({ language }) => {
    const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
    const currentUserName = localStorage.getItem('userName') || '';
    const isTeacherOnly = userRoles.length > 0 && userRoles.every(role => role === 'teacher' || role === 'role_teacher');
-   const canManageClasses = hasAnyRole(userRoles, ['admin', 'manager', 'finance']);
+   const canManageClasses = hasAnyRole(userRoles, ['admin', 'manager', 'secretary']);
 
    const configuredBase = resolveApiBaseUrl('http://localhost:8085');
    const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
@@ -411,7 +411,7 @@ const ClassesPage = ({ language }) => {
          </div>
        )}
 
-       {!isTeacherOnly && (
+       {canManageClasses && (
          <form onSubmit={handleCreateClass} className="bg-white rounded shadow p-4 space-y-3 border border-gray-200">
            <div>
              <label htmlFor="className" className="block text-sm font-medium text-gray-700 mb-1">
@@ -447,7 +447,7 @@ const ClassesPage = ({ language }) => {
          </form>
        )}
 
-      {selectedClassId ? (
+       {selectedClassId ? (
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm text-blue-700">
             {content.classes_manageSelectedLabel || 'Managing selected class'}
@@ -456,10 +456,14 @@ const ClassesPage = ({ language }) => {
             {content.classes_backToList || 'Back to class list'}
           </button>
         </div>
-      ) : (
+       ) : canManageClasses ? (
         <p className="text-sm text-gray-700">
           {content.classes_selectFirstHint || 'First select one class from the list, then manage it.'}
         </p>
+       ) : (
+         <p className="text-sm text-gray-700">
+           {content.classes_readOnlyHint || 'You can view classes, but you do not have permission to manage them.'}
+         </p>
       )}
 
       <div style={{ overflowX: 'auto' }}>
@@ -506,8 +510,8 @@ const ClassesPage = ({ language }) => {
                   <td style={td}>{(cls.teachers || []).length}</td>
                    <td style={td}>
                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                       {!selectedClassId ? (
-                         !isTeacherOnly && (
+                        {!selectedClassId ? (
+                          canManageClasses && (
                            <button onClick={() => handleSelectClass(cls)}>
                              {content.classes_manageClassButton || 'Manage this class'}
                            </button>
@@ -517,7 +521,7 @@ const ClassesPage = ({ language }) => {
                            <button onClick={() => toggleExpand(cls.id)}>
                              {expandedClassId === cls.id ? content.classes_hideStudents : content.classes_showStudents}
                            </button>
-                           {!isTeacherOnly && (
+                            {canManageClasses && (
                              <>
                                <button onClick={() => handleAddStudentClick(cls)} disabled={addingStudentToClassId === cls.id || editingId === cls.id}>
                                  {content.classes_addStudent}
@@ -644,6 +648,13 @@ const ClassesPage = ({ language }) => {
                 )}
               </React.Fragment>
             ))}
+            {visibleClasses.length === 0 && (
+              <tr>
+                <td style={td} colSpan={4}>
+                  <span className="italic text-gray-500">{content.classes_noClasses || 'No classes found.'}</span>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
