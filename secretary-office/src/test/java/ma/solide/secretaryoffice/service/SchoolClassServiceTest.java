@@ -50,6 +50,40 @@ class SchoolClassServiceTest {
     }
 
     @Test
+    void getClassesShouldFilterByTeacherNameCaseInsensitive() {
+        SchoolClass classA = SchoolClass.builder()
+                .id(1)
+                .name("3e A")
+                .teachers(new java.util.ArrayList<>(List.of("teacher.one")))
+                .build();
+        SchoolClass classB = SchoolClass.builder()
+                .id(2)
+                .name("4e B")
+                .teachers(new java.util.ArrayList<>(List.of("teacher.two")))
+                .build();
+
+        when(schoolClassRepository.findAllByTenantIdOrderByNameAsc(TENANT)).thenReturn(List.of(classA, classB));
+
+        List<SchoolClassResponse> result = schoolClassService.getClasses("TEACHER.ONE");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("3e A");
+    }
+
+    @Test
+    void getClassesShouldReturnAllWhenTeacherFilterIsBlank() {
+        SchoolClass classA = SchoolClass.builder().id(1).name("3e A").build();
+        SchoolClass classB = SchoolClass.builder().id(2).name("4e B").build();
+
+        when(schoolClassRepository.findAllByTenantIdOrderByNameAsc(TENANT)).thenReturn(List.of(classA, classB));
+
+        List<SchoolClassResponse> result = schoolClassService.getClasses("   ");
+
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting(SchoolClassResponse::getName).containsExactly("3e A", "4e B");
+    }
+
+    @Test
     void addStudentShouldAppendToClassStudents() {
         SchoolClass existing = SchoolClass.builder().id(1).name("3e A")
                 .students(new java.util.ArrayList<>(List.of("Alice"))).build();

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,8 +31,9 @@ public class SchoolClassController {
     }
 
     @GetMapping
-    public ResponseEntity<List<SchoolClassResponse>> getClasses() {
-        return ResponseEntity.ok(schoolClassService.getClasses());
+    public ResponseEntity<List<SchoolClassResponse>> getClasses(
+            @RequestParam(value = "teacherName", required = false) String teacherName) {
+        return ResponseEntity.ok(schoolClassService.getClasses(teacherName));
     }
 
     @PostMapping

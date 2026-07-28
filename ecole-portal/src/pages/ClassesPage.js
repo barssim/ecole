@@ -9,6 +9,7 @@ const ClassesPage = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
   const [classes, setClasses] = useState([]);
   const [expandedClassId, setExpandedClassId] = useState(null);
+  const [selectedClassId, setSelectedClassId] = useState(null);
   const [newClassName, setNewClassName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
@@ -56,6 +57,24 @@ const ClassesPage = ({ language }) => {
 
   const toggleExpand = (id) => {
     setExpandedClassId(expandedClassId === id ? null : id);
+  };
+
+  const handleSelectClass = (cls) => {
+    setSelectedClassId(cls.id);
+    setExpandedClassId(cls.id);
+    setSubmitError('');
+    setSubmitSuccess('');
+  };
+
+  const handleBackToClassList = () => {
+    setSelectedClassId(null);
+    setExpandedClassId(null);
+    setAddingStudentToClassId(null);
+    setAddingTeacherToClassId(null);
+    setEditingId(null);
+    setEditName('');
+    setSubmitError('');
+    setSubmitSuccess('');
   };
 
    useEffect(() => {
@@ -309,6 +328,9 @@ const ClassesPage = ({ language }) => {
       }
       setClasses((current) => current.filter((c) => c.id !== cls.id));
       if (expandedClassId === cls.id) setExpandedClassId(null);
+      if (selectedClassId === cls.id) {
+        setSelectedClassId(null);
+      }
       setSubmitSuccess(`"${cls.name}" ${content.classes_removeSuccess}`);
     } catch (error) {
       setSubmitError(content.classes_removeError);
@@ -364,6 +386,10 @@ const ClassesPage = ({ language }) => {
     }
   };
 
+  const visibleClasses = selectedClassId
+    ? classes.filter((cls) => cls.id === selectedClassId)
+    : classes;
+
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <h2 className="text-2xl font-bold">🏫 {content.classes_title}</h2>
@@ -402,6 +428,21 @@ const ClassesPage = ({ language }) => {
         )}
       </form>
 
+      {selectedClassId ? (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-blue-700">
+            {content.classes_manageSelectedLabel || 'Managing selected class'}
+          </p>
+          <button onClick={handleBackToClassList}>
+            {content.classes_backToList || 'Back to class list'}
+          </button>
+        </div>
+      ) : (
+        <p className="text-sm text-gray-700">
+          {content.classes_selectFirstHint || 'First select one class from the list, then manage it.'}
+        </p>
+      )}
+
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
           <thead style={{ background: '#dbeafe', color: '#1e3a8a' }}>
@@ -409,11 +450,11 @@ const ClassesPage = ({ language }) => {
               <th style={th}>{content.classes_title}</th>
               <th style={th}>{content.students}</th>
               <th style={th}>{content.classes_teachers || 'Teachers'}</th>
-              <th style={th}>Actions</th>
+              <th style={th}>{selectedClassId ? 'Actions' : (content.classes_selectAction || 'Select')}</th>
             </tr>
           </thead>
           <tbody>
-            {classes.map((cls, index) => (
+            {visibleClasses.map((cls, index) => (
               <React.Fragment key={cls.id}>
                 <tr style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}>
                   <td style={td}>
@@ -446,25 +487,33 @@ const ClassesPage = ({ language }) => {
                   <td style={td}>{(cls.teachers || []).length}</td>
                   <td style={td}>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      <button onClick={() => toggleExpand(cls.id)}>
-                        {expandedClassId === cls.id ? content.classes_hideStudents : content.classes_showStudents}
-                      </button>
-                      <button onClick={() => handleAddStudentClick(cls)} disabled={addingStudentToClassId === cls.id || editingId === cls.id}>
-                        {content.classes_addStudent}
-                      </button>
-                      <button onClick={() => handleAddTeacherClick(cls)} disabled={addingTeacherToClassId === cls.id || editingId === cls.id || teachersLoading || teachers.length === 0}>
-                        {content.classes_assignTeacher || 'Assign teacher'}
-                      </button>
-                      <button onClick={() => handleEditClass(cls)} disabled={editingId !== null || deletingId === cls.id}>
-                        {content.classes_editClass}
-                      </button>
-                      <button onClick={() => handleDeleteClass(cls)} disabled={deletingId === cls.id || editingId === cls.id}>
-                        {deletingId === cls.id ? '...' : content.classes_removeClass}
-                      </button>
+                      {!selectedClassId ? (
+                        <button onClick={() => handleSelectClass(cls)}>
+                          {content.classes_manageClassButton || 'Manage this class'}
+                        </button>
+                      ) : (
+                        <>
+                          <button onClick={() => toggleExpand(cls.id)}>
+                            {expandedClassId === cls.id ? content.classes_hideStudents : content.classes_showStudents}
+                          </button>
+                          <button onClick={() => handleAddStudentClick(cls)} disabled={addingStudentToClassId === cls.id || editingId === cls.id}>
+                            {content.classes_addStudent}
+                          </button>
+                          <button onClick={() => handleAddTeacherClick(cls)} disabled={addingTeacherToClassId === cls.id || editingId === cls.id || teachersLoading || teachers.length === 0}>
+                            {content.classes_assignTeacher || 'Assign teacher'}
+                          </button>
+                          <button onClick={() => handleEditClass(cls)} disabled={editingId !== null || deletingId === cls.id}>
+                            {content.classes_editClass}
+                          </button>
+                          <button onClick={() => handleDeleteClass(cls)} disabled={deletingId === cls.id || editingId === cls.id}>
+                            {deletingId === cls.id ? '...' : content.classes_removeClass}
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
-                {expandedClassId === cls.id && (
+                {selectedClassId && expandedClassId === cls.id && (
                   <tr style={{ background: '#fff' }}>
                     <td style={td} colSpan={4}>
                       <ul className="ml-4 list-disc list-inside text-sm space-y-1">

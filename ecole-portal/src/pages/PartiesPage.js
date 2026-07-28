@@ -16,9 +16,11 @@ const PartiesPage = ({ language }) => {
   const isAdministrationPath = (location.pathname || "").toLowerCase().startsWith("/administration/");
   const isSecretaryAuthorized = hasAnyRole(normalizedRoles, ["secretary"]);
   const isAdminAuthorized = hasAnyRole(normalizedRoles, ["admin", "manager"]);
+  const isTeacherAuthorized = hasAnyRole(normalizedRoles, ["teacher"]);
+  const isTeacherOnly = isTeacherAuthorized && !isSecretaryAuthorized && !isAdminAuthorized;
   const canManageActivities = isAdministrationPath
     ? (isSecretaryAuthorized || isAdminAuthorized)
-    : isSecretaryAuthorized;
+    : (isSecretaryAuthorized || isTeacherAuthorized);
   const userName = localStorage.getItem("LoggedIn") || "";
   const token = sessionStorage.getItem("jwt_token");
   const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || "http://localhost:8085").replace(/\/$/, "");
@@ -79,7 +81,10 @@ const PartiesPage = ({ language }) => {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch(`${baseUrl}/api/classes`, { headers });
+      const classesUrl = isTeacherOnly
+        ? `${baseUrl}/api/classes?teacherName=${encodeURIComponent(userName)}`
+        : `${baseUrl}/api/classes`;
+      const response = await fetch(classesUrl, { headers });
       if (!response.ok) {
         throw new Error("Failed to load classes");
       }
