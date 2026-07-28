@@ -19,14 +19,21 @@ const SchoolInvoicePreview =  ({language}) => {
                              };
   const [invoice, setInvoice] = useState(null);
   const [error, setError] = useState('');
+  const configuredBase = resolveApiBaseUrl('http://localhost:8085');
   const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-  const baseUrl = browserIsLocal ? resolveApiBaseUrl('http://localhost:8085') : '';
+  const localhostApiTarget = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBase);
+  const inferredRemoteBase = `${window.location.protocol}//${window.location.hostname}:8085`;
+  const effectiveBase = localhostApiTarget && !browserIsLocal ? inferredRemoteBase : configuredBase;
+  const useRelativeApi = process.env.REACT_APP_USE_RELATIVE_API === 'true';
   const token = sessionStorage.getItem('jwt_token');
   const studentName = localStorage.getItem('userName') || '';
   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
 
   useEffect(() => {
-    const apiUrl = browserIsLocal ? `${baseUrl}/api/paymentNotice?studentName=${encodeURIComponent(studentName)}` : `/api/paymentNotice?studentName=${encodeURIComponent(studentName)}`;
+    const apiBase = effectiveBase.endsWith('/api') ? effectiveBase : `${effectiveBase}/api`;
+    const apiUrl = useRelativeApi
+      ? `/api/paymentNotice?studentName=${encodeURIComponent(studentName)}`
+      : `${apiBase}/paymentNotice?studentName=${encodeURIComponent(studentName)}`;
     axios.get(apiUrl, {
       headers: {
         'X-Tenant-Id': getTenantId(),
@@ -38,7 +45,7 @@ const SchoolInvoicePreview =  ({language}) => {
       .catch((requestError) => {
         setError(requestError.response?.data?.message || 'API error while loading payment notice');
       });
-  }, [baseUrl, studentName, token]);
+  }, [effectiveBase, studentName, token, useRelativeApi, userRoles]);
 
   if (error) return <div>{error}</div>;
   if (!invoice) return <div>Loading...</div>;

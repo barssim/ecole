@@ -117,6 +117,8 @@ services:
     restart: always
     environment:
       NODE_ENV: production
+      REACT_APP_API_GATEWAY_URL: http://v95566.1blu.de:8085
+      REACT_APP_USE_RELATIVE_API: "false"
     networks:
       - ecole
 

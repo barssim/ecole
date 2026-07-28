@@ -28,14 +28,18 @@ const ClassesPage = ({ language }) => {
    const [submitError, setSubmitError] = useState('');
    const [submitSuccess, setSubmitSuccess] = useState('');
 
+   const configuredBase = resolveApiBaseUrl('http://localhost:8085');
    const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-   const baseUrl = browserIsLocal ? resolveApiBaseUrl('http://localhost:8085') : '';
+   const localhostApiTarget = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBase);
+   const inferredRemoteBase = `${window.location.protocol}//${window.location.hostname}:8085`;
+   const effectiveBase = localhostApiTarget && !browserIsLocal ? inferredRemoteBase : configuredBase;
+   const useRelativeApi = process.env.REACT_APP_USE_RELATIVE_API === 'true';
 
    const apiUrlFor = (path) => {
-     if (browserIsLocal) {
-       return `${baseUrl}/api${path}`;
+     if (useRelativeApi) {
+       return `/api${path}`;
      }
-     return `/api${path}`;
+     return `${effectiveBase}/api${path}`;
    };
 
    const buildHeaders = (includeJson = false) => {

@@ -60,17 +60,15 @@ const Payments = ({ language }) => {
     return fallback;
   };
 
-   const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-   const paymentsApiBase = browserIsLocal ? (() => {
-     const configuredBase = resolveApiBaseUrl('http://localhost:8085');
-     const apiRoot = configuredBase.endsWith('/api') ? configuredBase : `${configuredBase}/api`;
-     return `${apiRoot}/payments`;
-   })() : '/api/payments';
-   const invoiceApiUrl = browserIsLocal ? (() => {
-     const configuredBase = resolveApiBaseUrl('http://localhost:8085');
-     const apiRoot = configuredBase.endsWith('/api') ? configuredBase : `${configuredBase}/api`;
-     return `${apiRoot}/facture/generate`;
-   })() : '/api/facture/generate';
+  const configuredBase = resolveApiBaseUrl('http://localhost:8085');
+  const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const localhostApiTarget = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBase);
+  const inferredRemoteBase = `${window.location.protocol}//${window.location.hostname}:8085`;
+  const effectiveBase = localhostApiTarget && !browserIsLocal ? inferredRemoteBase : configuredBase;
+  const apiRoot = effectiveBase.endsWith('/api') ? effectiveBase : `${effectiveBase}/api`;
+  const useRelativeApi = process.env.REACT_APP_USE_RELATIVE_API === 'true';
+  const paymentsApiBase = useRelativeApi ? '/api/payments' : `${apiRoot}/payments`;
+  const invoiceApiUrl = useRelativeApi ? '/api/facture/generate' : `${apiRoot}/facture/generate`;
   const token = sessionStorage.getItem('jwt_token');
 
   const buildRoleHeader = () => {
