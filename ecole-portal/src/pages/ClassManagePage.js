@@ -19,11 +19,15 @@ const ClassManagePage = ({ language }) => {
   const [editName, setEditName] = useState('');
   const [savingName, setSavingName] = useState(false);
 
+  // Students
+  const [allStudents, setAllStudents] = useState([]);
+  const [studentsLoading, setStudentsLoading] = useState(false);
   const [addingStudent, setAddingStudent] = useState(false);
-  const [newStudentName, setNewStudentName] = useState('');
+  const [selectedStudentName, setSelectedStudentName] = useState('');
   const [savingStudent, setSavingStudent] = useState(false);
   const [removingStudent, setRemovingStudent] = useState(null);
 
+  // Teachers
   const [teachers, setTeachers] = useState([]);
   const [teachersLoading, setTeachersLoading] = useState(false);
   const [addingTeacher, setAddingTeacher] = useState(false);
@@ -91,8 +95,25 @@ const ClassManagePage = ({ language }) => {
       }
     };
 
+    const fetchStudents = async () => {
+      setStudentsLoading(true);
+      try {
+        const response = await fetch(apiUrlFor('/users/students'), { headers: buildHeaders() });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        setAllStudents(Array.isArray(data) ? data : []);
+      } catch {
+        setAllStudents([]);
+      } finally {
+        setStudentsLoading(false);
+      }
+    };
+
     fetchClass();
-    if (canManageClasses) fetchTeachers();
+    if (canManageClasses) {
+      fetchTeachers();
+      fetchStudents();
+    }
   }, [id]);
 
   const clearMessages = () => {
@@ -155,9 +176,9 @@ const ClassManagePage = ({ language }) => {
     }
   };
 
-  // ── Add student ───────────────────────────────────────────────
+  // ── Add student (select) ──────────────────────────────────────
   const handleSaveStudent = async () => {
-    const trimmed = newStudentName.trim();
+    const trimmed = selectedStudentName.trim();
     if (!trimmed) { setSubmitError(content.classes_studentValidation); return; }
     setSavingStudent(true);
     clearMessages();
@@ -174,7 +195,7 @@ const ClassManagePage = ({ language }) => {
       }
       const updated = await response.json();
       setCls(updated);
-      setNewStudentName('');
+      setSelectedStudentName('');
       setAddingStudent(false);
       setSubmitSuccess(content.classes_studentSuccess);
     } catch (error) {
@@ -275,6 +296,10 @@ const ClassManagePage = ({ language }) => {
     (t) => !(cls.teachers || []).some((a) => a.toLowerCase() === String(t.name || '').toLowerCase())
   );
 
+  const unassignedStudents = allStudents.filter(
+    (s) => !(cls.students || []).some((added) => added.toLowerCase() === String(s.name || '').toLowerCase())
+  );
+
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       {/* Header */}
@@ -328,10 +353,12 @@ const ClassManagePage = ({ language }) => {
       {/* Students */}
       <div className="bg-white rounded shadow p-4 border border-gray-200 space-y-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <h3 className="font-semibold text-gray-700">👥 {content.students || 'Students'} ({cls.students.length})</h3>
-          {!addingStudent && (
+          <h3 className="font-semibold text-gray-700">
+            👥 {content.students || 'Students'} ({cls.students.length})
+          </h3>
+          {!addingStudent && !studentsLoading && unassignedStudents.length > 0 && (
             <button
-              onClick={() => { setAddingStudent(true); setNewStudentName(''); clearMessages(); }}
+              onClick={() => { setAddingStudent(true); setSelectedStudentName(''); clearMessages(); }}
               className="text-xs bg-indigo-100 text-indigo-800 px-3 py-1 rounded hover:bg-indigo-200"
             >
               {content.classes_addStudent || '+ Add Student'}
@@ -341,30 +368,45 @@ const ClassManagePage = ({ language }) => {
 
         {addingStudent && (
           <div className="flex items-center gap-2 flex-wrap">
-            <input
-              type="text"
-              value={newStudentName}
-              onChange={(e) => setNewStudentName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleSaveStudent(); if (e.key === 'Escape') setAddingStudent(false); }}
-              placeholder={content.classes_studentPlaceholder || 'Student name'}
+            <select
+              value={selectedStudentName}
+              onChange={(e) => setSelectedStudentName(e.target.value)}
               className="border rounded px-3 py-1 text-sm flex-1"
+              disabled={savingStudent || studentsLoading}
               autoFocus
-              disabled={savingStudent}
-            />
-            <button onClick={handleSaveStudent} disabled={savingStudent} className="text-xs bg-green-100 text-green-800 px-3 py-1 rounded hover:bg-green-200 disabled:opacity-50">
+            >
+              <option value="">{content.classes_selectStudentPlaceholder || 'Select student...'}</option>
+              {unassignedStudents.map((s) => (
+                <option key={s.id || s.name} value={s.name}>{s.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={handleSaveStudent}
+              disabled={savingStudent || !selectedStudentName}
+              className="text-xs bg-green-100 text-green-800 px-3 py-1 rounded hover:bg-green-200 disabled:opacity-50"
+            >
               {savingStudent ? '...' : (content.classes_studentSave || 'Add')}
             </button>
-            <button onClick={() => setAddingStudent(false)} disabled={savingStudent} className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded hover:bg-gray-200">
+            <button
+              onClick={() => { setAddingStudent(false); setSelectedStudentName(''); }}
+              disabled={savingStudent}
+              className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded hover:bg-gray-200"
+            >
               {content.classes_editCancel || 'Cancel'}
             </button>
           </div>
         )}
 
         {cls.students.length > 0 ? (
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-gray-100 mt-2">
             {cls.students.map((student, i) => (
               <li key={i} className="flex items-center justify-between py-2 text-sm">
-                <span>{student}</span>
+                <span className="flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold">
+                    {i + 1}
+                  </span>
+                  {student}
+                </span>
                 <button
                   onClick={() => handleRemoveStudent(student)}
                   disabled={removingStudent === student}
@@ -384,7 +426,9 @@ const ClassManagePage = ({ language }) => {
       {/* Teachers */}
       <div className="bg-white rounded shadow p-4 border border-gray-200 space-y-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <h3 className="font-semibold text-gray-700">🎓 {content.classes_teachers || 'Teachers'} ({(cls.teachers || []).length})</h3>
+          <h3 className="font-semibold text-gray-700">
+            🎓 {content.classes_teachers || 'Teachers'} ({(cls.teachers || []).length})
+          </h3>
           {!addingTeacher && unassignedTeachers.length > 0 && !teachersLoading && (
             <button
               onClick={() => { setAddingTeacher(true); setSelectedTeacherName(''); clearMessages(); }}
@@ -408,20 +452,33 @@ const ClassManagePage = ({ language }) => {
                 <option key={t.id || t.name} value={t.name}>{t.name}</option>
               ))}
             </select>
-            <button onClick={handleSaveTeacher} disabled={savingTeacher || !selectedTeacherName} className="text-xs bg-green-100 text-green-800 px-3 py-1 rounded hover:bg-green-200 disabled:opacity-50">
+            <button
+              onClick={handleSaveTeacher}
+              disabled={savingTeacher || !selectedTeacherName}
+              className="text-xs bg-green-100 text-green-800 px-3 py-1 rounded hover:bg-green-200 disabled:opacity-50"
+            >
               {savingTeacher ? '...' : (content.classes_teacherSave || 'Assign')}
             </button>
-            <button onClick={() => setAddingTeacher(false)} disabled={savingTeacher} className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded hover:bg-gray-200">
+            <button
+              onClick={() => { setAddingTeacher(false); setSelectedTeacherName(''); }}
+              disabled={savingTeacher}
+              className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded hover:bg-gray-200"
+            >
               {content.classes_editCancel || 'Cancel'}
             </button>
           </div>
         )}
 
         {(cls.teachers || []).length > 0 ? (
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-gray-100 mt-2">
             {(cls.teachers || []).map((teacher, i) => (
               <li key={i} className="flex items-center justify-between py-2 text-sm">
-                <span>{teacher}</span>
+                <span className="flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                    {i + 1}
+                  </span>
+                  {teacher}
+                </span>
                 <button
                   onClick={() => handleRemoveTeacher(teacher)}
                   disabled={removingTeacher === teacher}
