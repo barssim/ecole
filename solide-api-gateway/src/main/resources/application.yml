@@ -24,6 +24,9 @@ spring:
               - "http://v95566.1blu.de"
               - "http://v95566.1blu.de:80"
               - "https://v95566.1blu.de"
+              - "http://gardinia.mysolide.com"
+              - "http://gardinia.mysolide.com:80"
+              - "https://gardinia.mysolide.com"
               - "http://www.v95566.1blu.de"
               - "https://www.v95566.1blu.de"
               - "http://localhost"
@@ -38,6 +41,8 @@ spring:
             allowedOriginPatterns:
               - "http://*.1blu.de"
               - "https://*.1blu.de"
+              - "http://*.mysolide.com"
+              - "https://*.mysolide.com"
               - "http://localhost:*"
               - "http://127.0.0.1:*"
             allowedMethods:
