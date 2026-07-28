@@ -12,7 +12,8 @@ import java.util.Map;
 @Service
 public class SchoolInvoicePdfService {
 
-    public ByteArrayInputStream generateInvoice(String studentName, String className, List<Map<String, Object>> items) {
+    public ByteArrayInputStream generateInvoice(String studentName, String className, List<Map<String, Object>> items,
+            String logoUrl, String schoolName, String phoneNumber, String emailAddress, String address) {
         Document document = new Document();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -23,6 +24,26 @@ public class SchoolInvoicePdfService {
             Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
             Font labelFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
             Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
+            Font smallFont = FontFactory.getFont(FontFactory.HELVETICA, 9);
+
+            // Add logo if provided
+            if (logoUrl != null && !logoUrl.isEmpty()) {
+                try {
+                    Image logo = Image.getInstance(logoUrl);
+                    logo.scaleToFit(80, 80);
+                    logo.setAlignment(Element.ALIGN_LEFT);
+                    document.add(logo);
+                } catch (Exception e) {
+                    // Logo load failed, skip it
+                }
+            }
+
+            // Add school name if provided
+            if (schoolName != null && !schoolName.isEmpty()) {
+                Paragraph schoolHeader = new Paragraph(schoolName, titleFont);
+                schoolHeader.setAlignment(Element.ALIGN_CENTER);
+                document.add(schoolHeader);
+            }
 
             Paragraph title = new Paragraph("Facture Scolaire", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
@@ -68,6 +89,20 @@ public class SchoolInvoicePdfService {
 
             document.add(new Paragraph(" "));
             document.add(new Paragraph("Merci pour votre confiance.", normalFont));
+
+            // Add contact information if provided
+            document.add(new Paragraph(" "));
+            document.add(new Paragraph("═══════════════════════════════════", smallFont));
+
+            if (phoneNumber != null && !phoneNumber.isEmpty()) {
+                document.add(new Paragraph("Téléphone : " + phoneNumber, smallFont));
+            }
+            if (emailAddress != null && !emailAddress.isEmpty()) {
+                document.add(new Paragraph("Email : " + emailAddress, smallFont));
+            }
+            if (address != null && !address.isEmpty()) {
+                document.add(new Paragraph("Adresse : " + address, smallFont));
+            }
 
             document.close();
         } catch (DocumentException e) {

@@ -4,6 +4,7 @@ import en from "../locales/en.json";
 import ar from "../locales/ar.json";
 import { getTenantId } from '../tenant';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
+import { normalizeRoles, hasAnyRole } from '../utils/roles';
 
 const ClassesPage = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
@@ -28,6 +29,12 @@ const ClassesPage = ({ language }) => {
    const [removingTeacher, setRemovingTeacher] = useState(null); // { classId, name }
    const [submitError, setSubmitError] = useState('');
    const [submitSuccess, setSubmitSuccess] = useState('');
+
+   // Get user roles and name for teacher block filtering
+   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
+   const currentUserName = localStorage.getItem('userName') || '';
+   const isTeacherOnly = userRoles.length > 0 && userRoles.every(role => role === 'teacher' || role === 'role_teacher');
+   const canManageClasses = hasAnyRole(userRoles, ['admin', 'manager', 'finance']);
 
    const configuredBase = resolveApiBaseUrl('http://localhost:8085');
    const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
@@ -386,47 +393,59 @@ const ClassesPage = ({ language }) => {
     }
   };
 
-  const visibleClasses = selectedClassId
-    ? classes.filter((cls) => cls.id === selectedClassId)
-    : classes;
+   const visibleClasses = selectedClassId
+     ? classes.filter((cls) => cls.id === selectedClassId)
+     : isTeacherOnly
+     ? classes.filter((cls) => (cls.teachers || []).some(t => t.toLowerCase() === currentUserName.toLowerCase()))
+     : classes;
 
-  return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <h2 className="text-2xl font-bold">🏫 {content.classes_title}</h2>
+   return (
+     <div className="p-6 max-w-4xl mx-auto space-y-6">
+       <h2 className="text-2xl font-bold">🏫 {content.classes_title}</h2>
 
-      <form onSubmit={handleCreateClass} className="bg-white rounded shadow p-4 space-y-3 border border-gray-200">
-        <div>
-          <label htmlFor="className" className="block text-sm font-medium text-gray-700 mb-1">
-            {content.classes_createLabel}
-          </label>
-          <div className="flex flex-col gap-3 md:flex-row">
-            <input
-              id="className"
-              type="text"
-              value={newClassName}
-              onChange={(event) => setNewClassName(event.target.value)}
-              placeholder={content.classes_createPlaceholder}
-              className="flex-1 border rounded px-3 py-2"
-              disabled={isSubmitting}
-            />
-            <button
-              type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm disabled:opacity-60"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? content.classes_createSubmitting : content.classes_createButton}
-            </button>
-          </div>
-        </div>
+       {isTeacherOnly && (
+         <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
+           <p className="text-sm text-blue-700">
+             👨‍🏫 {content.classes_teacherViewLabel || 'Showing only your assigned classes'}
+           </p>
+         </div>
+       )}
 
-        {submitError && (
-          <p className="text-sm text-red-600">{submitError}</p>
-        )}
+       {!isTeacherOnly && (
+         <form onSubmit={handleCreateClass} className="bg-white rounded shadow p-4 space-y-3 border border-gray-200">
+           <div>
+             <label htmlFor="className" className="block text-sm font-medium text-gray-700 mb-1">
+               {content.classes_createLabel}
+             </label>
+             <div className="flex flex-col gap-3 md:flex-row">
+               <input
+                 id="className"
+                 type="text"
+                 value={newClassName}
+                 onChange={(event) => setNewClassName(event.target.value)}
+                 placeholder={content.classes_createPlaceholder}
+                 className="flex-1 border rounded px-3 py-2"
+                 disabled={isSubmitting}
+               />
+               <button
+                 type="submit"
+                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm disabled:opacity-60"
+                 disabled={isSubmitting}
+               >
+                 {isSubmitting ? content.classes_createSubmitting : content.classes_createButton}
+               </button>
+             </div>
+           </div>
 
-        {submitSuccess && (
-          <p className="text-sm text-green-600">{submitSuccess}</p>
-        )}
-      </form>
+           {submitError && (
+             <p className="text-sm text-red-600">{submitError}</p>
+           )}
+
+           {submitSuccess && (
+             <p className="text-sm text-green-600">{submitSuccess}</p>
+           )}
+         </form>
+       )}
 
       {selectedClassId ? (
         <div className="flex items-center justify-between gap-3">
@@ -485,33 +504,39 @@ const ClassesPage = ({ language }) => {
                   </td>
                   <td style={td}>{cls.students.length}</td>
                   <td style={td}>{(cls.teachers || []).length}</td>
-                  <td style={td}>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {!selectedClassId ? (
-                        <button onClick={() => handleSelectClass(cls)}>
-                          {content.classes_manageClassButton || 'Manage this class'}
-                        </button>
-                      ) : (
-                        <>
-                          <button onClick={() => toggleExpand(cls.id)}>
-                            {expandedClassId === cls.id ? content.classes_hideStudents : content.classes_showStudents}
-                          </button>
-                          <button onClick={() => handleAddStudentClick(cls)} disabled={addingStudentToClassId === cls.id || editingId === cls.id}>
-                            {content.classes_addStudent}
-                          </button>
-                          <button onClick={() => handleAddTeacherClick(cls)} disabled={addingTeacherToClassId === cls.id || editingId === cls.id || teachersLoading || teachers.length === 0}>
-                            {content.classes_assignTeacher || 'Assign teacher'}
-                          </button>
-                          <button onClick={() => handleEditClass(cls)} disabled={editingId !== null || deletingId === cls.id}>
-                            {content.classes_editClass}
-                          </button>
-                          <button onClick={() => handleDeleteClass(cls)} disabled={deletingId === cls.id || editingId === cls.id}>
-                            {deletingId === cls.id ? '...' : content.classes_removeClass}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
+                   <td style={td}>
+                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                       {!selectedClassId ? (
+                         !isTeacherOnly && (
+                           <button onClick={() => handleSelectClass(cls)}>
+                             {content.classes_manageClassButton || 'Manage this class'}
+                           </button>
+                         )
+                       ) : (
+                         <>
+                           <button onClick={() => toggleExpand(cls.id)}>
+                             {expandedClassId === cls.id ? content.classes_hideStudents : content.classes_showStudents}
+                           </button>
+                           {!isTeacherOnly && (
+                             <>
+                               <button onClick={() => handleAddStudentClick(cls)} disabled={addingStudentToClassId === cls.id || editingId === cls.id}>
+                                 {content.classes_addStudent}
+                               </button>
+                               <button onClick={() => handleAddTeacherClick(cls)} disabled={addingTeacherToClassId === cls.id || editingId === cls.id || teachersLoading || teachers.length === 0}>
+                                 {content.classes_assignTeacher || 'Assign teacher'}
+                               </button>
+                               <button onClick={() => handleEditClass(cls)} disabled={editingId !== null || deletingId === cls.id}>
+                                 {content.classes_editClass}
+                               </button>
+                               <button onClick={() => handleDeleteClass(cls)} disabled={deletingId === cls.id || editingId === cls.id}>
+                                 {deletingId === cls.id ? '...' : content.classes_removeClass}
+                               </button>
+                             </>
+                           )}
+                         </>
+                       )}
+                     </div>
+                   </td>
                 </tr>
                 {selectedClassId && expandedClassId === cls.id && (
                   <tr style={{ background: '#fff' }}>

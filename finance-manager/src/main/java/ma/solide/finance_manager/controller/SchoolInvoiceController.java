@@ -245,7 +245,9 @@ public class SchoolInvoiceController {
      */
     @PostMapping("/facture/generate")
     public ResponseEntity<InputStreamResource> generate(@RequestBody InvoiceRequest request) {
-        var pdf = pdfService.generateInvoice(request.getStudentName(), request.getClassName(), request.getItems());
+        var pdf = pdfService.generateInvoice(request.getStudentName(), request.getClassName(), request.getItems(),
+                request.getLogoUrl(), request.getSchoolName(), request.getPhoneNumber(),
+                request.getEmailAddress(), request.getAddress());
         factureService.saveGeneratedFacture(request.getStudentName(), request.getClassName(), request.getItems());
 
         HttpHeaders headers = new HttpHeaders();
@@ -261,6 +263,11 @@ public class SchoolInvoiceController {
         private String studentName;
         private String className;
         private List<Map<String, Object>> items;
+        private String logoUrl;
+        private String schoolName;
+        private String phoneNumber;
+        private String emailAddress;
+        private String address;
 
         public String getStudentName() {
             return studentName;
@@ -284,6 +291,46 @@ public class SchoolInvoiceController {
 
         public void setItems(List<Map<String, Object>> items) {
             this.items = items;
+        }
+
+        public String getLogoUrl() {
+            return logoUrl;
+        }
+
+        public void setLogoUrl(String logoUrl) {
+            this.logoUrl = logoUrl;
+        }
+
+        public String getSchoolName() {
+            return schoolName;
+        }
+
+        public void setSchoolName(String schoolName) {
+            this.schoolName = schoolName;
+        }
+
+        public String getPhoneNumber() {
+            return phoneNumber;
+        }
+
+        public void setPhoneNumber(String phoneNumber) {
+            this.phoneNumber = phoneNumber;
+        }
+
+        public String getEmailAddress() {
+            return emailAddress;
+        }
+
+        public void setEmailAddress(String emailAddress) {
+            this.emailAddress = emailAddress;
+        }
+
+        public String getAddress() {
+            return address;
+        }
+
+        public void setAddress(String address) {
+            this.address = address;
         }
     }
 }

@@ -11,6 +11,11 @@ const PostInvoice = () => {
   const [factures, setFactures] = useState([]);
   const [loadingFactures, setLoadingFactures] = useState(false);
   const [error, setError] = useState(null);
+  const [logoUrl, setLogoUrl] = useState('');
+  const [schoolName, setSchoolName] = useState('École Solide');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [emailAddress, setEmailAddress] = useState('');
+  const [address, setAddress] = useState('');
 
   const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
   const token = sessionStorage.getItem('jwt_token');
@@ -74,16 +79,21 @@ const PostInvoice = () => {
 
     try {
       setError(null);
-      const response = await axios.post(
-        `${baseUrl}/api/facture/generate`,
-        {
-          studentName,
-          className,
-          items: items.map(item => ({
-            description: item.description,
-            amount: parseFloat(item.amount)
-          }))
-        },
+       const response = await axios.post(
+         `${baseUrl}/api/facture/generate`,
+         {
+           studentName,
+           className,
+           items: items.map(item => ({
+             description: item.description,
+             amount: parseFloat(item.amount)
+           })),
+           logoUrl,
+           schoolName,
+           phoneNumber,
+           emailAddress,
+           address
+         },
         {
           headers: buildHeaders(true),
           responseType: 'blob'
@@ -126,6 +136,42 @@ const PostInvoice = () => {
         style={{ width: '100%', marginBottom: 10 }}
       />
 
+      <h4>📋 Coordonnées de l'école</h4>
+      <input
+        type="text"
+        placeholder="Nom de l'école"
+        value={schoolName}
+        onChange={e => setSchoolName(e.target.value)}
+        style={{ width: '100%', marginBottom: 10 }}
+      />
+      <input
+        type="url"
+        placeholder="URL du logo (https://...)"
+        value={logoUrl}
+        onChange={e => setLogoUrl(e.target.value)}
+        style={{ width: '100%', marginBottom: 10 }}
+      />
+      <input
+        type="text"
+        placeholder="Téléphone"
+        value={phoneNumber}
+        onChange={e => setPhoneNumber(e.target.value)}
+        style={{ width: '100%', marginBottom: 10 }}
+      />
+      <input
+        type="email"
+        placeholder="Email"
+        value={emailAddress}
+        onChange={e => setEmailAddress(e.target.value)}
+        style={{ width: '100%', marginBottom: 10 }}
+      />
+      <input
+        type="text"
+        placeholder="Adresse"
+        value={address}
+        onChange={e => setAddress(e.target.value)}
+        style={{ width: '100%', marginBottom: 10 }}
+      />
       <h4>Services</h4>
       {items.map((item, index) => (
         <div key={index} style={{ marginBottom: 10 }}>
