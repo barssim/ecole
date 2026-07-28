@@ -94,7 +94,7 @@ const ClassesPage = ({ language }) => {
 
     fetchClasses();
     fetchTeachers();
-  }, [baseUrl]);
+  }, []);
 
   const handleAddStudentClick = (cls) => {
     setAddingStudentToClassId(cls.id);
