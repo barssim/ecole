@@ -24,13 +24,21 @@ const ClassesPage = ({ language }) => {
   const [addingTeacherToClassId, setAddingTeacherToClassId] = useState(null);
   const [selectedTeacherName, setSelectedTeacherName] = useState('');
   const [savingTeacherId, setSavingTeacherId] = useState(null);
-  const [removingTeacher, setRemovingTeacher] = useState(null); // { classId, name }
-  const [submitError, setSubmitError] = useState('');
-  const [submitSuccess, setSubmitSuccess] = useState('');
+   const [removingTeacher, setRemovingTeacher] = useState(null); // { classId, name }
+   const [submitError, setSubmitError] = useState('');
+   const [submitSuccess, setSubmitSuccess] = useState('');
 
-  const baseUrl = resolveApiBaseUrl('http://localhost:8085');
+   const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+   const baseUrl = browserIsLocal ? resolveApiBaseUrl('http://localhost:8085') : '';
 
-  const buildHeaders = (includeJson = false) => {
+   const apiUrlFor = (path) => {
+     if (browserIsLocal) {
+       return `${baseUrl}/api${path}`;
+     }
+     return `/api${path}`;
+   };
+
+   const buildHeaders = (includeJson = false) => {
     const token = sessionStorage.getItem('jwt_token');
     const headers = {
       'X-Tenant-Id': getTenantId(),
@@ -46,10 +54,10 @@ const ClassesPage = ({ language }) => {
     setExpandedClassId(expandedClassId === id ? null : id);
   };
 
-  useEffect(() => {
-    const fetchClasses = async () => {
-      try {
-        const url = `${baseUrl}/api/classes`;
+   useEffect(() => {
+     const fetchClasses = async () => {
+       try {
+         const url = apiUrlFor('/classes');
 
         const response = await fetch(url, { headers: buildHeaders() });
         if (!response.ok) {
@@ -66,7 +74,7 @@ const ClassesPage = ({ language }) => {
     const fetchTeachers = async () => {
       setTeachersLoading(true);
       try {
-        const response = await fetch(`${baseUrl}/api/users/teachers`, { headers: buildHeaders() });
+        const response = await fetch(apiUrlFor('/users/teachers'), { headers: buildHeaders() });
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -120,7 +128,7 @@ const ClassesPage = ({ language }) => {
     setSubmitError('');
     setSubmitSuccess('');
     try {
-      const response = await fetch(`${baseUrl}/api/classes/${cls.id}/students`, {
+      const response = await fetch(apiUrlFor(`/classes/${cls.id}/students`), {
         method: 'POST',
         headers: buildHeaders(true),
         body: JSON.stringify({ name: trimmed }),
@@ -153,7 +161,7 @@ const ClassesPage = ({ language }) => {
     setSubmitSuccess('');
     try {
       const response = await fetch(
-        `${baseUrl}/api/classes/${cls.id}/students/${encodeURIComponent(studentName)}`,
+        `${apiUrlFor(`/classes/${cls.id}/students/${encodeURIComponent(studentName)}`)}`,
         { method: 'DELETE', headers: buildHeaders() }
       );
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -177,7 +185,7 @@ const ClassesPage = ({ language }) => {
     setSubmitError('');
     setSubmitSuccess('');
     try {
-      const response = await fetch(`${baseUrl}/api/classes/${cls.id}/teachers`, {
+      const response = await fetch(apiUrlFor(`/classes/${cls.id}/teachers`), {
         method: 'POST',
         headers: buildHeaders(true),
         body: JSON.stringify({ name: trimmed }),
@@ -210,7 +218,7 @@ const ClassesPage = ({ language }) => {
     setSubmitSuccess('');
     try {
       const response = await fetch(
-        `${baseUrl}/api/classes/${cls.id}/teachers/${encodeURIComponent(teacherName)}`,
+        `${apiUrlFor(`/classes/${cls.id}/teachers/${encodeURIComponent(teacherName)}`)}`,
         { method: 'DELETE', headers: buildHeaders() }
       );
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -247,13 +255,13 @@ const ClassesPage = ({ language }) => {
       return;
     }
 
-    setSavingId(cls.id);
-    setSubmitError('');
-    setSubmitSuccess('');
-    try {
-      const response = await fetch(`${baseUrl}/api/classes/${cls.id}`, {
-        method: 'PUT',
-        headers: buildHeaders(true),
+     setSavingId(cls.id);
+     setSubmitError('');
+     setSubmitSuccess('');
+     try {
+       const response = await fetch(apiUrlFor(`/classes/${cls.id}`), {
+         method: 'PUT',
+         headers: buildHeaders(true),
         body: JSON.stringify({ name: trimmed }),
       });
       if (!response.ok) {
@@ -284,13 +292,13 @@ const ClassesPage = ({ language }) => {
   const handleDeleteClass = async (cls) => {
     if (!window.confirm(`${content.classes_removeConfirm} "${cls.name}"?`)) return;
 
-    setDeletingId(cls.id);
-    setSubmitError('');
-    setSubmitSuccess('');
-    try {
-      const response = await fetch(`${baseUrl}/api/classes/${cls.id}`, {
-        method: 'DELETE',
-        headers: buildHeaders(),
+     setDeletingId(cls.id);
+     setSubmitError('');
+     setSubmitSuccess('');
+     try {
+       const response = await fetch(apiUrlFor(`/classes/${cls.id}`), {
+         method: 'DELETE',
+         headers: buildHeaders(),
       });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -316,9 +324,9 @@ const ClassesPage = ({ language }) => {
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-      const response = await fetch(`${baseUrl}/api/classes`, {
+     try {
+       setIsSubmitting(true);
+       const response = await fetch(apiUrlFor('/classes'), {
         method: 'POST',
         headers: buildHeaders(true),
         body: JSON.stringify({

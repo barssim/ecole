@@ -19,13 +19,15 @@ const SchoolInvoicePreview =  ({language}) => {
                              };
   const [invoice, setInvoice] = useState(null);
   const [error, setError] = useState('');
-  const baseUrl = resolveApiBaseUrl('http://localhost:8085');
+  const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const baseUrl = browserIsLocal ? resolveApiBaseUrl('http://localhost:8085') : '';
   const token = sessionStorage.getItem('jwt_token');
   const studentName = localStorage.getItem('userName') || '';
   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
 
   useEffect(() => {
-    axios.get(`${baseUrl}/api/paymentNotice?studentName=${encodeURIComponent(studentName)}`, {
+    const apiUrl = browserIsLocal ? `${baseUrl}/api/paymentNotice?studentName=${encodeURIComponent(studentName)}` : `/api/paymentNotice?studentName=${encodeURIComponent(studentName)}`;
+    axios.get(apiUrl, {
       headers: {
         'X-Tenant-Id': getTenantId(),
         ...(userRoles.length > 0 ? { 'X-User-Roles': userRoles.join(',') } : {}),

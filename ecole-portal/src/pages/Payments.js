@@ -60,10 +60,17 @@ const Payments = ({ language }) => {
     return fallback;
   };
 
-  const configuredBase = resolveApiBaseUrl('http://localhost:8085');
-  const apiRoot = configuredBase.endsWith('/api') ? configuredBase : `${configuredBase}/api`;
-  const paymentsApiBase = `${apiRoot}/payments`;
-  const invoiceApiUrl = `${apiRoot}/facture/generate`;
+   const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+   const paymentsApiBase = browserIsLocal ? (() => {
+     const configuredBase = resolveApiBaseUrl('http://localhost:8085');
+     const apiRoot = configuredBase.endsWith('/api') ? configuredBase : `${configuredBase}/api`;
+     return `${apiRoot}/payments`;
+   })() : '/api/payments';
+   const invoiceApiUrl = browserIsLocal ? (() => {
+     const configuredBase = resolveApiBaseUrl('http://localhost:8085');
+     const apiRoot = configuredBase.endsWith('/api') ? configuredBase : `${configuredBase}/api`;
+     return `${apiRoot}/facture/generate`;
+   })() : '/api/facture/generate';
   const token = sessionStorage.getItem('jwt_token');
 
   const buildRoleHeader = () => {
