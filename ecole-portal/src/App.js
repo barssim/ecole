@@ -27,6 +27,7 @@ import Bibliotheque from './pages/Bibliotheque';
 import InscriptionForm from './pages/InscriptionForm';
 import { Navigate } from "react-router-dom";
 import ClassesPage from './pages/ClassesPage';
+import ClassManagePage from './pages/ClassManagePage';
 import AttestationsPage from './pages/AttestationsPage';
 import SharedDocumentsPage from "./pages/SharedDocumentsPage";
 import ParentMeetingPage from "./pages/ParentMeetingPage";
@@ -183,6 +184,7 @@ const AppContent = () => {
                       <Route path="/finance/invoices" element={<PaymentsPage language={language} />} />
                      <Route path="/administration/presence" element={<ProfessorPresence language={language} toggleLanguage={toggleLanguage} />} />
                      <Route path="/administration/classes" element={<ClassesPage language={language} toggleLanguage={toggleLanguage} />} />
+                     <Route path="/administration/classes/:id" element={<ClassManagePage language={language} />} />
                       <Route path="/administration/examens" element={<ExamProgram language={language} toggleLanguage={toggleLanguage} />} />
                       <Route path="/administration/outings" element={<OutingPage language={language} />} />
                       <Route path="/administration/parties" element={<PartiesPage language={language} />} />

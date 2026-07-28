@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import fr from "../locales/fr.json";
 import en from "../locales/en.json";
 import ar from "../locales/ar.json";
@@ -9,48 +10,32 @@ import { normalizeRoles, hasAnyRole } from '../utils/roles';
 const ClassesPage = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
   const [classes, setClasses] = useState([]);
-  const [expandedClassId, setExpandedClassId] = useState(null);
-  const [selectedClassId, setSelectedClassId] = useState(null);
   const [newClassName, setNewClassName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [deletingId, setDeletingId] = useState(null);
-  const [editingId, setEditingId] = useState(null);
-  const [editName, setEditName] = useState('');
-  const [savingId, setSavingId] = useState(null);
-  const [addingStudentToClassId, setAddingStudentToClassId] = useState(null);
-  const [newStudentName, setNewStudentName] = useState('');
-  const [savingStudentId, setSavingStudentId] = useState(null);
-  const [removingStudent, setRemovingStudent] = useState(null); // { classId, name }
-  const [teachers, setTeachers] = useState([]);
-  const [teachersLoading, setTeachersLoading] = useState(false);
-  const [addingTeacherToClassId, setAddingTeacherToClassId] = useState(null);
-  const [selectedTeacherName, setSelectedTeacherName] = useState('');
-  const [savingTeacherId, setSavingTeacherId] = useState(null);
-   const [removingTeacher, setRemovingTeacher] = useState(null); // { classId, name }
-   const [submitError, setSubmitError] = useState('');
-   const [submitSuccess, setSubmitSuccess] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState('');
 
-   // Get user roles and name for teacher block filtering
-   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
-   const currentUserName = localStorage.getItem('userName') || '';
-   const isTeacherOnly = userRoles.length > 0 && userRoles.every(role => role === 'teacher' || role === 'role_teacher');
-   const canManageClasses = hasAnyRole(userRoles, ['admin', 'manager', 'secretary']);
+  // Get user roles and name for teacher block filtering
+  const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
+  const currentUserName = localStorage.getItem('userName') || '';
+  const isTeacherOnly = userRoles.length > 0 && userRoles.every(role => role === 'teacher' || role === 'role_teacher');
+  const canManageClasses = hasAnyRole(userRoles, ['admin', 'manager', 'secretary']);
 
-   const configuredBase = resolveApiBaseUrl('http://localhost:8085');
-   const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-   const localhostApiTarget = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBase);
-   const inferredRemoteBase = `${window.location.protocol}//${window.location.hostname}:8085`;
-   const effectiveBase = localhostApiTarget && !browserIsLocal ? inferredRemoteBase : configuredBase;
-   const useRelativeApi = process.env.REACT_APP_USE_RELATIVE_API === 'true';
+  const configuredBase = resolveApiBaseUrl('http://localhost:8085');
+  const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const localhostApiTarget = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBase);
+  const inferredRemoteBase = `${window.location.protocol}//${window.location.hostname}:8085`;
+  const effectiveBase = localhostApiTarget && !browserIsLocal ? inferredRemoteBase : configuredBase;
+  const useRelativeApi = process.env.REACT_APP_USE_RELATIVE_API === 'true';
 
-   const apiUrlFor = (path) => {
-     if (useRelativeApi) {
-       return `/api${path}`;
-     }
-     return `${effectiveBase}/api${path}`;
-   };
+  const apiUrlFor = (path) => {
+    if (useRelativeApi) {
+      return `/api${path}`;
+    }
+    return `${effectiveBase}/api${path}`;
+  };
 
-   const buildHeaders = (includeJson = false) => {
+  const buildHeaders = (includeJson = false) => {
     const token = sessionStorage.getItem('jwt_token');
     const headers = {
       'X-Tenant-Id': getTenantId(),
@@ -62,34 +47,10 @@ const ClassesPage = ({ language }) => {
     return headers;
   };
 
-  const toggleExpand = (id) => {
-    setExpandedClassId(expandedClassId === id ? null : id);
-  };
-
-  const handleSelectClass = (cls) => {
-    setSelectedClassId(cls.id);
-    setExpandedClassId(cls.id);
-    setSubmitError('');
-    setSubmitSuccess('');
-  };
-
-  const handleBackToClassList = () => {
-    setSelectedClassId(null);
-    setExpandedClassId(null);
-    setAddingStudentToClassId(null);
-    setAddingTeacherToClassId(null);
-    setEditingId(null);
-    setEditName('');
-    setSubmitError('');
-    setSubmitSuccess('');
-  };
-
-   useEffect(() => {
-     const fetchClasses = async () => {
-       try {
-         const url = apiUrlFor('/classes');
-
-        const response = await fetch(url, { headers: buildHeaders() });
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const response = await fetch(apiUrlFor('/classes'), { headers: buildHeaders() });
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -100,251 +61,8 @@ const ClassesPage = ({ language }) => {
         setClasses([]);
       }
     };
-
-    const fetchTeachers = async () => {
-      setTeachersLoading(true);
-      try {
-        const response = await fetch(apiUrlFor('/users/teachers'), { headers: buildHeaders() });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        const data = await response.json();
-        setTeachers(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Failed to fetch teachers:', error);
-        setTeachers([]);
-      } finally {
-        setTeachersLoading(false);
-      }
-    };
-
     fetchClasses();
-    fetchTeachers();
   }, []);
-
-  const handleAddStudentClick = (cls) => {
-    setAddingStudentToClassId(cls.id);
-    setNewStudentName('');
-    setExpandedClassId(cls.id);
-    setSubmitError('');
-    setSubmitSuccess('');
-  };
-
-  const handleCancelAddStudent = () => {
-    setAddingStudentToClassId(null);
-    setNewStudentName('');
-  };
-
-  const handleAddTeacherClick = (cls) => {
-    setAddingTeacherToClassId(cls.id);
-    setExpandedClassId(cls.id);
-    setSelectedTeacherName('');
-    setSubmitError('');
-    setSubmitSuccess('');
-  };
-
-  const handleCancelAddTeacher = () => {
-    setAddingTeacherToClassId(null);
-    setSelectedTeacherName('');
-  };
-
-  const handleSaveStudent = async (cls) => {
-    const trimmed = newStudentName.trim();
-    if (!trimmed) {
-      setSubmitError(content.classes_studentValidation);
-      return;
-    }
-    setSavingStudentId(cls.id);
-    setSubmitError('');
-    setSubmitSuccess('');
-    try {
-      const response = await fetch(apiUrlFor(`/classes/${cls.id}/students`), {
-        method: 'POST',
-        headers: buildHeaders(true),
-        body: JSON.stringify({ name: trimmed }),
-      });
-      if (!response.ok) {
-        let message = content.classes_studentError;
-        try {
-          const payload = await response.json();
-          message = payload.message || message;
-        } catch {
-          if (response.status === 409) message = content.classes_studentDuplicate;
-        }
-        throw new Error(message);
-      }
-      const updated = await response.json();
-      setClasses((current) => current.map((c) => (c.id === updated.id ? updated : c)));
-      setNewStudentName('');
-      setAddingStudentToClassId(null);
-      setSubmitSuccess(content.classes_studentSuccess);
-    } catch (error) {
-      setSubmitError(error.message || content.classes_studentError);
-    } finally {
-      setSavingStudentId(null);
-    }
-  };
-
-  const handleRemoveStudent = async (cls, studentName) => {
-    setRemovingStudent({ classId: cls.id, name: studentName });
-    setSubmitError('');
-    setSubmitSuccess('');
-    try {
-      const response = await fetch(
-        `${apiUrlFor(`/classes/${cls.id}/students/${encodeURIComponent(studentName)}`)}`,
-        { method: 'DELETE', headers: buildHeaders() }
-      );
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const updated = await response.json();
-      setClasses((current) => current.map((c) => (c.id === updated.id ? updated : c)));
-    } catch {
-      setSubmitError(content.classes_studentRemoveError);
-    } finally {
-      setRemovingStudent(null);
-    }
-  };
-
-  const handleSaveTeacher = async (cls) => {
-    const trimmed = selectedTeacherName.trim();
-    if (!trimmed) {
-      setSubmitError(content.classes_teacherSelectValidation || 'Please select a teacher.');
-      return;
-    }
-
-    setSavingTeacherId(cls.id);
-    setSubmitError('');
-    setSubmitSuccess('');
-    try {
-      const response = await fetch(apiUrlFor(`/classes/${cls.id}/teachers`), {
-        method: 'POST',
-        headers: buildHeaders(true),
-        body: JSON.stringify({ name: trimmed }),
-      });
-      if (!response.ok) {
-        let message = content.classes_teacherAssignError || 'Unable to assign teacher to class.';
-        try {
-          const payload = await response.json();
-          message = payload.message || message;
-        } catch {
-          if (response.status === 409) message = content.classes_teacherAlreadyAssigned || 'Teacher is already assigned to this class.';
-        }
-        throw new Error(message);
-      }
-      const updated = await response.json();
-      setClasses((current) => current.map((c) => (c.id === updated.id ? updated : c)));
-      setAddingTeacherToClassId(null);
-      setSelectedTeacherName('');
-      setSubmitSuccess(content.classes_teacherAssignSuccess || 'Teacher assigned successfully.');
-    } catch (error) {
-      setSubmitError(error.message || content.classes_teacherAssignError || 'Unable to assign teacher to class.');
-    } finally {
-      setSavingTeacherId(null);
-    }
-  };
-
-  const handleRemoveTeacher = async (cls, teacherName) => {
-    setRemovingTeacher({ classId: cls.id, name: teacherName });
-    setSubmitError('');
-    setSubmitSuccess('');
-    try {
-      const response = await fetch(
-        `${apiUrlFor(`/classes/${cls.id}/teachers/${encodeURIComponent(teacherName)}`)}`,
-        { method: 'DELETE', headers: buildHeaders() }
-      );
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const updated = await response.json();
-      setClasses((current) => current.map((c) => (c.id === updated.id ? updated : c)));
-      setSubmitSuccess(content.classes_teacherRemoveSuccess || 'Teacher removed from class.');
-    } catch {
-      setSubmitError(content.classes_teacherRemoveError || 'Unable to remove teacher from class.');
-    } finally {
-      setRemovingTeacher(null);
-    }
-  };
-
-  const handleEditClass = (cls) => {
-    setEditingId(cls.id);
-    setEditName(cls.name);
-    setSubmitError('');
-    setSubmitSuccess('');
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditName('');
-  };
-
-  const handleSaveEdit = async (cls) => {
-    const trimmed = editName.trim();
-    if (!trimmed) {
-      setSubmitError(content.classes_createValidation);
-      return;
-    }
-    if (trimmed === cls.name) {
-      setEditingId(null);
-      return;
-    }
-
-     setSavingId(cls.id);
-     setSubmitError('');
-     setSubmitSuccess('');
-     try {
-       const response = await fetch(apiUrlFor(`/classes/${cls.id}`), {
-         method: 'PUT',
-         headers: buildHeaders(true),
-        body: JSON.stringify({ name: trimmed }),
-      });
-      if (!response.ok) {
-        let message = content.classes_editError;
-        try {
-          const payload = await response.json();
-          message = payload.message || message;
-        } catch {
-          if (response.status === 409) message = content.classes_createDuplicate;
-        }
-        throw new Error(message);
-      }
-      const updated = await response.json();
-      setClasses((current) =>
-        current
-          .map((c) => (c.id === updated.id ? updated : c))
-          .sort((a, b) => a.name.localeCompare(b.name))
-      );
-      setEditingId(null);
-      setSubmitSuccess(content.classes_editSuccess);
-    } catch (error) {
-      setSubmitError(error.message || content.classes_editError);
-    } finally {
-      setSavingId(null);
-    }
-  };
-
-  const handleDeleteClass = async (cls) => {
-    if (!window.confirm(`${content.classes_removeConfirm} "${cls.name}"?`)) return;
-
-     setDeletingId(cls.id);
-     setSubmitError('');
-     setSubmitSuccess('');
-     try {
-       const response = await fetch(apiUrlFor(`/classes/${cls.id}`), {
-         method: 'DELETE',
-         headers: buildHeaders(),
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      setClasses((current) => current.filter((c) => c.id !== cls.id));
-      if (expandedClassId === cls.id) setExpandedClassId(null);
-      if (selectedClassId === cls.id) {
-        setSelectedClassId(null);
-      }
-      setSubmitSuccess(`"${cls.name}" ${content.classes_removeSuccess}`);
-    } catch (error) {
-      setSubmitError(content.classes_removeError);
-    } finally {
-      setDeletingId(null);
-    }
-  };
 
   const handleCreateClass = async (event) => {
     event.preventDefault();
@@ -357,9 +75,9 @@ const ClassesPage = ({ language }) => {
       return;
     }
 
-     try {
-       setIsSubmitting(true);
-       const response = await fetch(apiUrlFor('/classes'), {
+    try {
+      setIsSubmitting(true);
+      const response = await fetch(apiUrlFor('/classes'), {
         method: 'POST',
         headers: buildHeaders(true),
         body: JSON.stringify({
@@ -382,8 +100,7 @@ const ClassesPage = ({ language }) => {
       }
 
       const createdClass = await response.json();
-      setClasses((currentClasses) => [...currentClasses, createdClass].sort((a, b) => a.name.localeCompare(b.name)));
-      setExpandedClassId(createdClass.id);
+      setClasses((current) => [...current, createdClass].sort((a, b) => a.name.localeCompare(b.name)));
       setNewClassName('');
       setSubmitSuccess(content.classes_createSuccess);
     } catch (error) {
@@ -393,77 +110,56 @@ const ClassesPage = ({ language }) => {
     }
   };
 
-   const visibleClasses = selectedClassId
-     ? classes.filter((cls) => cls.id === selectedClassId)
-     : isTeacherOnly
-     ? classes.filter((cls) => (cls.teachers || []).some(t => t.toLowerCase() === currentUserName.toLowerCase()))
-     : classes;
+  const visibleClasses = isTeacherOnly
+    ? classes.filter((cls) => (cls.teachers || []).some(t => t.toLowerCase() === currentUserName.toLowerCase()))
+    : classes;
 
-   return (
-     <div className="p-6 max-w-4xl mx-auto space-y-6">
-       <h2 className="text-2xl font-bold">🏫 {content.classes_title}</h2>
+  return (
+    <div className="p-6 max-w-4xl mx-auto space-y-6">
+      <h2 className="text-2xl font-bold">🏫 {content.classes_title}</h2>
 
-       {isTeacherOnly && (
-         <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
-           <p className="text-sm text-blue-700">
-             👨‍🏫 {content.classes_teacherViewLabel || 'Showing only your assigned classes'}
-           </p>
-         </div>
-       )}
-
-       {canManageClasses && (
-         <form onSubmit={handleCreateClass} className="bg-white rounded shadow p-4 space-y-3 border border-gray-200">
-           <div>
-             <label htmlFor="className" className="block text-sm font-medium text-gray-700 mb-1">
-               {content.classes_createLabel}
-             </label>
-             <div className="flex flex-col gap-3 md:flex-row">
-               <input
-                 id="className"
-                 type="text"
-                 value={newClassName}
-                 onChange={(event) => setNewClassName(event.target.value)}
-                 placeholder={content.classes_createPlaceholder}
-                 className="flex-1 border rounded px-3 py-2"
-                 disabled={isSubmitting}
-               />
-               <button
-                 type="submit"
-                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm disabled:opacity-60"
-                 disabled={isSubmitting}
-               >
-                 {isSubmitting ? content.classes_createSubmitting : content.classes_createButton}
-               </button>
-             </div>
-           </div>
-
-           {submitError && (
-             <p className="text-sm text-red-600">{submitError}</p>
-           )}
-
-           {submitSuccess && (
-             <p className="text-sm text-green-600">{submitSuccess}</p>
-           )}
-         </form>
-       )}
-
-       {selectedClassId ? (
-        <div className="flex items-center justify-between gap-3">
+      {isTeacherOnly && (
+        <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
           <p className="text-sm text-blue-700">
-            {content.classes_manageSelectedLabel || 'Managing selected class'}
+            👨‍🏫 {content.classes_teacherViewLabel || 'Showing only your assigned classes'}
           </p>
-          <button onClick={handleBackToClassList}>
-            {content.classes_backToList || 'Back to class list'}
-          </button>
         </div>
-       ) : canManageClasses ? (
-        <p className="text-sm text-gray-700">
-          {content.classes_selectFirstHint || 'First select one class from the list, then manage it.'}
-        </p>
-       ) : (
-         <p className="text-sm text-gray-700">
-           {content.classes_readOnlyHint || 'You can view classes, but you do not have permission to manage them.'}
-         </p>
+      )}
+
+      {canManageClasses && (
+        <form onSubmit={handleCreateClass} className="bg-white rounded shadow p-4 space-y-3 border border-gray-200">
+          <div>
+            <label htmlFor="className" className="block text-sm font-medium text-gray-700 mb-1">
+              {content.classes_createLabel}
+            </label>
+            <div className="flex flex-col gap-3 md:flex-row">
+              <input
+                id="className"
+                type="text"
+                value={newClassName}
+                onChange={(e) => setNewClassName(e.target.value)}
+                placeholder={content.classes_createPlaceholder}
+                className="flex-1 border rounded px-3 py-2"
+                disabled={isSubmitting}
+              />
+              <button
+                type="submit"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm disabled:opacity-60"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? content.classes_createSubmitting : content.classes_createButton}
+              </button>
+            </div>
+          </div>
+
+          {submitError && (
+            <p className="text-sm text-red-600">{submitError}</p>
+          )}
+
+          {submitSuccess && (
+            <p className="text-sm text-green-600">{submitSuccess}</p>
+          )}
+        </form>
       )}
 
       <div style={{ overflowX: 'auto' }}>
@@ -473,184 +169,30 @@ const ClassesPage = ({ language }) => {
               <th style={th}>{content.classes_title}</th>
               <th style={th}>{content.students}</th>
               <th style={th}>{content.classes_teachers || 'Teachers'}</th>
-              <th style={th}>{selectedClassId ? 'Actions' : (content.classes_selectAction || 'Select')}</th>
+              {canManageClasses && <th style={th}>{content.classes_selectAction || 'Actions'}</th>}
             </tr>
           </thead>
           <tbody>
             {visibleClasses.map((cls, index) => (
-              <React.Fragment key={cls.id}>
-                <tr style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}>
+              <tr key={cls.id} style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}>
+                <td style={td}><strong>{cls.name}</strong></td>
+                <td style={td}>{cls.students.length}</td>
+                <td style={td}>{(cls.teachers || []).length}</td>
+                {canManageClasses && (
                   <td style={td}>
-                    {editingId === cls.id ? (
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <input
-                          type="text"
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleSaveEdit(cls);
-                            if (e.key === 'Escape') handleCancelEdit();
-                          }}
-                          className="border rounded px-2 py-1 text-sm"
-                          autoFocus
-                          disabled={savingId === cls.id}
-                        />
-                        <button onClick={() => handleSaveEdit(cls)} disabled={savingId === cls.id}>
-                          {savingId === cls.id ? '...' : content.classes_editSave}
-                        </button>
-                        <button onClick={handleCancelEdit} disabled={savingId === cls.id}>
-                          {content.classes_editCancel}
-                        </button>
-                      </div>
-                    ) : (
-                      <strong>{cls.name}</strong>
-                    )}
+                    <Link
+                      to={`/administration/classes/${cls.id}`}
+                      className="text-xs bg-indigo-100 text-indigo-800 px-3 py-1 rounded hover:bg-indigo-200 inline-block"
+                    >
+                      {content.classes_manageClassButton || 'Manage'}
+                    </Link>
                   </td>
-                  <td style={td}>{cls.students.length}</td>
-                  <td style={td}>{(cls.teachers || []).length}</td>
-                   <td style={td}>
-                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        {!selectedClassId ? (
-                          canManageClasses && (
-                           <button onClick={() => handleSelectClass(cls)}>
-                             {content.classes_manageClassButton || 'Manage this class'}
-                           </button>
-                         )
-                       ) : (
-                         <>
-                           <button onClick={() => toggleExpand(cls.id)}>
-                             {expandedClassId === cls.id ? content.classes_hideStudents : content.classes_showStudents}
-                           </button>
-                            {canManageClasses && (
-                             <>
-                               <button onClick={() => handleAddStudentClick(cls)} disabled={addingStudentToClassId === cls.id || editingId === cls.id}>
-                                 {content.classes_addStudent}
-                               </button>
-                               <button onClick={() => handleAddTeacherClick(cls)} disabled={addingTeacherToClassId === cls.id || editingId === cls.id || teachersLoading || teachers.length === 0}>
-                                 {content.classes_assignTeacher || 'Assign teacher'}
-                               </button>
-                               <button onClick={() => handleEditClass(cls)} disabled={editingId !== null || deletingId === cls.id}>
-                                 {content.classes_editClass}
-                               </button>
-                               <button onClick={() => handleDeleteClass(cls)} disabled={deletingId === cls.id || editingId === cls.id}>
-                                 {deletingId === cls.id ? '...' : content.classes_removeClass}
-                               </button>
-                             </>
-                           )}
-                         </>
-                       )}
-                     </div>
-                   </td>
-                </tr>
-                {selectedClassId && expandedClassId === cls.id && (
-                  <tr style={{ background: '#fff' }}>
-                    <td style={td} colSpan={4}>
-                      <ul className="ml-4 list-disc list-inside text-sm space-y-1">
-                        {cls.students.length > 0 ? (
-                          cls.students.map((student, studentIndex) => (
-                            <li key={studentIndex} className="flex items-center justify-between pr-2">
-                              <span>{student}</span>
-                              <button
-                                onClick={() => handleRemoveStudent(cls, student)}
-                                disabled={
-                                  removingStudent?.classId === cls.id &&
-                                  removingStudent?.name === student
-                                }
-                                className="ml-2 text-red-400 hover:text-red-600 text-xs disabled:opacity-50"
-                                title={content.classes_removeStudentTooltip}
-                              >
-                                {removingStudent?.classId === cls.id && removingStudent?.name === student ? '...' : '✕'}
-                              </button>
-                            </li>
-                          ))
-                        ) : (
-                          <li className="italic text-gray-500">{content.classes_noStudents}</li>
-                        )}
-                      </ul>
-
-                      <div className="ml-4 mt-3">
-                        <strong style={{ fontSize: 13 }}>{content.classes_teachers || 'Teachers'}</strong>
-                        <ul className="ml-4 list-disc list-inside text-sm space-y-1 mt-1">
-                          {(cls.teachers || []).length > 0 ? (
-                            (cls.teachers || []).map((teacher, teacherIndex) => (
-                              <li key={`${teacher}-${teacherIndex}`} className="flex items-center justify-between pr-2">
-                                <span>{teacher}</span>
-                                <button
-                                  onClick={() => handleRemoveTeacher(cls, teacher)}
-                                  disabled={
-                                    removingTeacher?.classId === cls.id &&
-                                    removingTeacher?.name === teacher
-                                  }
-                                  className="ml-2 text-red-400 hover:text-red-600 text-xs disabled:opacity-50"
-                                  title={content.classes_removeTeacherTooltip || 'Remove teacher'}
-                                >
-                                  {removingTeacher?.classId === cls.id && removingTeacher?.name === teacher ? '...' : '✕'}
-                                </button>
-                              </li>
-                            ))
-                          ) : (
-                            <li className="italic text-gray-500">{content.classes_noTeachers || 'No teacher assigned'}</li>
-                          )}
-                        </ul>
-                      </div>
-
-                      {addingStudentToClassId === cls.id && (
-                        <div className="mt-2 flex items-center gap-2 ml-4">
-                          <input
-                            type="text"
-                            value={newStudentName}
-                            onChange={(e) => setNewStudentName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleSaveStudent(cls);
-                              if (e.key === 'Escape') handleCancelAddStudent();
-                            }}
-                            placeholder={content.classes_studentPlaceholder}
-                            className="border rounded px-2 py-1 text-sm flex-1"
-                            autoFocus
-                            disabled={savingStudentId === cls.id}
-                          />
-                          <button onClick={() => handleSaveStudent(cls)} disabled={savingStudentId === cls.id}>
-                            {savingStudentId === cls.id ? '...' : content.classes_studentSave}
-                          </button>
-                          <button onClick={handleCancelAddStudent} disabled={savingStudentId === cls.id}>
-                            {content.classes_editCancel}
-                          </button>
-                        </div>
-                      )}
-
-                      {addingTeacherToClassId === cls.id && (
-                        <div className="mt-2 flex items-center gap-2 ml-4">
-                          <select
-                            value={selectedTeacherName}
-                            onChange={(e) => setSelectedTeacherName(e.target.value)}
-                            className="border rounded px-2 py-1 text-sm flex-1"
-                            disabled={savingTeacherId === cls.id || teachersLoading}
-                          >
-                            <option value="">{content.classes_selectTeacherPlaceholder || 'Select teacher'}</option>
-                            {teachers
-                              .filter((teacher) => !(cls.teachers || []).some((assigned) => assigned.toLowerCase() === String(teacher.name || '').toLowerCase()))
-                              .map((teacher) => (
-                                <option key={teacher.id || teacher.name} value={teacher.name}>
-                                  {teacher.name}
-                                </option>
-                              ))}
-                          </select>
-                          <button onClick={() => handleSaveTeacher(cls)} disabled={savingTeacherId === cls.id || !selectedTeacherName}>
-                            {savingTeacherId === cls.id ? '...' : (content.classes_teacherSave || 'Assign')}
-                          </button>
-                          <button onClick={handleCancelAddTeacher} disabled={savingTeacherId === cls.id}>
-                            {content.classes_editCancel}
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
                 )}
-              </React.Fragment>
+              </tr>
             ))}
             {visibleClasses.length === 0 && (
               <tr>
-                <td style={td} colSpan={4}>
+                <td style={td} colSpan={canManageClasses ? 4 : 3}>
                   <span className="italic text-gray-500">{content.classes_noClasses || 'No classes found.'}</span>
                 </td>
               </tr>
