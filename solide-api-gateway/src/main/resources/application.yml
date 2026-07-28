@@ -17,26 +17,8 @@ spring:
           '[/**]':
             # Exact origins (no wildcard – required when allowCredentials is true)
             allowedOrigins:
-              - "http://ecole-portal"
-              - "http://ecole-portal:80"
-              - "http://ecole-portal-dev:8080"
-              - "http://ecole-portal-test:8081"
-              - "http://v95566.1blu.de"
-              - "http://v95566.1blu.de:80"
-              - "https://v95566.1blu.de"
-              - "http://gardinia.mysolide.com"
-              - "http://gardinia.mysolide.com:80"
+              - "http://qods.mysolide.com"
               - "https://gardinia.mysolide.com"
-              - "http://www.v95566.1blu.de"
-              - "https://www.v95566.1blu.de"
-              - "http://localhost"
-              - "http://localhost:80"
-              - "http://localhost:3000"
-              - "http://localhost:8080"
-              - "http://localhost:8081"
-              - "http://127.0.0.1"
-              - "http://127.0.0.1:3000"
-              - "http://127.0.0.1:8080"
             # Pattern-based fallback (covers sub-domains / CI environments)
             allowedOriginPatterns:
               - "http://*.1blu.de"
