@@ -71,9 +71,8 @@ if (language === "fr") {
 		const userCredentials = { username, password };
 		const configuredBase = resolveApiBaseUrl('http://localhost:8085');
 		const apiBase = configuredBase.endsWith('/api') ? configuredBase : `${configuredBase}/api`;
-		const localhostApiTarget = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBase);
 		const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-		const useRelativeApi = localhostApiTarget && !browserIsLocal;
+		const useRelativeApi = !browserIsLocal;
 		const apiUrl = useRelativeApi ? '/api/auth/login' : `${apiBase}/auth/login`;
 		const tenantHint = resolveTenantFromHost();
 
