@@ -17,7 +17,9 @@ spring:
           '[/**]':
             # Exact origins (no wildcard – required when allowCredentials is true)
             allowedOrigins:
+              - "http://qods.mysolide.com"
               - "https://qods.mysolide.com"
+              - "http://gardinia.mysolide.com"
               - "https://gardinia.mysolide.com"
             # Pattern-based fallback (covers sub-domains / CI environments)
             allowedOriginPatterns:
@@ -42,7 +44,7 @@ spring:
             allowCredentials: true
 
       default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
 
       httpclient:
         wiretap: false  # disable wiretap in prod
