@@ -4,7 +4,6 @@ import axios from 'axios';
 import fr from "../locales/header/fr.json";
 import ar from "../locales/header/ar.json";
 import en from "../locales/header/en.json";
-import { useNavigate } from "react-router-dom";
 import { resolveTenantFromHost, setTenantId } from "../tenant";
 import { resolveApiBaseUrl } from "../utils/apiBaseUrl";
 
@@ -48,7 +47,6 @@ const resolveTenantFromLoginResponse = (token, user, topLevelTenantId) => {
 
 const Login = ({language}) => {
 	let content;
-const navigate = useNavigate();
 
 if (language === "fr") {
   content = fr;
@@ -60,7 +58,6 @@ if (language === "fr") {
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
 	const [errorMessage, setErrorMessage] = useState('');
-	const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login status
 	const [isLoading, setIsLoading] = useState(false); // Track loading state
 
 	const handleLogin = async (e) => {
@@ -141,8 +138,6 @@ if (language === "fr") {
 
 			console.log('Login successful! Stored roles:', userRoles);
 
-			// Set login status to true in the state
-			setIsLoggedIn(true);
 			// 🔄 Force full reload
 			window.location.href = "/";
 		} catch (error) {
