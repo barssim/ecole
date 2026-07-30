@@ -27,6 +27,7 @@ const qods = {
    primaryColor: "#ff9900",
    accentColor: "#ffb74d",
    softColor: "#ffe0b2",
+   customerVersion: "bronzversion",
      phone: "+123 456 789",
      mail: "qods@gmail.com",
   footerText: "© 2025 Qods. All rights reserved.",

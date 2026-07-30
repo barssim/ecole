@@ -40,11 +40,12 @@ jwt:
 
 customer-version:
   max-users:
-    testversion: 2
-    bronzversion: 20
-    silber: 50
+    testversion: 1
+    bronzversion: 2
+    silber: 3
   default-by-tenant:
     gardinia: testversion
+    qods: bronzversion
 
 eureka:
 

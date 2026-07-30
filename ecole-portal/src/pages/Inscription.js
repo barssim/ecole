@@ -80,6 +80,24 @@ const Inscription = ({ language }) => {
     return headers;
   };
 
+  const parseErrorMessage = async (response) => {
+    try {
+      const payload = await response.json();
+      const message = payload?.message || payload?.error || "";
+      if (message) {
+        return String(message);
+      }
+    } catch {
+      // ignore and try plain text below
+    }
+
+    try {
+      return await response.text();
+    } catch {
+      return "";
+    }
+  };
+
   const roleLabelMap = useMemo(
     () =>
       roleOptions.reduce((acc, item) => {
@@ -190,7 +208,14 @@ const Inscription = ({ language }) => {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        const backendMessage = await parseErrorMessage(response);
+        const normalized = String(backendMessage || "").toLowerCase();
+
+        if (response.status === 409 && normalized.includes("maximum users reached")) {
+          throw new Error("User limit reached for your current plan. Please upgrade your version or remove a user first.");
+        }
+
+        throw new Error(backendMessage || `HTTP ${response.status}`);
       }
 
       const successMessage = (content.registrationSuccess || "User created.").replace("{surname}", surname);
