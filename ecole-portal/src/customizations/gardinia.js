@@ -26,6 +26,7 @@ const gardinia = {
     },
     phone: "+123 456 789",
     mail: "gardinia@gmail.com",
+    customerVersion: "testversion",
     primaryColor: "#2e7d32",
     accentColor: "#4caf50",
     softColor: "#c8e6c9",

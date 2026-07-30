@@ -225,7 +225,7 @@ const AppContent = () => {
 </div>
 			</div>
 			<br />
-			<Footer language={language} toggleLanguage={toggleLanguage} />
+      <Footer language={language} tenantCustomization={tenantCustomization} />
     </div>
 	);
 };

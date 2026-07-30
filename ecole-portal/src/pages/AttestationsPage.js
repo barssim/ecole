@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import fr from '../locales/fr.json';
 import en from '../locales/en.json';
 import ar from '../locales/ar.json';
@@ -44,7 +44,7 @@ const AttestationsPage = ({ language }) => {
   const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
   const rolesHeaderValue = normalizedRoles.join(',');
 
-  const buildHeaders = (includeJson = false) => {
+  const buildHeaders = useCallback((includeJson = false) => {
     const headers = {
       'X-Tenant-Id': getTenantId(),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -54,9 +54,9 @@ const AttestationsPage = ({ language }) => {
       headers['Content-Type'] = 'application/json';
     }
     return headers;
-  };
+  }, [rolesHeaderValue, token]);
 
-  const fetchAttestations = async () => {
+  const fetchAttestations = useCallback(async () => {
     try {
       const query = !canManageAttestations && userId ? `?userId=${encodeURIComponent(userId)}` : '';
       const response = await fetch(
@@ -70,9 +70,11 @@ const AttestationsPage = ({ language }) => {
     } catch (error) {
       console.error('Failed to fetch attestations:', error);
     }
-  };
+  }, [baseUrl, buildHeaders, canManageAttestations, userId]);
 
-  useEffect(() => { fetchAttestations(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    fetchAttestations();
+  }, [fetchAttestations]);
 
   const handleRequest = async (e) => {
     e.preventDefault();

@@ -21,9 +21,16 @@ public class UserService {
 
 
 	private final UserRepository userRepository;
+	private final TenantCustomizationService tenantCustomizationService;
+	private final CustomerVersionPolicy customerVersionPolicy;
 
-	public UserService(UserRepository userRepository) {
+	public UserService(
+			UserRepository userRepository,
+			TenantCustomizationService tenantCustomizationService,
+			CustomerVersionPolicy customerVersionPolicy) {
 		this.userRepository = userRepository;
+		this.tenantCustomizationService = tenantCustomizationService;
+		this.customerVersionPolicy = customerVersionPolicy;
 	}
 
 	public Optional<User> getUser(Integer userNo) {
@@ -74,8 +81,23 @@ public class UserService {
 	}
 
 	public User createUser(User user) {
-		user.setTenantId(TenantContext.getRequiredTenantId());
+		String tenantId = TenantContext.getRequiredTenantId();
+		enforceTenantUserLimit(tenantId);
+		user.setTenantId(tenantId);
 		return userRepository.save(user); // Inserts or updates the user
+	}
+
+	private void enforceTenantUserLimit(String tenantId) {
+		long currentUserCount = userRepository.countByTenantId(tenantId);
+		String customerVersion = tenantCustomizationService.resolveCustomerVersion(tenantId);
+		long maxUsers = customerVersionPolicy.resolveMaxUsers(customerVersion);
+
+		if (currentUserCount >= maxUsers) {
+			throw new ResponseStatusException(
+					HttpStatus.CONFLICT,
+					"Maximum users reached for version '" + customerVersion + "' (" + maxUsers + ")."
+			);
+		}
 	}
 
 	public User getUserOrThrow(Integer userNo) {

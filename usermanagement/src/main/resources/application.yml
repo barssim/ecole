@@ -38,6 +38,14 @@ jwt:
   secret: 239487234972394e98er023r934o9342oi4uew0923w8734928374
   expiration: 3600000 # 1 hour in milliseconds (optional)
 
+customer-version:
+  max-users:
+    testversion: 5
+    bronzversion: 20
+    silber: 50
+  default-by-tenant:
+    gardinia: testversion
+
 eureka:
 
   client:

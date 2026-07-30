@@ -1,19 +1,12 @@
 services:
 
-  api-gateway:
-    ports:
-      - "8085:8085"
-    networks:
-      - ecole
-
   ecole-portal:
     build:
       context: ./ecole-portal
       dockerfile: Dockerfile
       target: dev
-    image: barssim/ecole-portal:develop
     ports:
-      - "8080:8080"
+      - "3000:3000"
     volumes:
       - ./ecole-portal:/app
       - /app/node_modules
@@ -22,7 +15,112 @@ services:
     environment:
       - REACT_APP_API_GATEWAY_URL=http://localhost:8085
       - REACT_APP_DEBUG=true
+      - HOST=0.0.0.0
+
+  mysql-user:
+    image: mysql:8
+    container_name: mysql-user
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: userDB
+    networks:
+      - ecole
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mysql-fin:
+    image: mysql:8
+    container_name: mysql-fin
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: finDB
+    networks:
+      - ecole
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mysql-secretary-office:
+    image: mysql:8
+    container_name: mysql-secretary-office
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: secretaryOfficeDB
+    networks:
+      - ecole
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  usermanagement:
+    build:
+      context: ./usermanagement
+      dockerfile: Dockerfile
+    depends_on:
+      mysql-user:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-user:3306/userDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - ecole
+
+  finance-manager:
+    build:
+      context: ./finance-manager
+      dockerfile: Dockerfile
+    depends_on:
+      mysql-fin:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-fin:3306/finDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - ecole
+
+  secretary-office:
+    build:
+      context: ./secretary-office
+      dockerfile: Dockerfile
+    depends_on:
+      mysql-secretary-office:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-secretary-office:3306/secretaryOfficeDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - ecole
+
+  eureka-server:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    networks:
+      - ecole
+
+  api-gateway:
+    build:
+      context: ./solide-api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8085:8085"
+    depends_on:
+      - usermanagement
+      - finance-manager
+      - secretary-office
+      - eureka-server
+    networks:
+      - ecole
 
 networks:
   ecole:
-    external: true

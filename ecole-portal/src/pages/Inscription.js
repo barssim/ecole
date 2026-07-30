@@ -98,7 +98,18 @@ const Inscription = ({ language }) => {
     try {
       const response = await fetch(apiUrlFor("/users"), { headers: buildHeaders() });
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        let backendMessage = "";
+        try {
+          const payload = await response.json();
+          backendMessage = payload?.message || payload?.error || "";
+        } catch {
+          try {
+            backendMessage = await response.text();
+          } catch {
+            backendMessage = "";
+          }
+        }
+        throw new Error(backendMessage || `HTTP ${response.status}`);
       }
       const payload = await response.json();
       setUsers(Array.isArray(payload) ? payload : []);
@@ -192,7 +203,7 @@ const Inscription = ({ language }) => {
       }
     } catch (err) {
       console.error("Error:", err);
-      setError({ general: content.registrationError });
+      setError({ general: err?.message || content.registrationError });
     } finally {
       setLoading(false);
     }
