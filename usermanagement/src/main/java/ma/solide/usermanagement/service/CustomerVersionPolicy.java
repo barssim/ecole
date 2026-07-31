@@ -37,8 +37,8 @@ public class CustomerVersionPolicy {
         String normalizedVersion = normalizeVersion(customerVersion);
         return switch (normalizedVersion) {
             case TRIAL -> testversionMaxUsers;
-            case BRONZVERSION -> bronzversionMaxUsers;
-            case SILBER -> silberMaxUsers;
+            case BRONZE -> bronzversionMaxUsers;
+            case SILVER -> silverMaxUsers;
             case GOLD -> Long.MAX_VALUE;
             default -> throw new IllegalArgumentException("Unsupported customer version: " + customerVersion);
         };
