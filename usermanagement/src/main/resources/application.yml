@@ -40,13 +40,13 @@ jwt:
 
 customer-version:
   max-users:
-    Trial: 1
-    Bronze: 2
-    Silver: 3
-    Gold: 4
+    trial: 1
+    bronze: 2
+    silver: 3
+    gold: 4
   default-by-tenant:
-    gardinia: Trial
-    qods: Bronze
+    gardinia: trial
+    qods: bronze
 
 
 eureka:

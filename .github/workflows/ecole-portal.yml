@@ -121,4 +121,4 @@ jobs:
               -p $PORT:80 \
               ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:$IMAGE_TAG
 
-            docker image prune -f
+            docker image prune -a -f

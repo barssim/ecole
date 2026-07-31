@@ -11,20 +11,23 @@ public class CustomerVersionPolicy {
     public static final String SILVER = "Silver";
     public static final String GOLD = "Gold";
 
-    @Value("${customer-version.max-users.testversion:5}")
-    private int testversionMaxUsers = 5;
+    @Value("${customer-version.max-users.trial:10}")
+    private int trialMaxUsers;
 
-    @Value("${customer-version.max-users.bronzversion:20}")
-    private int bronzversionMaxUsers = 20;
+    @Value("${customer-version.max-users.bronze:100}")
+    private int bronzeMaxUsers;
 
-    @Value("${customer-version.max-users.silber:50}")
-    private int silberMaxUsers = 50;
+    @Value("${customer-version.max-users.silver:500}")
+    private int silverMaxUsers;
+
+    @Value("${customer-version.max-users.gold:2000}")
+    private int goldMaxUsers;
 
     public String resolveVersion(long userCount) {
-        if (userCount <= testversionMaxUsers) {
+        if (userCount <= trialMaxUsers) {
             return TRIAL;
         }
-        if (userCount <= bronzversionMaxUsers) {
+        if (userCount <= bronzeMaxUsers) {
             return BRONZVERSION;
         }
         if (userCount <= silberMaxUsers) {
@@ -36,10 +39,10 @@ public class CustomerVersionPolicy {
     public long resolveMaxUsers(String customerVersion) {
         String normalizedVersion = normalizeVersion(customerVersion);
         return switch (normalizedVersion) {
-            case TRIAL -> testversionMaxUsers;
-            case BRONZE -> bronzversionMaxUsers;
+            case TRIAL -> trialMaxUsers;
+            case BRONZE -> bronzeMaxUsers;
             case SILVER -> silverMaxUsers;
-            case GOLD -> Long.MAX_VALUE;
+            case GOLD -> goldMaxUsers;
             default -> throw new IllegalArgumentException("Unsupported customer version: " + customerVersion);
         };
     }
@@ -47,8 +50,8 @@ public class CustomerVersionPolicy {
     public boolean isKnownVersion(String customerVersion) {
         String normalizedVersion = normalizeVersion(customerVersion);
         return TRIAL.equals(normalizedVersion)
-                || BRONZVERSION.equals(normalizedVersion)
-                || SILBER.equals(normalizedVersion)
+                || BRONZE.equals(normalizedVersion)
+                || SILVER.equals(normalizedVersion)
                 || GOLD.equals(normalizedVersion);
     }
 
