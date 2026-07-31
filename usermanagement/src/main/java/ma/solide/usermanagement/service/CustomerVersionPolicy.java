@@ -30,8 +30,8 @@ public class CustomerVersionPolicy {
         if (userCount <= bronzeMaxUsers) {
             return BRONZVERSION;
         }
-        if (userCount <= silberMaxUsers) {
-            return SILBER;
+        if (userCount <= silverMaxUsers) {
+            return SILVER;
         }
         return GOLD;
     }
