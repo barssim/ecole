@@ -6,6 +6,18 @@ import en from "../locales/footer/en.json";
 const Footer = ({ language, tenantCustomization }) => {
 	let content;
   const tenant = tenantCustomization || {};
+  const customerVersion = (tenant.customerVersion || "").toLowerCase();
+  let trialIndicatorColor = null;
+
+  if (customerVersion.includes("gold")) {
+    trialIndicatorColor = "#d4af37";
+  } else if (customerVersion.includes("silver")) {
+    trialIndicatorColor = "#c0c0c0";
+  } else if (customerVersion.includes("bronze") || customerVersion.includes("bronz")) {
+    trialIndicatorColor = "#cd7f32";
+  } else if (["trial", "test"].some((tag) => customerVersion.includes(tag))) {
+    trialIndicatorColor = "#000";
+  }
 
 if (language === "fr") {
   content = fr;
@@ -30,6 +42,13 @@ if (language === "fr") {
                 Email: {tenant.mail || ""}
            </address>
             {tenant.customerVersion ? <p>Version: {tenant.customerVersion}</p> : null}
+            {trialIndicatorColor ? (
+              <span
+                className="trial-indicator"
+                aria-label="Trial version indicator"
+                style={{ "--trial-indicator-color": trialIndicatorColor }}
+              />
+            ) : null}
        </footer>
    );
 };

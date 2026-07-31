@@ -238,6 +238,16 @@
 	bottom: 0;
 	margin-top: auto;
 }
+
+.trial-indicator {
+	position: absolute;
+	right: 12px;
+	bottom: 12px;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background-color: var(--trial-indicator-color, #000);
+}
 .form-select {
   width: 100%;
   padding: 10px;

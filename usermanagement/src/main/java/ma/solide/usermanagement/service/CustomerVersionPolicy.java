@@ -6,10 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 @Component
 public class CustomerVersionPolicy {
 
-    public static final String TESTVERSION = "testversion";
-    public static final String BRONZVERSION = "bronzversion";
-    public static final String SILBER = "silber";
-    public static final String GOLD = "gold";
+    public static final String TRIAL = "Trial";
+    public static final String BRONZE = "Bronze";
+    public static final String SILVER = "Silver";
+    public static final String GOLD = "Gold";
 
     @Value("${customer-version.max-users.testversion:5}")
     private int testversionMaxUsers = 5;
@@ -22,7 +22,7 @@ public class CustomerVersionPolicy {
 
     public String resolveVersion(long userCount) {
         if (userCount <= testversionMaxUsers) {
-            return TESTVERSION;
+            return TRIAL;
         }
         if (userCount <= bronzversionMaxUsers) {
             return BRONZVERSION;
@@ -36,7 +36,7 @@ public class CustomerVersionPolicy {
     public long resolveMaxUsers(String customerVersion) {
         String normalizedVersion = normalizeVersion(customerVersion);
         return switch (normalizedVersion) {
-            case TESTVERSION -> testversionMaxUsers;
+            case TRIAL -> testversionMaxUsers;
             case BRONZVERSION -> bronzversionMaxUsers;
             case SILBER -> silberMaxUsers;
             case GOLD -> Long.MAX_VALUE;
@@ -46,7 +46,7 @@ public class CustomerVersionPolicy {
 
     public boolean isKnownVersion(String customerVersion) {
         String normalizedVersion = normalizeVersion(customerVersion);
-        return TESTVERSION.equals(normalizedVersion)
+        return TRIAL.equals(normalizedVersion)
                 || BRONZVERSION.equals(normalizedVersion)
                 || SILBER.equals(normalizedVersion)
                 || GOLD.equals(normalizedVersion);
