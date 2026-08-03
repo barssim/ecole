@@ -161,6 +161,11 @@ const TeacherNotesPage = ({ language }) => {
     setError('');
     setMessage('');
 
+    if (!selectedClassId) {
+      setError(content.notes_selectClassHint || 'Select one of your classes first.');
+      return;
+    }
+
     const valid = entries.filter(
       (e) => e.studentName.trim() && e.subject.trim() && String(e.grade).trim()
     );
@@ -207,6 +212,7 @@ const TeacherNotesPage = ({ language }) => {
             style={{ width: '100%' }}
             className="form-select"
             disabled={classesLoading}
+            required
           >
             <option value="">{content.notes_classPlaceholder || 'Sélectionnez une classe'}</option>
             {classes.map((cls) => (
@@ -229,6 +235,7 @@ const TeacherNotesPage = ({ language }) => {
               placeholder={content.notes_studentName || 'Nom de l\'élève'}
               value={entry.studentName}
               list="teacher-notes-students"
+              disabled={!selectedClassId}
               onChange={(e) => handleEntryChange(index, 'studentName', e.target.value)}
             />
             {allSubjectOptions.length > 0 ? (
@@ -237,6 +244,7 @@ const TeacherNotesPage = ({ language }) => {
                 onChange={(e) => handleEntryChange(index, 'subject', e.target.value)}
                 className="form-select"
                 title={content.notes_subject || 'Matière'}
+                disabled={!selectedClassId}
               >
                 <option value="">{content.notes_subjectPlaceholder || 'Sélectionnez une matière'}</option>
                 {allSubjectOptions.map((subject) => (
@@ -248,6 +256,7 @@ const TeacherNotesPage = ({ language }) => {
                 type="text"
                 placeholder={content.notes_subject || 'Matière'}
                 value={entry.subject}
+                disabled={!selectedClassId}
                 onChange={(e) => handleEntryChange(index, 'subject', e.target.value)}
               />
             )}
@@ -258,11 +267,13 @@ const TeacherNotesPage = ({ language }) => {
               min={0}
               max={20}
               step={0.5}
+              disabled={!selectedClassId}
               onChange={(e) => handleEntryChange(index, 'grade', e.target.value)}
             />
             <button
               type="button"
               onClick={() => removeEntry(index)}
+              disabled={!selectedClassId}
               style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}
               title={content.notes_removeRow || 'Supprimer'}
             >
@@ -272,10 +283,10 @@ const TeacherNotesPage = ({ language }) => {
         ))}
 
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <button type="button" className="buttonStyle" onClick={addEntry}>
+          <button type="button" className="buttonStyle" onClick={addEntry} disabled={!selectedClassId}>
             {content.notes_addRow || '+ Ajouter un élève'}
           </button>
-          <button type="submit" className="buttonStyle">
+          <button type="submit" className="buttonStyle" disabled={!selectedClassId}>
             {content.notes_save || 'Enregistrer les notes'}
           </button>
         </div>
