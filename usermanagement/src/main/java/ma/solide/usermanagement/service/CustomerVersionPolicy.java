@@ -56,7 +56,11 @@ public class CustomerVersionPolicy {
     }
 
     public String normalizeVersion(String customerVersion) {
-        return String.valueOf(customerVersion).trim().toLowerCase();
+        if (customerVersion == null || customerVersion.trim().isEmpty()) {
+            return "";
+        }
+        String trimmed = customerVersion.trim();
+        return Character.toUpperCase(trimmed.charAt(0)) + trimmed.substring(1).toLowerCase();
     }
 }
 
