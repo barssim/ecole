@@ -62,7 +62,16 @@ jobs:
           script: |
             cd /home/ecole
 
-            docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_TOKEN }}
+            echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+            # Sync external Spring config used by docker-compose volume mount.
+            mkdir -p /opt/ecole/config/usermanagement
+            if [ -n "${{ secrets.USERMANAGEMENT_APPLICATION_YML_B64 }}" ]; then
+              echo "${{ secrets.USERMANAGEMENT_APPLICATION_YML_B64 }}" | base64 -d > /opt/ecole/config/usermanagement/application.yml
+              chmod 600 /opt/ecole/config/usermanagement/application.yml
+            else
+              echo "Secret USERMANAGEMENT_APPLICATION_YML_B64 is empty. Keeping existing config file."
+            fi
 
 
             # ensure the Docker network used by docker-compose exists on the target host

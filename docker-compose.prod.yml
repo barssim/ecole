@@ -49,7 +49,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
     volumes:
-      - /opt/ecole/usermanagement/config/application.yml:/app/config/application.yml:ro
+      - /opt/ecole/config/usermanagement/application.yml:/app/config/application.yml:ro
     networks:
       - ecole
     restart: always
@@ -65,7 +65,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
     volumes:
-      - /opt/ecole/finance-manager/config/application.yml:/app/config/application.yml:ro
+      - /opt/ecole/config/finance-manager/application.yml:/app/config/application.yml:ro
     networks:
       - ecole
     restart: always
@@ -87,7 +87,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-dev-pass}
       SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
     volumes:
-      - /opt/ecole/secretary-office/config/application.yml:/app/config/application.yml:ro
+      - /opt/ecole/config/secretary-office/application.yml:/app/config/application.yml:ro
     networks:
       - ecole
     restart: always
@@ -98,7 +98,7 @@ services:
     environment:
       SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
     volumes:
-      - /opt/ecole/eureka-server/config/application.yml:/app/config/application.yml:ro
+      - /opt/ecole/config/eureka-server/application.yml:/app/config/application.yml:ro
     networks:
       - ecole
     restart: always
@@ -119,7 +119,7 @@ services:
     environment:
       SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
     volumes:
-      - /opt/ecole/api-gateway/config/application.yml:/app/config/application.yml:ro
+      - /opt/ecole/config/api-gateway/application.yml:/app/config/application.yml:ro
     networks:
       - ecole
     restart: always
