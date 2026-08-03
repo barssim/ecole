@@ -7,15 +7,20 @@ const Footer = ({ language, tenantCustomization }) => {
 	let content;
   const tenant = tenantCustomization || {};
   const customerVersion = (tenant.customerVersion || "").toLowerCase();
+  let customerVersionLabel = null;
   let trialIndicatorColor = null;
 
   if (customerVersion.includes("gold")) {
+    customerVersionLabel = "Gold";
     trialIndicatorColor = "#d4af37";
   } else if (customerVersion.includes("silver")) {
+    customerVersionLabel = "Silver";
     trialIndicatorColor = "#c0c0c0";
   } else if (customerVersion.includes("bronze") || customerVersion.includes("bronz")) {
+    customerVersionLabel = "Bronze";
     trialIndicatorColor = "#cd7f32";
   } else if (["trial", "test"].some((tag) => customerVersion.includes(tag))) {
+    customerVersionLabel = "Trial";
     trialIndicatorColor = "#000";
   }
 
@@ -28,8 +33,7 @@ if (language === "fr") {
 };
    return (
        <footer className="footer">
-           <p>&copy; 2024 {tenant.name?.[language] || tenant.name?.["fr"] || "School"} </p>
-           <p>{content.legal_notice || "© 2026 Company TAB-Logic. All rights reserved."}</p>
+           <p> {tenant.name?.[language] || tenant.name?.["fr"] || "School"} </p>
            <div>
                <a href={content.facebook_link} target="_blank" rel="noopener noreferrer" style={{ marginRight: '10px' }}>Facebook</a>
                <a href={content.twitter_link} target="_blank" rel="noopener noreferrer">Twitter</a>
@@ -41,14 +45,19 @@ if (language === "fr") {
                <br />
                 Email: {tenant.mail || ""}
            </address>
-            {tenant.customerVersion ? <p>Version: {tenant.customerVersion}</p> : null}
-            {trialIndicatorColor ? (
-              <span
-                className="trial-indicator"
-                aria-label="Trial version indicator"
-                style={{ "--trial-indicator-color": trialIndicatorColor }}
-              />
+            {customerVersionLabel ? (
+              <p className="customer-version-label">
+                {customerVersionLabel}
+                {trialIndicatorColor ? (
+                  <span
+                    className="trial-indicator"
+                    aria-label="Trial version indicator"
+                    style={{ "--trial-indicator-color": trialIndicatorColor }}
+                  />
+                ) : null}
+              </p>
             ) : null}
+            <p>{content.legal_notice || "© 2026 Company TAB-Logic. All rights reserved."}</p>
        </footer>
    );
 };
