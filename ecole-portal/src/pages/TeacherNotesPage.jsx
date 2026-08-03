@@ -1,19 +1,117 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import fr from '../locales/fr.json';
 import en from '../locales/en.json';
 import ar from '../locales/ar.json';
+import { getTenantId } from '../tenant';
+import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
+import { normalizeRoles } from '../utils/roles';
 
 /**
  * Teacher Notes/Grades page: teachers can enter and review student grades per class.
  */
 const TeacherNotesPage = ({ language }) => {
   const content = language === 'fr' ? fr : language === 'en' ? en : ar;
+  const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
+  const currentUserName = (localStorage.getItem('userName') || '').trim().toLowerCase();
+  const isTeacherOnly = userRoles.length > 0 && userRoles.every((role) => role === 'teacher' || role === 'role_teacher');
+
+  const configuredBase = resolveApiBaseUrl('http://localhost:8085');
+  const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const localhostApiTarget = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBase);
+  const inferredRemoteBase = `${window.location.protocol}//${window.location.hostname}:8085`;
+  const effectiveBase = localhostApiTarget && !browserIsLocal ? inferredRemoteBase : configuredBase;
+  const useRelativeApi = process.env.REACT_APP_USE_RELATIVE_API === 'true';
 
   const [entries, setEntries] = useState([{ studentName: '', subject: '', grade: '' }]);
   const [savedEntries, setSavedEntries] = useState([]);
   const [className, setClassName] = useState('');
+  const [classes, setClasses] = useState([]);
+  const [classesLoading, setClassesLoading] = useState(true);
+  const [selectedClassId, setSelectedClassId] = useState('');
+  const [selectedClassStudents, setSelectedClassStudents] = useState([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  const apiUrlFor = (path) => {
+    if (useRelativeApi) return `/api${path}`;
+    return `${effectiveBase}/api${path}`;
+  };
+
+  const buildHeaders = (includeJson = false) => {
+    const token = sessionStorage.getItem('jwt_token');
+    const headers = {
+      'X-Tenant-Id': getTenantId(),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+    if (includeJson) headers['Content-Type'] = 'application/json';
+    return headers;
+  };
+
+  const extractStudentName = (student) => {
+    if (typeof student === 'string') return student;
+    if (!student || typeof student !== 'object') return '';
+    return student.name || student.username || `${student.firstname || ''} ${student.surname || ''}`.trim();
+  };
+
+  useEffect(() => {
+    const fetchClasses = async () => {
+      setClassesLoading(true);
+      try {
+        const response = await fetch(apiUrlFor('/classes'), { headers: buildHeaders() });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const allClasses = Array.isArray(data) ? data : [];
+        const visibleClasses = isTeacherOnly
+          ? allClasses.filter((cls) => (cls.teachers || []).some((t) => String(t || '').toLowerCase() === currentUserName))
+          : allClasses;
+        setClasses(visibleClasses);
+      } catch {
+        setClasses([]);
+      } finally {
+        setClassesLoading(false);
+      }
+    };
+
+    fetchClasses();
+  }, [currentUserName, isTeacherOnly]);
+
+  useEffect(() => {
+    const selectedClass = classes.find((cls) => String(cls.id) === String(selectedClassId));
+    if (!selectedClass) {
+      setClassName('');
+      setSelectedClassStudents([]);
+      return;
+    }
+
+    setClassName(selectedClass.name || '');
+    const fallbackStudents = Array.isArray(selectedClass.students)
+      ? selectedClass.students.map(extractStudentName).filter(Boolean)
+      : [];
+    setSelectedClassStudents(fallbackStudents);
+
+    const fetchClassStudents = async () => {
+      try {
+        const response = await fetch(apiUrlFor(`/classes/${selectedClass.id}/students`), { headers: buildHeaders() });
+        if (!response.ok) return;
+        const data = await response.json();
+        const students = Array.isArray(data)
+          ? data.map(extractStudentName).filter(Boolean)
+          : [];
+        if (students.length > 0) {
+          setSelectedClassStudents(students);
+        }
+      } catch {
+        // Keep fallback list from /classes when the dedicated endpoint is unavailable.
+      }
+    };
+
+    fetchClassStudents();
+  }, [selectedClassId, classes]);
+
+  const studentNameSuggestions = useMemo(
+    () => selectedClassStudents.filter(Boolean),
+    [selectedClassStudents]
+  );
 
   const handleEntryChange = (index, field, value) => {
     const updated = [...entries];
@@ -72,16 +170,42 @@ const TeacherNotesPage = ({ language }) => {
         onSubmit={handleSubmit}
         style={{ background: '#fff', padding: 20, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.08)', display: 'grid', gap: 14 }}
       >
-        <div>
+        <div style={{ display: 'grid', gap: 8 }}>
           <label>{content.notes_class || 'Classe'}</label>
-          <input
-            type="text"
-            value={className}
-            onChange={(e) => setClassName(e.target.value)}
-            placeholder={content.notes_classPlaceholder || 'Ex. 3e A'}
+          <select
+            value={selectedClassId}
+            onChange={(e) => setSelectedClassId(e.target.value)}
             style={{ width: '100%' }}
-          />
+            className="form-select"
+            disabled={classesLoading}
+          >
+            <option value="">{content.notes_classPlaceholder || 'Sélectionnez une classe'}</option>
+            {classes.map((cls) => (
+              <option key={cls.id} value={cls.id}>{cls.name}</option>
+            ))}
+          </select>
+          <small style={{ color: '#555' }}>
+            {selectedClassStudents.length > 0
+              ? `${selectedClassStudents.length} ${content.students || 'students'} ${content.notes_loaded || 'loaded for this class.'}`
+              : (selectedClassId ? (content.notes_noClassStudents || 'No students found for this class.') : (content.notes_selectClassHint || 'Select a class to display students.'))}
+          </small>
         </div>
+
+        {selectedClassStudents.length > 0 && (
+          <div style={{ background: '#f8fbff', border: '1px solid #dbeafe', borderRadius: 10, padding: 12 }}>
+            <h4 style={{ margin: '0 0 8px 0' }}>{content.students || 'Students'}</h4>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {selectedClassStudents.map((studentName) => (
+                <span
+                  key={studentName}
+                  style={{ background: '#e0f2fe', borderRadius: 999, padding: '4px 10px', fontSize: 13 }}
+                >
+                  {studentName}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         <h3 style={{ margin: 0 }}>{content.notes_students || 'Élèves'}</h3>
 
@@ -91,6 +215,7 @@ const TeacherNotesPage = ({ language }) => {
               type="text"
               placeholder={content.notes_studentName || 'Nom de l\'élève'}
               value={entry.studentName}
+              list="teacher-notes-students"
               onChange={(e) => handleEntryChange(index, 'studentName', e.target.value)}
             />
             <input
@@ -127,6 +252,12 @@ const TeacherNotesPage = ({ language }) => {
             {content.notes_save || 'Enregistrer les notes'}
           </button>
         </div>
+
+        <datalist id="teacher-notes-students">
+          {studentNameSuggestions.map((studentName) => (
+            <option key={studentName} value={studentName} />
+          ))}
+        </datalist>
       </form>
 
       {savedEntries.length > 0 && (
