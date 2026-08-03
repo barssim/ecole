@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { getTenantId } from "../tenant";
 import { resolveApiBaseUrl } from "../utils/apiBaseUrl";
 import "../cssFiles/TeacherCourses.css";
@@ -14,101 +14,114 @@ const buildHeaders = (isJson = true) => {
   };
 };
 
-const TeacherCourses = ({ language }) => {
-  const userId = localStorage.getItem("userId");
+const getLocalUploadsKey = (userId) => `teachercourses_uploaded_${userId || "anonymous"}`;
 
-  const [courses, setCourses] = useState([]);
+const safeReadLocalUploads = (userId) => {
+  try {
+    const raw = localStorage.getItem(getLocalUploadsKey(userId));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const TeacherCourses = () => {
+  const userId = localStorage.getItem("userId");
+  const fileInputRef = useRef(null);
+
+  const [backendCourses, setBackendCourses] = useState([]);
+  const [localUploads, setLocalUploads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Add course form
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newCourse, setNewCourse] = useState({ name: "", description: "" });
-  const [saving, setSaving] = useState(false);
-
-  // Per-course file upload
-  const [uploadingForCourse, setUploadingForCourse] = useState(null);
-  const [uploadFile, setUploadFile] = useState(null);
+  const [courseTitle, setCourseTitle] = useState("");
+  const [courseFile, setCourseFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [deletingCourseId, setDeletingCourseId] = useState(null);
 
-  // Fetch courses on load
+  const persistLocalUploads = (items) => {
+    if (!userId) return;
+    try {
+      localStorage.setItem(getLocalUploadsKey(userId), JSON.stringify(items));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const flashSuccess = (msg) => {
+    setSuccess(msg);
+    window.setTimeout(() => setSuccess(""), 3000);
+  };
+
   useEffect(() => {
     const fetchCourses = async () => {
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError("");
+
       try {
         const res = await fetch(`${API_BASE}/api/teachercourses?teacher=${userId}`, {
           headers: buildHeaders(false),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        setCourses(Array.isArray(data) ? data : []);
-      } catch (err) {
+        setBackendCourses(Array.isArray(data) ? data : []);
+      } catch {
         setError("Impossible de charger les cours. Veuillez réessayer.");
+        setBackendCourses([]);
       } finally {
         setLoading(false);
       }
     };
-    if (userId) fetchCourses();
+
+    const local = safeReadLocalUploads(userId);
+    setLocalUploads(local);
+    fetchCourses();
   }, [userId]);
 
-  const flashSuccess = (msg) => {
-    setSuccess(msg);
-    setTimeout(() => setSuccess(""), 3000);
-  };
+  const mergedCourses = useMemo(() => {
+    const combined = [...localUploads, ...backendCourses];
+    const seen = new Set();
 
-  // Add course
-  const handleAddCourse = async (e) => {
+    return combined
+      .filter((course) => {
+        const key = String(course.id ?? course.localId ?? course.name ?? course.fileName ?? "");
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) => {
+        const aDate = new Date(a.uploadedAt || a.createdAt || 0).getTime();
+        const bDate = new Date(b.uploadedAt || b.createdAt || 0).getTime();
+        if (aDate !== bDate) return bDate - aDate;
+        return String(a.name || a.fileName || "").localeCompare(String(b.name || b.fileName || ""));
+      });
+  }, [backendCourses, localUploads]);
+
+  const handleUploadCourse = async (e) => {
     e.preventDefault();
-    if (!newCourse.name.trim()) return;
-    setSaving(true);
-    setError("");
-    try {
-      const res = await fetch(`${API_BASE}/api/teachercourses`, {
-        method: "POST",
-        headers: buildHeaders(),
-        body: JSON.stringify({ ...newCourse, teacherId: userId }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const created = await res.json();
-      setCourses((prev) => [...prev, created]);
-      setNewCourse({ name: "", description: "" });
-      setShowAddForm(false);
-      flashSuccess("Cours ajouté avec succès !");
-    } catch {
-      setError("Erreur lors de l'ajout du cours.");
-    } finally {
-      setSaving(false);
+    if (!courseFile) {
+      setError("Veuillez choisir un fichier de cours.");
+      return;
     }
-  };
 
-  // Delete course
-  const handleDeleteCourse = async (courseId) => {
-    if (!window.confirm("Supprimer ce cours ?")) return;
-    try {
-      await fetch(`${API_BASE}/api/teachercourses/${courseId}`, {
-        method: "DELETE",
-        headers: buildHeaders(false),
-      });
-      setCourses((prev) => prev.filter((c) => c.id !== courseId));
-      flashSuccess("Cours supprimé.");
-    } catch {
-      setError("Erreur lors de la suppression.");
-    }
-  };
-
-  // Upload file for a course
-  const handleUpload = async (courseId) => {
-    if (!uploadFile) return;
     setUploading(true);
     setError("");
-    const formData = new FormData();
-    formData.append("file", uploadFile);
-    formData.append("courseId", courseId);
+
     try {
+      const formData = new FormData();
+      formData.append("file", courseFile);
+      formData.append("filename", courseTitle.trim() || courseFile.name);
+
       const token = sessionStorage.getItem("jwt_token");
-      const res = await fetch(`${API_BASE}/api/teachercourses/${courseId}/upload`, {
+      const uploadRes = await fetch(`${API_BASE}/api/upload`, {
         method: "POST",
         headers: {
           "X-Tenant-Id": getTenantId(),
@@ -116,145 +129,212 @@ const TeacherCourses = ({ language }) => {
         },
         body: formData,
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const updatedCourse = await res.json();
-      setCourses((prev) =>
-        prev.map((c) => (c.id === courseId ? updatedCourse : c))
-      );
-      setUploadFile(null);
-      setUploadingForCourse(null);
-      flashSuccess("Fichier uploadé avec succès !");
+
+      if (!uploadRes.ok) {
+        throw new Error(`HTTP ${uploadRes.status}`);
+      }
+
+      const uploadedFile = await uploadRes.json();
+      const finalCourseName = courseTitle.trim() || uploadedFile.filename || courseFile.name;
+      const payload = {
+        name: finalCourseName,
+        description: `Uploaded course file: ${uploadedFile.filename || courseFile.name}`,
+        teacherId: userId,
+        files: [uploadedFile],
+      };
+
+      let savedCourse = null;
+      try {
+        const saveRes = await fetch(`${API_BASE}/api/teachercourses`, {
+          method: "POST",
+          headers: buildHeaders(true),
+          body: JSON.stringify(payload),
+        });
+        if (saveRes.ok) {
+          savedCourse = await saveRes.json();
+        }
+      } catch {
+        // If the backend doesn't support persisting uploaded course metadata,
+        // we keep a local copy so the uploaded course remains visible in this view.
+      }
+
+      if (savedCourse) {
+        setBackendCourses((prev) => [
+          {
+            ...savedCourse,
+            uploadedFile,
+            uploadedAt: savedCourse.uploadedAt || new Date().toISOString(),
+          },
+          ...prev,
+        ]);
+        flashSuccess("Cours téléversé avec succès !");
+      } else {
+        const localCourse = {
+          id: `local-${Date.now()}`,
+          localOnly: true,
+          name: finalCourseName,
+          description: `Uploaded course file: ${uploadedFile.filename || courseFile.name}`,
+          teacherId: userId,
+          uploadedFile,
+          uploadedAt: new Date().toISOString(),
+        };
+        setLocalUploads((prev) => {
+          const next = [localCourse, ...prev];
+          persistLocalUploads(next);
+          return next;
+        });
+        flashSuccess("Cours téléversé avec succès !");
+      }
+
+      setCourseTitle("");
+      setCourseFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } catch {
-      setError("Erreur lors de l'upload du fichier.");
+      setError("Erreur lors du téléversement du fichier de cours.");
     } finally {
       setUploading(false);
     }
   };
 
+  const handleDeleteCourse = async (course) => {
+    const courseId = course.id;
+    if (!window.confirm("Supprimer ce cours ?")) return;
+
+    setDeletingCourseId(courseId);
+    setError("");
+
+    try {
+      if (course.localOnly || String(courseId).startsWith("local-")) {
+        setLocalUploads((prev) => {
+          const next = prev.filter((c) => c.id !== courseId);
+          persistLocalUploads(next);
+          return next;
+        });
+        flashSuccess("Cours supprimé.");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/api/teachercourses/${courseId}`, {
+        method: "DELETE",
+        headers: buildHeaders(false),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      setBackendCourses((prev) => prev.filter((c) => String(c.id) !== String(courseId)));
+      flashSuccess("Cours supprimé.");
+    } catch {
+      setError("Erreur lors de la suppression.");
+    } finally {
+      setDeletingCourseId(null);
+    }
+  };
+
+  const renderFiles = (course) => {
+    const files = Array.isArray(course.files) && course.files.length > 0
+      ? course.files
+      : course.uploadedFile
+        ? [course.uploadedFile]
+        : [];
+
+    if (files.length === 0) {
+      return null;
+    }
+
+    return (
+      <ul className="tc-file-list">
+        {files.map((file, index) => (
+          <li key={file.url || file.filename || index}>
+            📄{" "}
+            <a href={file.url} target="_blank" rel="noopener noreferrer">
+              {file.filename || file.name || `Fichier ${index + 1}`}
+            </a>
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
   return (
     <div className="tc-container">
-      {/* Header */}
       <div className="tc-header">
-        <h2 className="tc-title">📚 Mes Cours</h2>
-        <button
-          className="tc-btn tc-btn-primary"
-          onClick={() => { setShowAddForm((v) => !v); setError(""); }}
-        >
-          {showAddForm ? "✕ Annuler" : "＋ Ajouter un cours"}
-        </button>
+        <h2 className="tc-title">📚 Mes cours</h2>
+        <div style={{ color: "#6b7280", fontSize: 14 }}>
+          {mergedCourses.length} {mergedCourses.length > 1 ? "cours" : "cours"}
+        </div>
       </div>
 
-      {/* Feedback */}
       {error && <div className="tc-alert tc-alert-error">{error}</div>}
       {success && <div className="tc-alert tc-alert-success">{success}</div>}
 
-      {/* Add Course Form */}
-      {showAddForm && (
-        <form className="tc-add-form" onSubmit={handleAddCourse}>
-          <h3>Nouveau cours</h3>
-          <div className="tc-form-group">
-            <label>Nom du cours *</label>
-            <input
-              type="text"
-              placeholder="Ex: Mathématiques – Terminale"
-              value={newCourse.name}
-              onChange={(e) => setNewCourse({ ...newCourse, name: e.target.value })}
-              required
-            />
-          </div>
-          <div className="tc-form-group">
-            <label>Description</label>
-            <textarea
-              placeholder="Brève description du cours..."
-              rows={3}
-              value={newCourse.description}
-              onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })}
-            />
-          </div>
-          <div className="tc-form-actions">
-            <button type="submit" className="tc-btn tc-btn-success" disabled={saving}>
-              {saving ? "Enregistrement..." : "💾 Enregistrer le cours"}
-            </button>
-            <button
-              type="button"
-              className="tc-btn tc-btn-ghost"
-              onClick={() => { setShowAddForm(false); setNewCourse({ name: "", description: "" }); }}
-            >
-              Annuler
-            </button>
-          </div>
-        </form>
-      )}
+      <form className="tc-add-form" onSubmit={handleUploadCourse}>
+        <h3>➕ Téléverser un fichier de cours</h3>
+        <div className="tc-form-group">
+          <label>Titre du cours</label>
+          <input
+            type="text"
+            value={courseTitle}
+            onChange={(e) => setCourseTitle(e.target.value)}
+            placeholder="Ex: Mathématiques - Chapitre 1"
+          />
+        </div>
+        <div className="tc-form-group">
+          <label>Fichier du cours *</label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            onChange={(e) => setCourseFile(e.target.files?.[0] || null)}
+            required
+          />
+        </div>
+        <p style={{ marginTop: -4, marginBottom: 0, color: "#6b7280", fontSize: 13 }}>
+          Le fichier téléversé apparaîtra immédiatement dans la liste ci-dessous.
+        </p>
+        <div className="tc-form-actions">
+          <button type="submit" className="tc-btn tc-btn-success" disabled={uploading}>
+            {uploading ? "Téléversement..." : "📤 Téléverser le cours"}
+          </button>
+        </div>
+      </form>
 
-      {/* Course List */}
       {loading ? (
         <p className="tc-loading">Chargement des cours...</p>
-      ) : courses.length === 0 ? (
+      ) : mergedCourses.length === 0 ? (
         <div className="tc-empty">
-          <p>📭 Aucun cours trouvé.</p>
-          <p>Cliquez sur <strong>«&nbsp;Ajouter un cours&nbsp;»</strong> pour commencer.</p>
+          <p>📭 Aucun cours téléversé.</p>
+          <p>Ajoutez votre premier fichier de cours ci-dessus.</p>
         </div>
       ) : (
         <div className="tc-course-list">
-          {courses.map((course) => (
+          {mergedCourses.map((course) => (
             <div className="tc-course-card" key={course.id}>
               <div className="tc-course-card-header">
                 <div>
                   <h3 className="tc-course-name">{course.name}</h3>
-                  {course.description && (
-                    <p className="tc-course-desc">{course.description}</p>
-                  )}
+                  {course.description && <p className="tc-course-desc">{course.description}</p>}
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+                    <span style={{ background: "#e0f2fe", color: "#075985", borderRadius: 999, padding: "2px 10px", fontSize: 12, fontWeight: 600 }}>
+                      {course.localOnly || String(course.id).startsWith("local-") ? "Téléversé" : "Synchronisé"}
+                    </span>
+                    {course.uploadedAt && (
+                      <span style={{ background: "#f3f4f6", color: "#374151", borderRadius: 999, padding: "2px 10px", fontSize: 12 }}>
+                        {new Date(course.uploadedAt).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="tc-course-actions">
                   <button
-                    className="tc-btn tc-btn-upload"
-                    onClick={() =>
-                      setUploadingForCourse(
-                        uploadingForCourse === course.id ? null : course.id
-                      )
-                    }
-                  >
-                    📤 Upload fichier
-                  </button>
-                  <button
                     className="tc-btn tc-btn-danger"
-                    onClick={() => handleDeleteCourse(course.id)}
+                    onClick={() => handleDeleteCourse(course)}
+                    disabled={deletingCourseId === course.id}
                   >
-                    🗑️
+                    {deletingCourseId === course.id ? "..." : "🗑️ Supprimer"}
                   </button>
                 </div>
               </div>
 
-              {/* File list */}
-              {Array.isArray(course.files) && course.files.length > 0 && (
-                <ul className="tc-file-list">
-                  {course.files.map((f, i) => (
-                    <li key={i}>
-                      📄{" "}
-                      <a href={f.url} target="_blank" rel="noopener noreferrer">
-                        {f.name || f.filename || `Fichier ${i + 1}`}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {/* Upload panel */}
-              {uploadingForCourse === course.id && (
-                <div className="tc-upload-panel">
-                  <input
-                    type="file"
-                    onChange={(e) => setUploadFile(e.target.files[0])}
-                  />
-                  <button
-                    className="tc-btn tc-btn-primary"
-                    disabled={!uploadFile || uploading}
-                    onClick={() => handleUpload(course.id)}
-                  >
-                    {uploading ? "Upload en cours..." : "📤 Envoyer"}
-                  </button>
-                </div>
-              )}
+              {renderFiles(course)}
             </div>
           ))}
         </div>
