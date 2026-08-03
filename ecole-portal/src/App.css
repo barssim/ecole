@@ -247,6 +247,12 @@
 	background-color: var(--trial-indicator-color, #000);
 	margin-top: 10px;
 }
+
+.legal-notice {
+	font-size: 0.85em;
+	margin: 5px 0;
+}
+
 .form-select {
   width: 100%;
   padding: 10px;

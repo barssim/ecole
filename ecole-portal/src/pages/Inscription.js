@@ -377,7 +377,7 @@ const Inscription = ({ language }) => {
       {!canManageTenantUsers && addUserForm}
 
       {canManageTenantUsers && (
-        <div className="signup-form" style={{ marginTop: 24 }}>
+        <div className="signup-form" style={{ marginTop: 24, width: "100%", maxWidth: "1200px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
             <h2>{content.usersTitle || "Users"}</h2>
             <button
@@ -397,7 +397,7 @@ const Inscription = ({ language }) => {
           {usersError && <p className="error-message">{usersError}</p>}
 
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <table style={{ width: "100%", minWidth: "900px", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
                   <th style={th}>{content.surname || "Last name"}</th>

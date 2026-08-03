@@ -26,6 +26,23 @@ if (language === "fr") {
 } else {
   content = ar;
 };
+
+  // Render legal notice with TAB-Logic as a link
+  const renderLegalNotice = () => {
+    const text = content.legal_notice || "© 2026 Company TAB-Logic. All rights reserved.";
+    const parts = text.split("TAB-Logic");
+
+    return (
+      <>
+        {parts[0]}
+        <a href="https://tab-logic.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
+          TAB-Logic
+        </a>
+        {parts.slice(1).join("TAB-Logic")}
+      </>
+    );
+  };
+
    return (
        <footer className="footer">
            <p> {tenant.name?.[language] || tenant.name?.["fr"] || "School"} </p>
@@ -40,7 +57,7 @@ if (language === "fr") {
                 <br />
                  Email: {tenant.mail || ""}
             </address>
-            <p>{content.legal_notice || "© 2026 Company TAB-Logic. All rights reserved."}</p>
+            <p className="legal-notice">{renderLegalNotice()}</p>
             {trialIndicatorColor ? (
               <span
                 className="trial-indicator"
