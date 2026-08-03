@@ -5,8 +5,8 @@ services:
       context: ./ecole-portal
       dockerfile: Dockerfile
       target: test
-    container_name: ecole-portal-test
     image: barssim/ecole-portal:test
+    container_name: ecole-portal-test
     ports:
       - "8081:8081"
     volumes:

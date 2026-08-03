@@ -111,8 +111,8 @@ services:
     build:
       context: ./ecole-portal
       dockerfile: Dockerfile
-    container_name: ecole-portal
     image: barssim/ecole-portal:latest
+    container_name: ecole-portal
     ports:
       - "80:80"
     restart: always
