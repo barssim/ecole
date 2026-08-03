@@ -29,6 +29,7 @@ const TeacherNotesPage = ({ language }) => {
   const [classesLoading, setClassesLoading] = useState(true);
   const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedClassStudents, setSelectedClassStudents] = useState([]);
+  const [subjectOptions, setSubjectOptions] = useState([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -108,10 +109,38 @@ const TeacherNotesPage = ({ language }) => {
     fetchClassStudents();
   }, [selectedClassId, classes]);
 
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const response = await fetch(apiUrlFor('/exams'), { headers: buildHeaders() });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const subjects = Array.isArray(data)
+          ? data
+              .map((exam) => String(exam?.subject || '').trim())
+              .filter(Boolean)
+          : [];
+        const uniqueSubjects = Array.from(new Set(subjects)).sort((a, b) => a.localeCompare(b));
+        setSubjectOptions(uniqueSubjects);
+      } catch {
+        setSubjectOptions([]);
+      }
+    };
+
+    fetchSubjects();
+  }, []);
+
   const studentNameSuggestions = useMemo(
     () => selectedClassStudents.filter(Boolean),
     [selectedClassStudents]
   );
+
+  const allSubjectOptions = useMemo(() => {
+    const savedSubjects = savedEntries
+      .map((entry) => String(entry?.subject || '').trim())
+      .filter(Boolean);
+    return Array.from(new Set([...subjectOptions, ...savedSubjects])).sort((a, b) => a.localeCompare(b));
+  }, [subjectOptions, savedEntries]);
 
   const handleEntryChange = (index, field, value) => {
     const updated = [...entries];
@@ -191,22 +220,6 @@ const TeacherNotesPage = ({ language }) => {
           </small>
         </div>
 
-        {selectedClassStudents.length > 0 && (
-          <div style={{ background: '#f8fbff', border: '1px solid #dbeafe', borderRadius: 10, padding: 12 }}>
-            <h4 style={{ margin: '0 0 8px 0' }}>{content.students || 'Students'}</h4>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {selectedClassStudents.map((studentName) => (
-                <span
-                  key={studentName}
-                  style={{ background: '#e0f2fe', borderRadius: 999, padding: '4px 10px', fontSize: 13 }}
-                >
-                  {studentName}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
         <h3 style={{ margin: 0 }}>{content.notes_students || 'Élèves'}</h3>
 
         {entries.map((entry, index) => (
@@ -218,12 +231,26 @@ const TeacherNotesPage = ({ language }) => {
               list="teacher-notes-students"
               onChange={(e) => handleEntryChange(index, 'studentName', e.target.value)}
             />
-            <input
-              type="text"
-              placeholder={content.notes_subject || 'Matière'}
-              value={entry.subject}
-              onChange={(e) => handleEntryChange(index, 'subject', e.target.value)}
-            />
+            {allSubjectOptions.length > 0 ? (
+              <select
+                value={entry.subject}
+                onChange={(e) => handleEntryChange(index, 'subject', e.target.value)}
+                className="form-select"
+                title={content.notes_subject || 'Matière'}
+              >
+                <option value="">{content.notes_subjectPlaceholder || 'Sélectionnez une matière'}</option>
+                {allSubjectOptions.map((subject) => (
+                  <option key={subject} value={subject}>{subject}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                placeholder={content.notes_subject || 'Matière'}
+                value={entry.subject}
+                onChange={(e) => handleEntryChange(index, 'subject', e.target.value)}
+              />
+            )}
             <input
               type="number"
               placeholder={content.notes_grade || 'Note'}

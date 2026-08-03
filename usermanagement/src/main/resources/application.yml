@@ -40,7 +40,7 @@ jwt:
 
 customer-version:
   max-users:
-    trial: 2
+    trial: 10
     bronze: 3
     silver: 4
     gold: 5
