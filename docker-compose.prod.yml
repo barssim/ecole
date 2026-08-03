@@ -47,6 +47,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-user:3306/userDB
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
+    volumes:
+      - /opt/ecole/usermanagement/config/application.yml:/app/config/application.yml:ro
     networks:
       - ecole
     restart: always
@@ -60,6 +63,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-fin:3306/finDB
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
+    volumes:
+      - /opt/ecole/finance-manager/config/application.yml:/app/config/application.yml:ro
     networks:
       - ecole
     restart: always
@@ -79,6 +85,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-secretary-office:3306/secretaryOfficeDB
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-dev-pass}
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
+    volumes:
+      - /opt/ecole/secretary-office/config/application.yml:/app/config/application.yml:ro
     networks:
       - ecole
     restart: always
@@ -86,6 +95,10 @@ services:
   eureka-server:
     image: barssim/eureka-server:latest
     container_name: eureka-server
+    environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
+    volumes:
+      - /opt/ecole/eureka-server/config/application.yml:/app/config/application.yml:ro
     networks:
       - ecole
     restart: always
@@ -103,6 +116,10 @@ services:
       - finance-manager
       - secretary-office
       - eureka-server
+    environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
+    volumes:
+      - /opt/ecole/api-gateway/config/application.yml:/app/config/application.yml:ro
     networks:
       - ecole
     restart: always
