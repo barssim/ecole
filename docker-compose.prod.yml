@@ -111,6 +111,7 @@ services:
     build:
       context: ./ecole-portal
       dockerfile: Dockerfile
+    container_name: ecole-portal
     image: barssim/ecole-portal:latest
     ports:
       - "80:80"

@@ -5,6 +5,7 @@ services:
       context: ./ecole-portal
       dockerfile: Dockerfile
       target: dev
+    container_name: ecole-portal-dev
     ports:
       - "3000:3000"
     volumes:
