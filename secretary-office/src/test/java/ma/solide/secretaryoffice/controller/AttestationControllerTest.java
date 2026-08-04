@@ -42,15 +42,25 @@ class AttestationControllerTest {
     }
 
     @Test
-    void requestAttestationShouldAllowStudentRole() {
+    void requestAttestationShouldAllowParentRole() {
         AttestationRequestDTO dto = new AttestationRequestDTO();
         AttestationResponse response = AttestationResponse.builder().id(1).status("pending").build();
         when(attestationService.requestAttestation(dto)).thenReturn(response);
 
-        AttestationResponse result = attestationController.requestAttestation(dto, "student");
+        AttestationResponse result = attestationController.requestAttestation(dto, "parent");
 
         assertThat(result.getId()).isEqualTo(1);
         verify(attestationService).requestAttestation(dto);
+    }
+
+    @Test
+    void requestAttestationShouldRejectStudentRole() {
+        AttestationRequestDTO dto = new AttestationRequestDTO();
+
+        assertThatThrownBy(() -> attestationController.requestAttestation(dto, "student"))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test
@@ -64,4 +74,3 @@ class AttestationControllerTest {
                 .isEqualTo(HttpStatus.FORBIDDEN);
     }
 }
-

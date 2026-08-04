@@ -189,6 +189,7 @@ const AppContent = () => {
                       <Route path="/administration/outings" element={<OutingPage language={language} />} />
                       <Route path="/administration/parties" element={<PartiesPage language={language} />} />
                       <Route path="/administration/meetings" element={<MeetingPage language={language} />} />
+                      <Route path="/administration/attestations" element={<AttestationsPage language={language} />} />
                       <Route path="/administration/customization" element={<TenantCustomizationPage language={language} />} />
                       <Route path="/services/outings" element={<OutingPage language={language} />} />
                       <Route path="/services/parties" element={<PartiesPage language={language} />} />
@@ -208,6 +209,7 @@ const AppContent = () => {
 				      <Route path="/inscription" element={<Inscription language={language} toggleLanguage={toggleLanguage} />} />
 				      <Route path="/contact" element={<Contact language={language} toggleLanguage={toggleLanguage} />} />
               <Route path="/profile" element={<ProfilePage language={language} />} />
+              <Route path="/parents/attestation_demand" element={<AttestationsPage language={language} />} />
 				      <Route path="/students/schedule" element={<StudentSchedulePage language={language} toggleLanguage={toggleLanguage} />} />
 				       <Route path="/parents/inscription" element={<InscriptionForm  isAuthorized={true} language={language} toggleLanguage={toggleLanguage} />} />
                    </Routes>

@@ -2,6 +2,7 @@
 package ma.solide.secretaryoffice.controller;
 
 import java.io.ByteArrayInputStream;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.core.io.InputStreamResource;
@@ -71,6 +72,10 @@ public class AttestationController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Les administrateurs et managers ne peuvent pas demander une attestation");
         }
+        if (!hasRole(userRolesHeader, "parent")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Seuls les parents peuvent demander une attestation");
+        }
         return attestationService.requestAttestation(dto);
     }
 
@@ -87,11 +92,24 @@ public class AttestationController {
     }
 
     private boolean isAdminOrManager(String rolesHeader) {
+        return hasRole(rolesHeader, "admin") || hasRole(rolesHeader, "manager");
+    }
+
+    private boolean hasRole(String rolesHeader, String expectedRole) {
         if (rolesHeader == null || rolesHeader.isBlank()) {
             return false;
         }
-        String normalized = rolesHeader.toLowerCase();
-        return normalized.contains("admin") || normalized.contains("manager");
+
+        String normalizedExpectedRole = expectedRole == null ? "" : expectedRole.trim().toLowerCase();
+        if (normalizedExpectedRole.isEmpty()) {
+            return false;
+        }
+
+        return Arrays.stream(rolesHeader.toLowerCase().split(","))
+                .map(String::trim)
+                .anyMatch(role -> role.equals(normalizedExpectedRole)
+                        || role.equals("role_" + normalizedExpectedRole)
+                        || role.endsWith("_" + normalizedExpectedRole));
     }
 
     private ResponseEntity<InputStreamResource> buildPdfResponse(Integer id, boolean inline) {
@@ -108,4 +126,3 @@ public class AttestationController {
                 .body(new InputStreamResource(pdf));
     }
 }
-
