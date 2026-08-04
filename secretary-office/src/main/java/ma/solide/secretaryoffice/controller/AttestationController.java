@@ -67,9 +67,9 @@ public class AttestationController {
     public AttestationResponse requestAttestation(
             @RequestBody AttestationRequestDTO dto,
             @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
-        if (isAdminOrManager(userRolesHeader)) {
+        if (!isParent(userRolesHeader)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Les administrateurs et managers ne peuvent pas demander une attestation");
+                    "Seuls les parents peuvent demander une attestation");
         }
         return attestationService.requestAttestation(dto);
     }
@@ -92,6 +92,13 @@ public class AttestationController {
         }
         String normalized = rolesHeader.toLowerCase();
         return normalized.contains("admin") || normalized.contains("manager");
+    }
+
+    private boolean isParent(String rolesHeader) {
+        if (rolesHeader == null || rolesHeader.isBlank()) {
+            return false;
+        }
+        return rolesHeader.toLowerCase().contains("parent");
     }
 
     private ResponseEntity<InputStreamResource> buildPdfResponse(Integer id, boolean inline) {

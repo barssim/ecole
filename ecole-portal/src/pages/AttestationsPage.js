@@ -39,7 +39,7 @@ const AttestationsPage = ({ language }) => {
   const userRoles = JSON.parse(localStorage.getItem('user_roles') || '[]');
   const normalizedRoles = normalizeRoles(userRoles);
   const canManageAttestations = hasAnyRole(normalizedRoles, ['admin', 'manager']);
-  const canRequestAttestation = !canManageAttestations;
+  const canRequestAttestation = hasAnyRole(normalizedRoles, ['parent']);
 
   const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
   const rolesHeaderValue = normalizedRoles.join(',');
