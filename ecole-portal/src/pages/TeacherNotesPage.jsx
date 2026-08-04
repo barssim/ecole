@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import fr from '../locales/fr.json';
 import en from '../locales/en.json';
 import ar from '../locales/ar.json';
@@ -7,7 +7,7 @@ import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { normalizeRoles } from '../utils/roles';
 
 /**
- * Teacher Notes/Grades page: teachers can enter and review student grades per class.
+ * Teacher Notes/Grades page: teachers can review, update, and delete saved student grades per class.
  */
 const TeacherNotesPage = ({ language }) => {
   const content = language === 'fr' ? fr : language === 'en' ? en : ar;
@@ -22,16 +22,17 @@ const TeacherNotesPage = ({ language }) => {
   const effectiveBase = localhostApiTarget && !browserIsLocal ? inferredRemoteBase : configuredBase;
   const useRelativeApi = process.env.REACT_APP_USE_RELATIVE_API === 'true';
 
-  const [entries, setEntries] = useState([{ studentName: '', subject: '', grade: '' }]);
   const [savedEntries, setSavedEntries] = useState([]);
-  const [className, setClassName] = useState('');
   const [classes, setClasses] = useState([]);
   const [classesLoading, setClassesLoading] = useState(true);
   const [selectedClassId, setSelectedClassId] = useState('');
-  const [selectedClassStudents, setSelectedClassStudents] = useState([]);
   const [subjectOptions, setSubjectOptions] = useState([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  // Editing state
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editValues, setEditValues] = useState({ subject: '', grade: '' });
 
   const apiUrlFor = (path) => {
     if (useRelativeApi) return `/api${path}`;
@@ -46,12 +47,6 @@ const TeacherNotesPage = ({ language }) => {
     };
     if (includeJson) headers['Content-Type'] = 'application/json';
     return headers;
-  };
-
-  const extractStudentName = (student) => {
-    if (typeof student === 'string') return student;
-    if (!student || typeof student !== 'object') return '';
-    return student.name || student.username || `${student.firstname || ''} ${student.surname || ''}`.trim();
   };
 
   useEffect(() => {
@@ -77,51 +72,15 @@ const TeacherNotesPage = ({ language }) => {
   }, [currentUserName, isTeacherOnly]);
 
   useEffect(() => {
-    const selectedClass = classes.find((cls) => String(cls.id) === String(selectedClassId));
-    if (!selectedClass) {
-      setClassName('');
-      setSelectedClassStudents([]);
-      return;
-    }
-
-    setClassName(selectedClass.name || '');
-    const fallbackStudents = Array.isArray(selectedClass.students)
-      ? selectedClass.students.map(extractStudentName).filter(Boolean)
-      : [];
-    setSelectedClassStudents(fallbackStudents);
-
-    const fetchClassStudents = async () => {
-      try {
-        const response = await fetch(apiUrlFor(`/classes/${selectedClass.id}/students`), { headers: buildHeaders() });
-        if (!response.ok) return;
-        const data = await response.json();
-        const students = Array.isArray(data)
-          ? data.map(extractStudentName).filter(Boolean)
-          : [];
-        if (students.length > 0) {
-          setSelectedClassStudents(students);
-        }
-      } catch {
-        // Keep fallback list from /classes when the dedicated endpoint is unavailable.
-      }
-    };
-
-    fetchClassStudents();
-  }, [selectedClassId, classes]);
-
-  useEffect(() => {
     const fetchSubjects = async () => {
       try {
         const response = await fetch(apiUrlFor('/exams'), { headers: buildHeaders() });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         const subjects = Array.isArray(data)
-          ? data
-              .map((exam) => String(exam?.subject || '').trim())
-              .filter(Boolean)
+          ? data.map((exam) => String(exam?.subject || '').trim()).filter(Boolean)
           : [];
-        const uniqueSubjects = Array.from(new Set(subjects)).sort((a, b) => a.localeCompare(b));
-        setSubjectOptions(uniqueSubjects);
+        setSubjectOptions(Array.from(new Set(subjects)).sort((a, b) => a.localeCompare(b)));
       } catch {
         setSubjectOptions([]);
       }
@@ -130,64 +89,53 @@ const TeacherNotesPage = ({ language }) => {
     fetchSubjects();
   }, []);
 
-  const studentNameSuggestions = useMemo(
-    () => selectedClassStudents.filter(Boolean),
-    [selectedClassStudents]
-  );
+  const allSubjectOptions = Array.from(
+    new Set([
+      ...subjectOptions,
+      ...savedEntries.map((e) => String(e?.subject || '').trim()).filter(Boolean),
+    ])
+  ).sort((a, b) => a.localeCompare(b));
 
-  const allSubjectOptions = useMemo(() => {
-    const savedSubjects = savedEntries
-      .map((entry) => String(entry?.subject || '').trim())
-      .filter(Boolean);
-    return Array.from(new Set([...subjectOptions, ...savedSubjects])).sort((a, b) => a.localeCompare(b));
-  }, [subjectOptions, savedEntries]);
+  const filteredEntries = selectedClassId
+    ? savedEntries.filter((e) => String(e.classId) === String(selectedClassId))
+    : savedEntries;
 
-  const handleEntryChange = (index, field, value) => {
-    const updated = [...entries];
-    updated[index][field] = value;
-    setEntries(updated);
-  };
-
-  const addEntry = () => {
-    setEntries([...entries, { studentName: '', subject: '', grade: '' }]);
-  };
-
-  const removeEntry = (index) => {
-    setEntries(entries.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    setError('');
+  const startEdit = (index) => {
+    const entry = filteredEntries[index];
+    setEditingIndex(index);
+    setEditValues({ subject: entry.subject, grade: entry.grade });
     setMessage('');
+    setError('');
+  };
 
-    if (!selectedClassId) {
-      setError(content.notes_selectClassHint || 'Select one of your classes first.');
+  const cancelEdit = () => {
+    setEditingIndex(null);
+    setEditValues({ subject: '', grade: '' });
+  };
+
+  const saveEdit = () => {
+    if (!String(editValues.grade).trim()) {
+      setError(content.notes_validationError || 'Veuillez remplir la note.');
       return;
     }
-
-    const valid = entries.filter(
-      (e) => e.studentName.trim() && e.subject.trim() && String(e.grade).trim()
+    const targetEntry = filteredEntries[editingIndex];
+    setSavedEntries((prev) =>
+      prev.map((e) =>
+        e === targetEntry ? { ...e, subject: editValues.subject, grade: editValues.grade } : e
+      )
     );
+    setEditingIndex(null);
+    setEditValues({ subject: '', grade: '' });
+    setMessage(content.notes_saveSuccess || 'Note mise à jour avec succès.');
+    setError('');
+  };
 
-    if (valid.length === 0) {
-      setError(content.notes_validationError || 'Veuillez remplir au moins une ligne avec nom, matière et note.');
-      return;
-    }
-
-    const newEntries = valid.map((e) => ({
-      className: className.trim() || '—',
-      studentName: e.studentName.trim(),
-      subject: e.subject.trim(),
-      grade: e.grade,
-      date: new Date().toLocaleDateString(
-        language === 'ar' ? 'ar-EG' : language === 'en' ? 'en-GB' : 'fr-FR'
-      ),
-    }));
-
-    setSavedEntries((prev) => [...newEntries, ...prev]);
-    setEntries([{ studentName: '', subject: '', grade: '' }]);
-    setMessage(content.notes_saveSuccess || 'Notes enregistrées avec succès.');
+  const deleteEntry = (index) => {
+    const targetEntry = filteredEntries[index];
+    setSavedEntries((prev) => prev.filter((e) => e !== targetEntry));
+    if (editingIndex === index) cancelEdit();
+    setMessage(content.notes_deleteSuccess || 'Note supprimée.');
+    setError('');
   };
 
   return (
@@ -200,105 +148,29 @@ const TeacherNotesPage = ({ language }) => {
       {error && <div style={{ color: '#b91c1c' }}>{error}</div>}
       {message && <div style={{ color: '#15803d' }}>{message}</div>}
 
-      <form
-        onSubmit={handleSubmit}
-        style={{ background: '#fff', padding: 20, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.08)', display: 'grid', gap: 14 }}
-      >
+      <div style={{ background: '#fff', padding: 20, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.08)', display: 'grid', gap: 14 }}>
         <div style={{ display: 'grid', gap: 8 }}>
           <label>{content.notes_class || 'Classe'}</label>
           <select
             value={selectedClassId}
-            onChange={(e) => setSelectedClassId(e.target.value)}
+            onChange={(e) => { setSelectedClassId(e.target.value); cancelEdit(); }}
             style={{ width: '100%' }}
             className="form-select"
             disabled={classesLoading}
-            required
           >
-            <option value="">{content.notes_classPlaceholder || 'Sélectionnez une classe'}</option>
+            <option value="">{content.notes_allClasses || 'Toutes les classes'}</option>
             {classes.map((cls) => (
               <option key={cls.id} value={cls.id}>{cls.name}</option>
             ))}
           </select>
-          <small style={{ color: '#555' }}>
-            {selectedClassStudents.length > 0
-              ? `${selectedClassStudents.length} ${content.students || 'students'} ${content.notes_loaded || 'loaded for this class.'}`
-              : (selectedClassId ? (content.notes_noClassStudents || 'No students found for this class.') : (content.notes_selectClassHint || 'Select a class to display students.'))}
-          </small>
         </div>
+      </div>
 
-        <h3 style={{ margin: 0 }}>{content.notes_students || 'Élèves'}</h3>
-
-        {entries.map((entry, index) => (
-          <div key={index} style={{ display: 'grid', gridTemplateColumns: '3fr 2fr 1fr auto', gap: 8, alignItems: 'center' }}>
-            <input
-              type="text"
-              placeholder={content.notes_studentName || 'Nom de l\'élève'}
-              value={entry.studentName}
-              list="teacher-notes-students"
-              disabled={!selectedClassId}
-              onChange={(e) => handleEntryChange(index, 'studentName', e.target.value)}
-            />
-            {allSubjectOptions.length > 0 ? (
-              <select
-                value={entry.subject}
-                onChange={(e) => handleEntryChange(index, 'subject', e.target.value)}
-                className="form-select"
-                title={content.notes_subject || 'Matière'}
-                disabled={!selectedClassId}
-              >
-                <option value="">{content.notes_subjectPlaceholder || 'Sélectionnez une matière'}</option>
-                {allSubjectOptions.map((subject) => (
-                  <option key={subject} value={subject}>{subject}</option>
-                ))}
-              </select>
-            ) : (
-              <input
-                type="text"
-                placeholder={content.notes_subject || 'Matière'}
-                value={entry.subject}
-                disabled={!selectedClassId}
-                onChange={(e) => handleEntryChange(index, 'subject', e.target.value)}
-              />
-            )}
-            <input
-              type="number"
-              placeholder={content.notes_grade || 'Note'}
-              value={entry.grade}
-              min={0}
-              max={20}
-              step={0.5}
-              disabled={!selectedClassId}
-              onChange={(e) => handleEntryChange(index, 'grade', e.target.value)}
-            />
-            <button
-              type="button"
-              onClick={() => removeEntry(index)}
-              disabled={!selectedClassId}
-              style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}
-              title={content.notes_removeRow || 'Supprimer'}
-            >
-              ✕
-            </button>
-          </div>
-        ))}
-
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <button type="button" className="buttonStyle" onClick={addEntry} disabled={!selectedClassId}>
-            {content.notes_addRow || '+ Ajouter un élève'}
-          </button>
-          <button type="submit" className="buttonStyle" disabled={!selectedClassId}>
-            {content.notes_save || 'Enregistrer les notes'}
-          </button>
+      {filteredEntries.length === 0 ? (
+        <div style={{ color: '#555', textAlign: 'center', padding: 24 }}>
+          {content.notes_noSavedEntries || 'Aucune note enregistrée.'}
         </div>
-
-        <datalist id="teacher-notes-students">
-          {studentNameSuggestions.map((studentName) => (
-            <option key={studentName} value={studentName} />
-          ))}
-        </datalist>
-      </form>
-
-      {savedEntries.length > 0 && (
+      ) : (
         <div>
           <h3>{content.notes_savedTitle || 'Notes enregistrées'}</h3>
           <div style={{ overflowX: 'auto' }}>
@@ -310,16 +182,95 @@ const TeacherNotesPage = ({ language }) => {
                   <th style={th}>{content.notes_studentName || 'Élève'}</th>
                   <th style={th}>{content.notes_subject || 'Matière'}</th>
                   <th style={th}>{content.notes_grade || 'Note'}</th>
+                  <th style={th}>{content.actions || 'Actions'}</th>
                 </tr>
               </thead>
               <tbody>
-                {savedEntries.map((entry, i) => (
+                {filteredEntries.map((entry, i) => (
                   <tr key={i} style={{ background: i % 2 === 0 ? '#f0f9ff' : '#fff' }}>
                     <td style={td}>{entry.date}</td>
                     <td style={td}>{entry.className}</td>
                     <td style={td}>{entry.studentName}</td>
-                    <td style={td}>{entry.subject}</td>
-                    <td style={td}><strong>{entry.grade} / 20</strong></td>
+                    <td style={td}>
+                      {editingIndex === i ? (
+                        allSubjectOptions.length > 0 ? (
+                          <select
+                            value={editValues.subject}
+                            onChange={(e) => setEditValues((v) => ({ ...v, subject: e.target.value }))}
+                            className="form-select"
+                          >
+                            <option value="">{content.notes_subjectPlaceholder || 'Sélectionnez une matière'}</option>
+                            {allSubjectOptions.map((s) => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            value={editValues.subject}
+                            onChange={(e) => setEditValues((v) => ({ ...v, subject: e.target.value }))}
+                            style={{ width: '100%' }}
+                          />
+                        )
+                      ) : (
+                        entry.subject
+                      )}
+                    </td>
+                    <td style={td}>
+                      {editingIndex === i ? (
+                        <input
+                          type="number"
+                          value={editValues.grade}
+                          min={0}
+                          max={20}
+                          step={0.5}
+                          onChange={(e) => setEditValues((v) => ({ ...v, grade: e.target.value }))}
+                          style={{ width: 70 }}
+                        />
+                      ) : (
+                        <strong>{entry.grade} / 20</strong>
+                      )}
+                    </td>
+                    <td style={td}>
+                      {editingIndex === i ? (
+                        <span style={{ display: 'flex', gap: 6 }}>
+                          <button
+                            type="button"
+                            className="buttonStyle"
+                            onClick={saveEdit}
+                            style={{ padding: '4px 10px', fontSize: 13 }}
+                          >
+                            {content.save || 'Enregistrer'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEdit}
+                            style={{ padding: '4px 10px', fontSize: 13, background: 'none', border: '1px solid #aaa', borderRadius: 6, cursor: 'pointer' }}
+                          >
+                            {content.cancel || 'Annuler'}
+                          </button>
+                        </span>
+                      ) : (
+                        <span style={{ display: 'flex', gap: 6 }}>
+                          <button
+                            type="button"
+                            onClick={() => startEdit(i)}
+                            style={{ color: '#1d4ed8', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}
+                            title={content.notes_edit || 'Modifier'}
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deleteEntry(i)}
+                            style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}
+                            title={content.notes_removeRow || 'Supprimer'}
+                          >
+                            🗑️
+                          </button>
+                        </span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -335,4 +286,3 @@ const th = { padding: '8px 12px', textAlign: 'left', fontWeight: 600 };
 const td = { padding: '8px 12px' };
 
 export default TeacherNotesPage;
-

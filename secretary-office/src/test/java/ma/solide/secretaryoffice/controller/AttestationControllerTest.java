@@ -32,22 +32,32 @@ class AttestationControllerTest {
     private AttestationController attestationController;
 
     @Test
-    void requestAttestationShouldRejectAdminRole() {
+    void requestAttestationShouldRejectStudentRole() {
         AttestationRequestDTO dto = new AttestationRequestDTO();
 
-        assertThatThrownBy(() -> attestationController.requestAttestation(dto, "student,admin"))
+        assertThatThrownBy(() -> attestationController.requestAttestation(dto, "student"))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test
-    void requestAttestationShouldAllowStudentRole() {
+    void requestAttestationShouldRejectAdminRole() {
+        AttestationRequestDTO dto = new AttestationRequestDTO();
+
+        assertThatThrownBy(() -> attestationController.requestAttestation(dto, "admin"))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void requestAttestationShouldAllowParentRole() {
         AttestationRequestDTO dto = new AttestationRequestDTO();
         AttestationResponse response = AttestationResponse.builder().id(1).status("pending").build();
         when(attestationService.requestAttestation(dto)).thenReturn(response);
 
-        AttestationResponse result = attestationController.requestAttestation(dto, "student");
+        AttestationResponse result = attestationController.requestAttestation(dto, "parent");
 
         assertThat(result.getId()).isEqualTo(1);
         verify(attestationService).requestAttestation(dto);
