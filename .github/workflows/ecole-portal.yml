@@ -90,7 +90,11 @@ jobs:
             # ensure the Docker network used by docker-compose exists on the target host
             docker network inspect ecole >/dev/null 2>&1 || docker network create ecole
             
-            docker compose pull ecole-portal
+
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
+            
+            docker compose pull ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:$IMAGE_TAG
             docker compose up -d ecole-portal
             
             docker image prune -a -f
