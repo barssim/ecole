@@ -7,6 +7,8 @@ import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { normalizeRoles } from '../utils/roles';
 import '../cssFiles/Inscription.css';
 
+const STORAGE_KEY = 'teacher_notes_entries';
+
 /**
  * Teacher Notes/Grades page: teachers can enter and review student grades per class.
  */
@@ -23,10 +25,7 @@ const TeacherNotesPage = ({ language }) => {
   const effectiveBase = localhostApiTarget && !browserIsLocal ? inferredRemoteBase : configuredBase;
   const useRelativeApi = process.env.REACT_APP_USE_RELATIVE_API === 'true';
 
-  // Single entry form (one row)
-  const [entry, setEntry] = useState({ studentName: '', subject: '', grade: '' });
   const [savedEntries, setSavedEntries] = useState([]);
-  const [className, setClassName] = useState('');
   const [classes, setClasses] = useState([]);
   const [classesLoading, setClassesLoading] = useState(true);
   const [selectedClassId, setSelectedClassId] = useState('');
@@ -34,10 +33,8 @@ const TeacherNotesPage = ({ language }) => {
   const [subjectOptions, setSubjectOptions] = useState([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-
-  // Inline edit state
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [editValues, setEditValues] = useState({ subject: '', grade: '' });
+  const [selectedSavedEntryId, setSelectedSavedEntryId] = useState('');
+  const [managedEntry, setManagedEntry] = useState({ subject: '', grade: '' });
 
   const apiUrlFor = (path) => {
     if (useRelativeApi) return `/api${path}`;
@@ -59,6 +56,19 @@ const TeacherNotesPage = ({ language }) => {
     if (!student || typeof student !== 'object') return '';
     return student.name || student.username || `${student.firstname || ''} ${student.surname || ''}`.trim();
   };
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      setSavedEntries(Array.isArray(stored) ? stored : []);
+    } catch {
+      setSavedEntries([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedEntries));
+  }, [savedEntries]);
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -85,12 +95,10 @@ const TeacherNotesPage = ({ language }) => {
   useEffect(() => {
     const selectedClass = classes.find((cls) => String(cls.id) === String(selectedClassId));
     if (!selectedClass) {
-      setClassName('');
       setSelectedClassStudents([]);
       return;
     }
 
-    setClassName(selectedClass.name || '');
     const fallbackStudents = Array.isArray(selectedClass.students)
       ? selectedClass.students.map(extractStudentName).filter(Boolean)
       : [];
@@ -113,9 +121,9 @@ const TeacherNotesPage = ({ language }) => {
     };
 
     fetchClassStudents();
-    // Reset form and editing when class changes
-    setEntry({ studentName: '', subject: '', grade: '' });
-    setEditingIndex(null);
+    // Reset selected note when class changes
+    setSelectedSavedEntryId('');
+    setManagedEntry({ subject: '', grade: '' });
   }, [selectedClassId, classes]);
 
   useEffect(() => {
@@ -146,61 +154,92 @@ const TeacherNotesPage = ({ language }) => {
     return Array.from(new Set([...subjectOptions, ...savedSubjects])).sort((a, b) => a.localeCompare(b));
   }, [subjectOptions, savedEntries]);
 
-  const handleSubmit = (event) => {
+  const savedEntriesForSelectedClass = useMemo(() => {
+    if (!selectedClassId) return savedEntries;
+    return savedEntries.filter((savedEntry) => String(savedEntry.classId) === String(selectedClassId));
+  }, [savedEntries, selectedClassId]);
+
+  const selectedSavedEntry = useMemo(
+    () => savedEntries.find((savedEntry) => String(savedEntry.id) === String(selectedSavedEntryId)) || null,
+    [savedEntries, selectedSavedEntryId]
+  );
+
+  useEffect(() => {
+    if (!selectedSavedEntry) {
+      setManagedEntry({ subject: '', grade: '' });
+      return;
+    }
+
+    setManagedEntry({
+      subject: selectedSavedEntry.subject || '',
+      grade: selectedSavedEntry.grade || '',
+    });
+  }, [selectedSavedEntry]);
+
+  useEffect(() => {
+    if (!selectedSavedEntryId) return;
+
+    const stillVisible = savedEntriesForSelectedClass.some(
+      (savedEntry) => String(savedEntry.id) === String(selectedSavedEntryId)
+    );
+
+    if (!stillVisible) {
+      setSelectedSavedEntryId('');
+      setManagedEntry({ subject: '', grade: '' });
+    }
+  }, [savedEntriesForSelectedClass, selectedSavedEntryId]);
+
+  const buildSavedEntryLabel = (savedEntry) => {
+    const parts = [
+      savedEntry.studentName,
+      savedEntry.subject,
+      `${savedEntry.grade} / 20`,
+      savedEntry.date,
+    ].filter(Boolean);
+
+    return parts.join(' — ');
+  };
+
+  const handleUpdateSelectedEntry = (event) => {
     event.preventDefault();
     setError('');
     setMessage('');
 
-    if (!selectedClassId) {
-      setError(content.notes_selectClassHint || 'Select one of your classes first.');
+    if (!selectedSavedEntry) {
+      setError(content.notes_selectSavedHint || 'Select a registered note first.');
       return;
     }
 
-    if (!entry.studentName.trim() || !entry.subject.trim() || !String(entry.grade).trim()) {
+    if (!managedEntry.subject.trim() || !String(managedEntry.grade).trim()) {
       setError(content.notes_validationError || 'Veuillez remplir nom, matière et note.');
       return;
     }
 
-    const newEntry = {
-      className: className.trim() || '—',
-      studentName: entry.studentName.trim(),
-      subject: entry.subject.trim(),
-      grade: entry.grade,
-      date: new Date().toLocaleDateString(
-        language === 'ar' ? 'ar-EG' : language === 'en' ? 'en-GB' : 'fr-FR'
-      ),
-    };
-
-    setSavedEntries((prev) => [newEntry, ...prev]);
-    setEntry({ studentName: '', subject: '', grade: '' });
-    setMessage(content.notes_saveSuccess || 'Note enregistrée avec succès.');
-  };
-
-  // Delete a saved entry
-  const handleDelete = (index) => {
-    setSavedEntries((prev) => prev.filter((_, i) => i !== index));
-    if (editingIndex === index) setEditingIndex(null);
-  };
-
-  // Start editing
-  const handleEditStart = (index) => {
-    setEditingIndex(index);
-    setEditValues({ subject: savedEntries[index].subject, grade: savedEntries[index].grade });
-  };
-
-  // Save edit
-  const handleEditSave = (index) => {
-    if (!editValues.subject.trim() || !String(editValues.grade).trim()) return;
     setSavedEntries((prev) =>
-      prev.map((e, i) =>
-        i === index ? { ...e, subject: editValues.subject.trim(), grade: editValues.grade } : e
+      prev.map((savedEntry) =>
+        String(savedEntry.id) === String(selectedSavedEntryId)
+          ? { ...savedEntry, subject: managedEntry.subject.trim(), grade: managedEntry.grade }
+          : savedEntry
       )
     );
-    setEditingIndex(null);
-    setMessage(content.notes_saveSuccess || 'Note mise à jour avec succès.');
+
+    setMessage(content.notes_updateSuccess || 'Note mise à jour avec succès.');
   };
 
-  const handleEditCancel = () => setEditingIndex(null);
+  const handleDeleteSelectedEntry = () => {
+    if (!selectedSavedEntry) {
+      setError(content.notes_selectSavedHint || 'Select a registered note first.');
+      return;
+    }
+
+    setSavedEntries((prev) =>
+      prev.filter((savedEntry) => String(savedEntry.id) !== String(selectedSavedEntryId))
+    );
+    setSelectedSavedEntryId('');
+    setManagedEntry({ subject: '', grade: '' });
+    setError('');
+    setMessage(content.notes_deleteSuccess || 'Note supprimée avec succès.');
+  };
 
   return (
     <div
@@ -212,15 +251,11 @@ const TeacherNotesPage = ({ language }) => {
       {error && <div className="error-message">{error}</div>}
       {message && <div className="success-message">{message}</div>}
 
-      {/* New grade form – form-group style matching InscriptionForm */}
-      <form
-        onSubmit={handleSubmit}
-        className="signup-form"
-        style={{ maxWidth: '100%', width: '100%' }}
-      >
-        <h3 style={{ marginTop: 0, marginBottom: 15 }}>{content.notes_newGrade || 'Nouvelle note'}</h3>
+      <form className="signup-form" style={{ maxWidth: '100%', width: '100%' }}>
+        <h3 style={{ marginTop: 0, marginBottom: 15 }}>
+          {content.notes_manageTitle || 'Manage registered note'}
+        </h3>
 
-        {/* Class selector */}
         <div className="form-group">
           <label>{content.notes_class || 'Classe'}</label>
           <select
@@ -237,36 +272,64 @@ const TeacherNotesPage = ({ language }) => {
           <small style={{ color: '#555', display: 'block', marginTop: 4 }}>
             {selectedClassStudents.length > 0
               ? `${selectedClassStudents.length} ${content.students || 'students'} ${content.notes_loaded || 'loaded for this class.'}`
-              : (selectedClassId ? (content.notes_noClassStudents || 'No students found for this class.') : (content.notes_selectClassHint || 'Select a class to display students.'))}
+              : (selectedClassId
+                ? (content.notes_noClassStudents || 'No students found for this class.')
+                : (content.notes_selectClassHint || 'Select a class to display students.'))}
+          </small>
+        </div>
+      </form>
+
+      <form
+        onSubmit={handleUpdateSelectedEntry}
+        className="signup-form"
+        style={{ maxWidth: '100%', width: '100%' }}
+      >
+        <h3 style={{ marginTop: 0, marginBottom: 15 }}>
+          {content.notes_manageTitle || 'Manage registered note'}
+        </h3>
+
+        <div className="form-group">
+          <label>{content.notes_savedTitle || 'Registered notes'}</label>
+          <select
+            value={selectedSavedEntryId}
+            onChange={(e) => setSelectedSavedEntryId(e.target.value)}
+            disabled={savedEntriesForSelectedClass.length === 0}
+          >
+            <option value="">
+              {content.notes_selectSavedEntry || 'Select a registered note'}
+            </option>
+            {savedEntriesForSelectedClass.map((savedEntry) => (
+              <option key={savedEntry.id} value={savedEntry.id}>
+                {buildSavedEntryLabel(savedEntry)}
+              </option>
+            ))}
+          </select>
+          <small style={{ color: '#555', display: 'block', marginTop: 4 }}>
+            {savedEntriesForSelectedClass.length > 0
+              ? `${savedEntriesForSelectedClass.length} ${content.notes_savedTitle || 'registered notes'}`
+              : (content.notes_noRegisteredNotes || 'No registered notes for the selected class.')}
           </small>
         </div>
 
-        {/* Student dropdown */}
         <div className="form-group">
           <label>{content.notes_studentName || 'Élève'}</label>
-          <select
-            value={entry.studentName}
-            onChange={(e) => setEntry({ ...entry, studentName: e.target.value })}
-            disabled={!selectedClassId}
-            required
-          >
-            <option value="">{content.notes_studentPlaceholder || 'Sélectionnez un élève'}</option>
-            {selectedClassStudents.map((name) => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
+          <input value={selectedSavedEntry?.studentName || ''} disabled />
         </div>
 
-        {/* Subject */}
         <div className="form-group">
-          <label>{content.notes_subject || 'Matière'}</label>
+          <label>{content.notes_class || 'Classe'}</label>
+          <input value={selectedSavedEntry?.className || ''} disabled />
+        </div>
+
+        <div className="form-group">
+          <label>Matiere</label>
           {allSubjectOptions.length > 0 ? (
             <select
-              value={entry.subject}
-              onChange={(e) => setEntry({ ...entry, subject: e.target.value })}
-              disabled={!selectedClassId}
+              value={managedEntry.subject}
+              onChange={(e) => setManagedEntry((prev) => ({ ...prev, subject: e.target.value }))}
+              disabled={!selectedSavedEntry}
             >
-              <option value="">{content.notes_subject || 'Matière'}</option>
+              <option value="">Matiere</option>
               {allSubjectOptions.map((subject) => (
                 <option key={subject} value={subject}>{subject}</option>
               ))}
@@ -274,36 +337,46 @@ const TeacherNotesPage = ({ language }) => {
           ) : (
             <input
               type="text"
-              placeholder={content.notes_subject || 'Matière'}
-              value={entry.subject}
-              disabled={!selectedClassId}
-              onChange={(e) => setEntry({ ...entry, subject: e.target.value })}
+              placeholder="Matiere"
+              value={managedEntry.subject}
+              disabled={!selectedSavedEntry}
+              onChange={(e) => setManagedEntry((prev) => ({ ...prev, subject: e.target.value }))}
             />
           )}
         </div>
 
-        {/* Grade */}
         <div className="form-group">
           <label>{content.notes_grade || 'Note'}</label>
           <input
             type="number"
-            placeholder={content.notes_grade || 'Note'}
-            value={entry.grade}
             min={0}
             max={20}
             step={0.5}
-            disabled={!selectedClassId}
-            onChange={(e) => setEntry({ ...entry, grade: e.target.value })}
+            placeholder={content.notes_grade || 'Note'}
+            value={managedEntry.grade}
+            disabled={!selectedSavedEntry}
+            onChange={(e) => setManagedEntry((prev) => ({ ...prev, grade: e.target.value }))}
           />
         </div>
 
-        <button type="submit" className="buttonStyle" disabled={!selectedClassId} style={{ width: '100%' }}>
-          {content.notes_save || 'Enregistrer la note'}
-        </button>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <button type="submit" className="signup-button" disabled={!selectedSavedEntry} style={{ flex: '1 1 220px' }}>
+            {content.notes_update || 'Update note'}
+          </button>
+          <button
+            type="button"
+            className="signup-button"
+            disabled={!selectedSavedEntry}
+            onClick={handleDeleteSelectedEntry}
+            style={{ flex: '1 1 220px', background: '#dc2626' }}
+          >
+            {content.notes_delete || 'Delete note'}
+          </button>
+        </div>
       </form>
 
       {/* Saved grades table with edit / delete */}
-      {savedEntries.length > 0 && (
+      {(selectedClassId ? savedEntriesForSelectedClass : savedEntries).length > 0 && (
         <div>
           <h3>{content.notes_savedTitle || 'Notes enregistrées'}</h3>
           <div style={{ overflowX: 'auto' }}>
@@ -319,93 +392,31 @@ const TeacherNotesPage = ({ language }) => {
                 </tr>
               </thead>
               <tbody>
-                {savedEntries.map((e, i) => (
-                  <tr key={i} style={{ background: i % 2 === 0 ? '#f0f9ff' : '#fff' }}>
-                    <td style={td}>{e.date}</td>
-                    <td style={td}>{e.className}</td>
-                    <td style={td}>{e.studentName}</td>
-
-                    {/* Subject cell – editable */}
-                    <td style={td}>
-                      {editingIndex === i ? (
-                        allSubjectOptions.length > 0 ? (
-                          <select
-                            value={editValues.subject}
-                            onChange={(ev) => setEditValues({ ...editValues, subject: ev.target.value })}
-                            className="form-select"
-                          >
-                            <option value="">{content.notes_subjectPlaceholder || 'Matière'}</option>
-                            {allSubjectOptions.map((s) => (
-                              <option key={s} value={s}>{s}</option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            type="text"
-                            value={editValues.subject}
-                            onChange={(ev) => setEditValues({ ...editValues, subject: ev.target.value })}
-                          />
-                        )
-                      ) : e.subject}
-                    </td>
-
-                    {/* Grade cell – editable */}
-                    <td style={td}>
-                      {editingIndex === i ? (
-                        <input
-                          type="number"
-                          value={editValues.grade}
-                          min={0}
-                          max={20}
-                          step={0.5}
-                          style={{ width: 70 }}
-                          onChange={(ev) => setEditValues({ ...editValues, grade: ev.target.value })}
-                        />
-                      ) : (
-                        <strong>{e.grade} / 20</strong>
-                      )}
-                    </td>
-
-                    {/* Action buttons */}
+                {(selectedClassId ? savedEntriesForSelectedClass : savedEntries).map((savedEntry, i) => (
+                  <tr
+                    key={savedEntry.id || i}
+                    style={{
+                      background: String(savedEntry.id) === String(selectedSavedEntryId)
+                        ? '#bfdbfe'
+                        : i % 2 === 0
+                          ? '#f0f9ff'
+                          : '#fff',
+                    }}
+                  >
+                    <td style={td}>{savedEntry.date}</td>
+                    <td style={td}>{savedEntry.className}</td>
+                    <td style={td}>{savedEntry.studentName}</td>
+                    <td style={td}>{savedEntry.subject}</td>
+                    <td style={td}><strong>{savedEntry.grade} / 20</strong></td>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>
-                      {editingIndex === i ? (
-                        <>
-                          <button
-                            type="button"
-                            className="buttonStyle"
-                            style={{ marginInlineEnd: 6, padding: '4px 10px', fontSize: 13 }}
-                            onClick={() => handleEditSave(i)}
-                          >
-                            ✓
-                          </button>
-                          <button
-                            type="button"
-                            style={{ color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}
-                            onClick={handleEditCancel}
-                          >
-                            ✕
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            style={{ color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, marginInlineEnd: 8 }}
-                            title={content.notes_edit || 'Modifier'}
-                            onClick={() => handleEditStart(i)}
-                          >
-                            ✏️
-                          </button>
-                          <button
-                            type="button"
-                            style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}
-                            title={content.notes_removeRow || 'Supprimer'}
-                            onClick={() => handleDelete(i)}
-                          >
-                            🗑️
-                          </button>
-                        </>
-                      )}
+                      <button
+                        type="button"
+                        className="signup-button"
+                        style={{ padding: '6px 12px', width: 'auto' }}
+                        onClick={() => setSelectedSavedEntryId(savedEntry.id)}
+                      >
+                        {content.notes_selectSavedEntry || 'Select'}
+                      </button>
                     </td>
                   </tr>
                 ))}
