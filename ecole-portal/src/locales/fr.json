@@ -318,8 +318,29 @@
 	"payment_paymentDate": "Date du Paiement",
 	"payment_notes": "Notes (optionnel)",
 	"payment_roleError": "Vous n'avez pas la permission d'enregistrer des paiements",
-	"loading": "Chargement..."
+	"loading": "Chargement...",
 
-
+	"assignment_title": "Devoirs et Tâches",
+	"assignment_new": "Nouveau devoir",
+	"assignment_manage": "Gérer le devoir",
+	"assignment_select": "Sélectionner un devoir",
+	"assignment_selectPlaceholder": "Sélectionner un devoir",
+	"assignment_list": "Liste des devoirs",
+	"assignment_titlePlaceholder": "Titre du devoir",
+	"assignment_description": "Description",
+	"assignment_descriptionPlaceholder": "Décrivez le devoir (optionnel)",
+	"assignment_dueDate": "Date limite",
+	"assignment_create": "Créer le devoir",
+	"assignment_update": "Modifier",
+	"assignment_delete": "Supprimer",
+	"assignment_createSuccess": "Devoir créé avec succès.",
+	"assignment_updateSuccess": "Devoir mis à jour avec succès.",
+	"assignment_deleteSuccess": "Devoir supprimé avec succès.",
+	"assignment_selectClassHint": "Veuillez sélectionner une classe d'abord.",
+	"assignment_selectAssignmentHint": "Veuillez sélectionner un devoir d'abord.",
+	"assignment_titleRequired": "Le titre est obligatoire.",
+	"assignment_dueDateRequired": "La date limite est obligatoire.",
+	"assignment_noAssignments": "Aucun devoir pour le moment. Créez-en un ci-dessus!",
+	"assignment_count": "devoirs",
+	"assignment_overdue": "En retard"
 }
-

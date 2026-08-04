@@ -41,6 +41,7 @@ import TeacherAttendancePage from './pages/TeacherAttendancePage';
 import TeacherNotesPage from './pages/TeacherNotesPage';
 import OutingPage from './pages/OutingPage';
 import TenantCustomizationPage from './pages/TenantCustomizationPage';
+import TeacherAssignmentsPage from './pages/TeacherAssignmentsPage';
 
 
 
@@ -199,6 +200,7 @@ const AppContent = () => {
                       <Route path="/enseignant/attendance" element={<TeacherAttendancePage language={language} />} />
                       <Route path="/enseignant/absence" element={<TeacherAttendancePage language={language} />} />
                       <Route path="/enseignant/notes" element={<TeacherNotesPage language={language} />} />
+                       <Route path="/enseignant/assignments" element={<TeacherAssignmentsPage language={language} />} />
                       <Route path="/services/bibliotheque" element={<Bibliotheque />} />
                       <Route path="/services/bibliotheque/catalogue" element={<Catalogue />} />
                       <Route path="/services/bibliotheque/emprunts" element={<Borrow />} />
