@@ -94,7 +94,7 @@ jobs:
             docker stop $CONTAINER_NAME || true
             docker rm $CONTAINER_NAME || true
             
-            docker compose pull ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:$IMAGE_TAG
+            docker compose pull ecole-portal
             docker compose up -d ecole-portal
             
             docker image prune -a -f
