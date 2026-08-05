@@ -274,8 +274,14 @@
 	"schedule_friday": "الجمعة",
 
 	"course_title": "تحميل مادة",
+	"course_upload_title": "➕ تحميل ملف الدرس",
 	"course_select_file": "اختر ملفًا",
 	"course_upload_button": "ابدأ التحميل",
+	"course_uploading": "جارٍ التحميل...",
+	"course_upload_action": "📤 تحميل ملف الدرس",
+	"course_uploaded_hint": "سيظهر الملف الذي تم تحميله فورًا في القائمة أدناه.",
+	"course_uploaded_badge": "تم التحميل",
+	"course_synced_badge": "متزامن",
 	"course_success": "تم التحميل بنجاح!",
 	"course_error": "فشل التحميل.",
 

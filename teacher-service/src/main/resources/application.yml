@@ -28,6 +28,9 @@ teacher:
   uploads:
     directory: ${TEACHER_UPLOADS_DIR:/tmp/teacher-uploads}
 
+secretary-office:
+  base-url: ${SECRETARY_OFFICE_BASE_URL:http://secretary-office:8095}
+
 management:
   endpoints:
     web:

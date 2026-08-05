@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { getTenantId } from "../tenant";
 import { resolveApiBaseUrl } from "../utils/apiBaseUrl";
+import fr from "../locales/fr.json";
+import en from "../locales/en.json";
+import ar from "../locales/ar.json";
 import "../cssFiles/TeacherCourses.css";
 
 const API_BASE = resolveApiBaseUrl();
@@ -27,7 +30,8 @@ const safeReadLocalUploads = (userId) => {
   }
 };
 
-const TeacherCourses = () => {
+const TeacherCourses = ({ language }) => {
+  const content = language === "fr" ? fr : language === "en" ? en : ar;
   const userId = localStorage.getItem("userId");
   const fileInputRef = useRef(null);
 
@@ -167,7 +171,7 @@ const TeacherCourses = () => {
           },
           ...prev,
         ]);
-        flashSuccess("Cours téléversé avec succès !");
+        flashSuccess(content.course_success || "Action réussie !");
       } else {
         const localCourse = {
           id: `local-${Date.now()}`,
@@ -183,14 +187,14 @@ const TeacherCourses = () => {
           persistLocalUploads(next);
           return next;
         });
-        flashSuccess("Cours téléversé avec succès !");
+        flashSuccess(content.course_success || "Action réussie !");
       }
 
       setCourseTitle("");
       setCourseFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch {
-      setError("Erreur lors du téléversement du fichier de cours.");
+      setError(content.course_error || "Erreur lors du téléchargement du fichier de cours.");
     } finally {
       setUploading(false);
     }
@@ -268,7 +272,7 @@ const TeacherCourses = () => {
       {success && <div className="tc-alert tc-alert-success">{success}</div>}
 
       <form className="tc-add-form" onSubmit={handleUploadCourse}>
-        <h3>➕ Téléverser un fichier de cours</h3>
+        <h3>{content.course_upload_title || "➕ Télécharger un fichier de cours"}</h3>
         <div className="tc-form-group">
           <label>Titre du cours</label>
           <input
@@ -288,11 +292,13 @@ const TeacherCourses = () => {
           />
         </div>
         <p style={{ marginTop: -4, marginBottom: 0, color: "#6b7280", fontSize: 13 }}>
-          Le fichier téléversé apparaîtra immédiatement dans la liste ci-dessous.
+          {content.course_uploaded_hint || "Le fichier téléchargé apparaîtra immédiatement dans la liste ci-dessous."}
         </p>
         <div className="tc-form-actions">
           <button type="submit" className="tc-btn tc-btn-success" disabled={uploading}>
-            {uploading ? "Téléversement..." : "📤 Téléverser le cours"}
+            {uploading
+              ? (content.course_uploading || "Téléchargement...")
+              : (content.course_upload_action || "📤 Télécharger le cours")}
           </button>
         </div>
       </form>
@@ -314,7 +320,9 @@ const TeacherCourses = () => {
                   {course.description && <p className="tc-course-desc">{course.description}</p>}
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
                     <span style={{ background: "#e0f2fe", color: "#075985", borderRadius: 999, padding: "2px 10px", fontSize: 12, fontWeight: 600 }}>
-                      {course.localOnly || String(course.id).startsWith("local-") ? "Téléversé" : "Synchronisé"}
+                      {course.localOnly || String(course.id).startsWith("local-")
+                        ? (content.course_uploaded_badge || "Téléchargé")
+                        : (content.course_synced_badge || "Synchronisé")}
                     </span>
                     {course.uploadedAt && (
                       <span style={{ background: "#f3f4f6", color: "#374151", borderRadius: 999, padding: "2px 10px", fontSize: 12 }}>

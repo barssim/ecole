@@ -76,14 +76,12 @@ const TeacherNotesPage = ({ language }) => {
     const fetchClasses = async () => {
       setClassesLoading(true);
       try {
-        const response = await fetch(apiUrlFor('/classes'), { headers: buildHeaders() });
+        const query = currentUserName ? `?teacherName=${encodeURIComponent(currentUserName)}` : '';
+        const response = await fetch(apiUrlFor(`/teacher/classes${query}`), { headers: buildHeaders() });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
-        const allClasses = Array.isArray(data) ? data : [];
-        const visibleClasses = isTeacherOnly
-          ? allClasses.filter((cls) => (cls.teachers || []).some((t) => String(t || '').toLowerCase() === currentUserName))
-          : allClasses;
-        setClasses(visibleClasses);
+        const assignedClasses = Array.isArray(data) ? data : [];
+        setClasses(assignedClasses);
       } catch {
         setClasses([]);
       } finally {
@@ -113,7 +111,7 @@ const TeacherNotesPage = ({ language }) => {
 
     const fetchClassStudents = async () => {
       try {
-        const response = await fetch(apiUrlFor(`/classes/${cls.id}/students`), { headers: buildHeaders() });
+        const response = await fetch(apiUrlFor(`/teacher/classes/${cls.id}/students`), { headers: buildHeaders() });
         if (!response.ok) return;
         const data = await response.json();
         const students = Array.isArray(data) ? data.map(extractStudentName).filter(Boolean) : [];
