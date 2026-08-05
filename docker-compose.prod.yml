@@ -80,7 +80,6 @@ services:
     restart: always
 
   secretary-office:
-    build:
     image: barssim/secretary-office:latest
     container_name: secretary-office
     env_file:
