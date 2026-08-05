@@ -20,14 +20,14 @@ services:
       - ecole
     restart: always
 
-    mysql-teacher:
-      image: mysql:8
-      container_name: mysql-teacher
-      environment:
-        MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-        MYSQL_DATABASE: teacherDB
-      networks:
-        - ecole
+  mysql-teacher:
+    image: mysql:8
+    container_name: mysql-teacher
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: teacherDB
+    networks:
+      - ecole
 
   mysql-secretary-office:
     image: mysql:8
@@ -99,17 +99,17 @@ services:
       - ecole
     restart: always
 
-    teacher-service:
-      image: barssim/teacher-service:latest
-      container_name: teacher-service
-      depends_on:
-        - mysql-teacher
-      environment:
-        SPRING_DATASOURCE_URL: jdbc:mysql://mysql-teacher:3306/teacherDB
-        SPRING_DATASOURCE_USERNAME: root
-        SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      networks:
-        - ecole
+  teacher-service:
+    image: barssim/teacher-service:latest
+    container_name: teacher-service
+    depends_on:
+      - mysql-teacher
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-teacher:3306/teacherDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - ecole
 
   eureka-server:
     image: barssim/eureka-server:latest
