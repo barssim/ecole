@@ -73,10 +73,17 @@ spring:
           filters:
             - StripPrefix=0
 
+        - id: teacher-service
+          uri: "http://teacher-service:8096"
+          predicates:
+            - Path=/api/teachercourses,/api/teachercourses/**,/api/upload,/api/uploads/**,/api/teacher/**,/api/presence/professors/**
+          filters:
+            - StripPrefix=0
+
         - id: secretary-office
           uri: "http://secretary-office:8095"
           predicates:
-            - Path=/api/attestations,/api/attestations/**,/api/attestationsproduction,/api/attestationsproduction/**,/api/classes,/api/classes/**,/api/presence/**,/api/exams,/api/exams/**,/api/activities,/api/activities/**
+            - Path=/api/attestations,/api/attestations/**,/api/attestationsproduction,/api/attestationsproduction/**,/api/classes,/api/classes/**,/api/exams,/api/exams/**,/api/activities,/api/activities/**
           filters:
             - StripPrefix=0
 
