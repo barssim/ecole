@@ -1,4 +1,4 @@
-name: Build & Deploy finance-manager app
+name: Build & Deploy teacher-service app
 
 on:
   push:
