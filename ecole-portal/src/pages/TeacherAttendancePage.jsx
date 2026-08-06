@@ -3,6 +3,7 @@ import fr from '../locales/fr.json';
 import en from '../locales/en.json';
 import ar from '../locales/ar.json';
 import { getTenantId } from '../tenant';
+import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 
 const TeacherAttendancePage = ({ language }) => {
   const content = language === 'fr' ? fr : language === 'en' ? en : ar;
@@ -28,7 +29,14 @@ const TeacherAttendancePage = ({ language }) => {
   const teacherName = localStorage.getItem('LoggedIn') || 'Teacher';
   const userRoles = JSON.parse(localStorage.getItem('user_roles') || '[]');
   const rolesHeader = userRoles.join(',');
-  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
+  const configuredBase = resolveApiBaseUrl('http://localhost:8085');
+  const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const localhostApiTarget = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBase);
+  const inferredRemoteBase = `${window.location.protocol}//${window.location.hostname}:8085`;
+  const effectiveBase = localhostApiTarget && !browserIsLocal ? inferredRemoteBase : configuredBase;
+  const useRelativeApi = process.env.REACT_APP_USE_RELATIVE_API === 'true';
+
+  const apiUrlFor = (path) => (useRelativeApi ? `/api${path}` : `${effectiveBase}/api${path}`);
 
   const headers = useMemo(() => ({
     'Content-Type': 'application/json',
@@ -36,6 +44,19 @@ const TeacherAttendancePage = ({ language }) => {
     'X-User-Roles': rolesHeader,
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }), [token, rolesHeader]);
+
+  const isHtmlResponse = (response, bodyText = '') => {
+    const contentType = String(response.headers.get('content-type') || '').toLowerCase();
+    return contentType.includes('text/html') || bodyText.trim().toLowerCase().startsWith('<!doctype html');
+  };
+
+  const readSafeErrorMessage = async (response, fallbackMessage) => {
+    const bodyText = await response.text();
+    if (!bodyText || isHtmlResponse(response, bodyText)) {
+      return fallbackMessage;
+    }
+    return bodyText;
+  };
 
   useEffect(() => {
     if (!userId) {
@@ -55,7 +76,7 @@ const TeacherAttendancePage = ({ language }) => {
       setError('');
       setMessage('');
 
-      const response = await fetch(`${baseUrl}/api/presence/professors/${userId}?date=${date}`, {
+      const response = await fetch(apiUrlFor(`/presence/professors/${userId}?date=${date}`), {
         headers,
       });
 
@@ -65,6 +86,10 @@ const TeacherAttendancePage = ({ language }) => {
       }
 
       if (!response.ok) {
+        throw new Error(content.teacher_attendance_loadError || 'Impossible de charger votre présence.');
+      }
+
+      if (isHtmlResponse(response)) {
         throw new Error(content.teacher_attendance_loadError || 'Impossible de charger votre présence.');
       }
 
@@ -86,11 +111,15 @@ const TeacherAttendancePage = ({ language }) => {
   const fetchAttendanceHistory = async () => {
     try {
       setHistoryLoading(true);
-      const response = await fetch(`${baseUrl}/api/presence/professors/${userId}/history?days=${historyDays}&endDate=${today}`, {
+      const response = await fetch(apiUrlFor(`/presence/professors/${userId}/history?days=${historyDays}&endDate=${today}`), {
         headers,
       });
 
       if (!response.ok) {
+        throw new Error(content.teacher_attendance_loadError || 'Impossible de charger votre présence.');
+      }
+
+      if (isHtmlResponse(response)) {
         throw new Error(content.teacher_attendance_loadError || 'Impossible de charger votre présence.');
       }
 
@@ -111,7 +140,7 @@ const TeacherAttendancePage = ({ language }) => {
       setError('');
       setMessage('');
 
-      const response = await fetch(`${baseUrl}/api/presence/professors`, {
+      const response = await fetch(apiUrlFor('/presence/professors'), {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -125,8 +154,15 @@ const TeacherAttendancePage = ({ language }) => {
       });
 
       if (!response.ok) {
-        const backendMessage = await response.text();
+        const backendMessage = await readSafeErrorMessage(
+          response,
+          content.teacher_attendance_saveError || 'Impossible d\'enregistrer la présence.'
+        );
         throw new Error(backendMessage || content.teacher_attendance_saveError || 'Impossible d\'enregistrer la présence.');
+      }
+
+      if (isHtmlResponse(response)) {
+        throw new Error(content.teacher_attendance_saveError || 'Impossible d\'enregistrer la présence.');
       }
 
       const data = await response.json();

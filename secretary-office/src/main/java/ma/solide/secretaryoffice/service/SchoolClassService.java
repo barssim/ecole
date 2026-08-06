@@ -1,7 +1,11 @@
 package ma.solide.secretaryoffice.service;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -30,13 +34,89 @@ public class SchoolClassService {
 
     public List<SchoolClassResponse> getClasses(String teacherName) {
         String tenantId = TenantContext.getRequiredTenantId();
-        List<SchoolClass> classes = StringUtils.hasText(teacherName)
-                ? schoolClassRepository.findAllByTenantIdAndTeacherNameOrderByNameAsc(tenantId, teacherName.trim())
-                : schoolClassRepository.findAllByTenantIdOrderByNameAsc(tenantId);
+        List<SchoolClass> classes;
+        if (!StringUtils.hasText(teacherName)) {
+            classes = schoolClassRepository.findAllByTenantIdOrderByNameAsc(tenantId);
+        } else {
+            String teacherFilter = teacherName.trim();
+            classes = schoolClassRepository.findAllByTenantIdAndTeacherNameOrderByNameAsc(tenantId, teacherFilter);
+            if (classes.isEmpty()) {
+                Set<String> teacherKeys = buildTeacherKeys(teacherFilter);
+                classes = schoolClassRepository.findAllByTenantIdOrderByNameAsc(tenantId)
+                        .stream()
+                        .filter(schoolClass -> schoolClass.getTeachers() != null && schoolClass.getTeachers().stream()
+                                .anyMatch(storedTeacher -> matchesTeacher(storedTeacher, teacherKeys)))
+                        .toList();
+            }
+        }
         return classes
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    private Set<String> buildTeacherKeys(String teacherName) {
+        Set<String> keys = new HashSet<>();
+        String trimmed = StringUtils.hasText(teacherName) ? teacherName.trim() : "";
+        if (trimmed.isEmpty()) {
+            return keys;
+        }
+
+        keys.add(normalizeTeacherKey(trimmed));
+
+        int atIndex = trimmed.indexOf('@');
+        if (atIndex > 0) {
+            keys.add(normalizeTeacherKey(trimmed.substring(0, atIndex)));
+        }
+
+        String withoutSeparators = trimmed.replace('.', ' ').replace('_', ' ').replace('-', ' ');
+        keys.add(normalizeTeacherKey(withoutSeparators));
+        for (String token : withoutSeparators.split("\\s+")) {
+            String normalizedToken = normalizeTeacherKey(token);
+            if (normalizedToken.length() >= 3) {
+                keys.add(normalizedToken);
+            }
+        }
+
+        keys.removeIf(String::isEmpty);
+        return keys;
+    }
+
+    private boolean matchesTeacher(String storedTeacherName, Set<String> teacherKeys) {
+        if (!StringUtils.hasText(storedTeacherName) || teacherKeys.isEmpty()) {
+            return false;
+        }
+
+        String normalizedStored = normalizeTeacherKey(storedTeacherName);
+        if (normalizedStored.isEmpty()) {
+            return false;
+        }
+
+        if (teacherKeys.contains(normalizedStored)) {
+            return true;
+        }
+
+        for (String key : teacherKeys) {
+            if (key.length() < 4) {
+                continue;
+            }
+            if (normalizedStored.endsWith(key) || key.endsWith(normalizedStored)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String normalizeTeacherKey(String input) {
+        if (!StringUtils.hasText(input)) {
+            return "";
+        }
+
+        String withoutAccents = Normalizer.normalize(input, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "");
+        String lower = withoutAccents.toLowerCase(Locale.ROOT).trim();
+        lower = lower.replaceAll("\\b(mme|madame|monsieur|mr|m|prof|professeur|teacher)\\b", " ");
+        return lower.replaceAll("[^a-z0-9]", "");
     }
 
     public SchoolClassResponse createClass(SchoolClassRequestDTO dto) {
