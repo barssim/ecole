@@ -62,7 +62,8 @@ class SchoolClassServiceTest {
                 .teachers(new java.util.ArrayList<>(List.of("teacher.two")))
                 .build();
 
-        when(schoolClassRepository.findAllByTenantIdOrderByNameAsc(TENANT)).thenReturn(List.of(classA, classB));
+        when(schoolClassRepository.findAllByTenantIdAndTeacherNameOrderByNameAsc(TENANT, "TEACHER.ONE"))
+                .thenReturn(List.of(classA));
 
         List<SchoolClassResponse> result = schoolClassService.getClasses("TEACHER.ONE");
 
