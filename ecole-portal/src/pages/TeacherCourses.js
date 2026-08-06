@@ -19,6 +19,12 @@ const buildHeaders = (isJson = true) => {
 
 const getLocalUploadsKey = (userId) => `teachercourses_uploaded_${userId || "anonymous"}`;
 
+const isPdfFile = (file) => {
+  if (!file) return false;
+  if (file.type === "application/pdf") return true;
+  return String(file.name || "").toLowerCase().endsWith(".pdf");
+};
+
 const safeReadLocalUploads = (userId) => {
   try {
     const raw = localStorage.getItem(getLocalUploadsKey(userId));
@@ -115,6 +121,10 @@ const TeacherCourses = ({ language }) => {
       setError("Veuillez choisir un fichier de cours.");
       return;
     }
+    if (!isPdfFile(courseFile)) {
+      setError("Seuls les fichiers PDF sont autorises.");
+      return;
+    }
 
     setUploading(true);
     setError("");
@@ -194,7 +204,7 @@ const TeacherCourses = ({ language }) => {
       setCourseFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch {
-      setError(content.course_error || "Erreur lors du téléchargement du fichier de cours.");
+        setError(content.course_error || "Erreur lors de l'envoi du fichier de cours.");
     } finally {
       setUploading(false);
     }
@@ -272,7 +282,7 @@ const TeacherCourses = ({ language }) => {
       {success && <div className="tc-alert tc-alert-success">{success}</div>}
 
       <form className="tc-add-form" onSubmit={handleUploadCourse}>
-        <h3>{content.course_upload_title || "➕ Télécharger un fichier de cours"}</h3>
+        <h3>{content.course_upload_title || "➕ Envoyer un fichier de cours"}</h3>
         <div className="tc-form-group">
           <label>Titre du cours</label>
           <input
@@ -287,6 +297,7 @@ const TeacherCourses = ({ language }) => {
           <input
             ref={fileInputRef}
             type="file"
+            accept="application/pdf,.pdf"
             onChange={(e) => setCourseFile(e.target.files?.[0] || null)}
             required
           />
@@ -297,8 +308,8 @@ const TeacherCourses = ({ language }) => {
         <div className="tc-form-actions">
           <button type="submit" className="tc-btn tc-btn-success" disabled={uploading}>
             {uploading
-              ? (content.course_uploading || "Téléchargement...")
-              : (content.course_upload_action || "📤 Télécharger le cours")}
+              ? (content.course_uploading || "Envoi...")
+              : (content.course_upload_action || "📤 Envoyer le cours")}
           </button>
         </div>
       </form>

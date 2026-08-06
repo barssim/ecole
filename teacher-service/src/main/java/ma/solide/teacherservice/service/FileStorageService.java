@@ -38,6 +38,10 @@ public class FileStorageService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "file is required");
         }
 
+        if (!isPdfFile(multipartFile)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only PDF files are allowed");
+        }
+
         String tenantId = TenantContext.getRequiredTenantId();
         String originalName = StringUtils.hasText(customFilename)
                 ? customFilename.trim()
@@ -47,6 +51,9 @@ public class FileStorageService {
         }
 
         String safeOriginal = sanitizeFilename(originalName);
+        if (!safeOriginal.toLowerCase().endsWith(".pdf")) {
+            safeOriginal = safeOriginal + ".pdf";
+        }
         String storedName = TS.format(LocalDateTime.now()) + "-" + UUID.randomUUID() + "-" + safeOriginal;
 
         try {
@@ -86,6 +93,17 @@ public class FileStorageService {
 
     private String sanitizeFilename(String input) {
         return input.replaceAll("[^a-zA-Z0-9._-]", "_");
+    }
+
+    private boolean isPdfFile(MultipartFile multipartFile) {
+        String contentType = multipartFile.getContentType();
+        if (StringUtils.hasText(contentType)) {
+            return "application/pdf".equalsIgnoreCase(contentType.trim());
+        }
+
+        String originalFilename = multipartFile.getOriginalFilename();
+        return StringUtils.hasText(originalFilename)
+                && originalFilename.trim().toLowerCase().endsWith(".pdf");
     }
 }
 

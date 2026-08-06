@@ -7,6 +7,12 @@ import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { normalizeRoles } from '../utils/roles';
 import '../cssFiles/Inscription.css';
 
+const isPdfFile = (file) => {
+  if (!file) return false;
+  if (file.type === 'application/pdf') return true;
+  return String(file.name || '').toLowerCase().endsWith('.pdf');
+};
+
 const TeacherAssignmentsPage = ({ language }) => {
   const content = language === 'fr' ? fr : language === 'en' ? en : ar;
   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
@@ -55,13 +61,15 @@ const TeacherAssignmentsPage = ({ language }) => {
 
   const resolveAttachmentUrl = (url) => {
     if (!url) return '';
-    if (/^https?:\/\//i.test(url)) return url;
-    return useRelativeApi ? url : `${effectiveBase}${url}`;
+    return url;
   };
 
   const uploadAttachment = async (file) => {
     if (!file) {
       return { attachmentName: null, attachmentUrl: null };
+    }
+    if (!isPdfFile(file)) {
+      throw new Error(content.assignment_uploadError || 'Only PDF files are allowed.');
     }
 
     const formData = new FormData();
@@ -88,8 +96,14 @@ const TeacherAssignmentsPage = ({ language }) => {
   useEffect(() => {
     const fetchClasses = async () => {
       setClassesLoading(true);
+      if (!currentUserName) {
+        setClasses([]);
+        setSelectedClassId('');
+        setClassesLoading(false);
+        return;
+      }
       try {
-        const query = currentUserName ? `?teacherName=${encodeURIComponent(currentUserName)}` : '';
+        const query = `?teacherName=${encodeURIComponent(currentUserName)}`;
         const response = await fetch(apiUrlFor(`/teacher/classes${query}`), { headers: buildHeaders() });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
@@ -388,6 +402,7 @@ const TeacherAssignmentsPage = ({ language }) => {
           <input
             key={createFileInputKey}
             type="file"
+            accept="application/pdf,.pdf"
             disabled={!selectedClassId || createSubmitting}
             onChange={(e) => setNewAttachmentFile(e.target.files?.[0] || null)}
           />
@@ -456,13 +471,14 @@ const TeacherAssignmentsPage = ({ language }) => {
                 {editValues.attachmentUrl && !removeExistingAttachment && !editAttachmentFile && (
                   <small style={{ color: '#555', display: 'block', marginBottom: 8 }}>
                     <a href={resolveAttachmentUrl(editValues.attachmentUrl)} target="_blank" rel="noreferrer">
-                      {editValues.attachmentName || content.assignment_attachmentDownload || 'Download current file'}
+                      {editValues.attachmentName || content.assignment_attachmentDownload || 'Current uploaded file'}
                     </a>
                   </small>
                 )}
                 <input
                   key={editFileInputKey}
                   type="file"
+                  accept="application/pdf,.pdf"
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null;
                     setEditAttachmentFile(file);
@@ -554,7 +570,7 @@ const TeacherAssignmentsPage = ({ language }) => {
                     <td style={td}>
                       {assignment.attachmentUrl ? (
                         <a href={resolveAttachmentUrl(assignment.attachmentUrl)} target="_blank" rel="noreferrer">
-                          {assignment.attachmentName || (content.assignment_attachmentDownload || 'Download')}
+                          {assignment.attachmentName || (content.assignment_attachmentDownload || 'Uploaded file')}
                         </a>
                       ) : '—'}
                     </td>

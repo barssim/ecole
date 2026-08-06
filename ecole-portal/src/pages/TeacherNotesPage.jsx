@@ -75,8 +75,14 @@ const TeacherNotesPage = ({ language }) => {
   useEffect(() => {
     const fetchClasses = async () => {
       setClassesLoading(true);
+      if (!currentUserName) {
+        setClasses([]);
+        setSelectedClassId('');
+        setClassesLoading(false);
+        return;
+      }
       try {
-        const query = currentUserName ? `?teacherName=${encodeURIComponent(currentUserName)}` : '';
+        const query = `?teacherName=${encodeURIComponent(currentUserName)}`;
         const response = await fetch(apiUrlFor(`/teacher/classes${query}`), { headers: buildHeaders() });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
@@ -335,23 +341,21 @@ const TeacherNotesPage = ({ language }) => {
 
         <div className="form-group">
           <label>{content.notes_studentName || 'Élève'}</label>
-          {selectedClassStudents.length > 0 ? (
-            <select value={newEntry.studentName} onChange={(e) => setNewEntry((p) => ({ ...p, studentName: e.target.value }))} required disabled={!selectedClassId}>
-              <option value="">{'— ' + (content.notes_studentSelect || 'Sélectionnez un élève') + ' —'}</option>
-              {selectedClassStudents.map((student) => (
-                <option key={student} value={student}>{student}</option>
-              ))}
-            </select>
-          ) : (
-            <input
-              type="text"
-              placeholder={content.notes_studentName || "Nom de l'élève"}
-              value={newEntry.studentName}
-              onChange={(e) => setNewEntry((p) => ({ ...p, studentName: e.target.value }))}
-              required
-              disabled={!selectedClassId}
-            />
-          )}
+          <select
+            value={newEntry.studentName}
+            onChange={(e) => setNewEntry((p) => ({ ...p, studentName: e.target.value }))}
+            required
+            disabled={!selectedClassId || selectedClassStudents.length === 0}
+          >
+            <option value="">
+              {'— ' + (selectedClassStudents.length > 0
+                ? (content.notes_studentSelect || 'Sélectionnez un élève')
+                : (content.notes_noClassStudents || 'Aucun élève trouvé pour cette classe.')) + ' —'}
+            </option>
+            {selectedClassStudents.map((student) => (
+              <option key={student} value={student}>{student}</option>
+            ))}
+          </select>
         </div>
 
         <div className="form-group">
@@ -365,7 +369,13 @@ const TeacherNotesPage = ({ language }) => {
             onChange={(e) => setNewEntry((p) => ({ ...p, grade: e.target.value }))} required disabled={!selectedClassId} />
         </div>
 
-        <button type="submit" className="signup-button" disabled={!selectedClassId}>{content.notes_save || 'Enregistrer la note'}</button>
+        <button
+          type="submit"
+          className="signup-button"
+          disabled={!selectedClassId || selectedClassStudents.length === 0}
+        >
+          {content.notes_save || 'Enregistrer la note'}
+        </button>
       </form>
 
       {savedEntries.length > 0 && (
