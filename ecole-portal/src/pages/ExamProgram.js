@@ -4,6 +4,7 @@ import en from "../locales/en.json";
 import ar from "../locales/ar.json";
 import { getTenantId } from "../tenant";
 import { hasAnyRole, normalizeRoles } from "../utils/roles";
+import { createApiUrlFor, readJsonResponse } from "../utils/apiClient";
 
 const EMPTY_FORM = {
   subject: "",
@@ -29,7 +30,7 @@ const ExamProgram = ({ language }) => {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || "http://localhost:8085").replace(/\/$/, "");
+  const apiUrlFor = createApiUrlFor('http://localhost:8085');
   const token = sessionStorage.getItem("jwt_token");
   const userRoles = JSON.parse(localStorage.getItem("user_roles") || "[]");
   const normalizedRoles = normalizeRoles(userRoles);
@@ -56,9 +57,9 @@ const ExamProgram = ({ language }) => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`${baseUrl}/api/exams`, { headers: buildHeaders() });
-      if (!res.ok) throw new Error(content.exam_error || "Erreur de chargement");
-      setExams(await res.json());
+      const res = await fetch(apiUrlFor('/exams'), { headers: buildHeaders() });
+      const data = await readJsonResponse(res, content.exam_error || "Erreur de chargement");
+      setExams(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -94,13 +95,10 @@ const ExamProgram = ({ language }) => {
     setMessage("");
     setError(null);
     try {
-      const url = editId ? `${baseUrl}/api/exams/${editId}` : `${baseUrl}/api/exams`;
+      const url = editId ? apiUrlFor(`/exams/${editId}`) : apiUrlFor('/exams');
       const method = editId ? "PUT" : "POST";
       const res = await fetch(url, { method, headers: buildHeaders(true), body: JSON.stringify(form) });
-      if (!res.ok) {
-        const msg = await res.text();
-        throw new Error(msg || content.exam_saveError || "Erreur d'enregistrement");
-      }
+      await readJsonResponse(res, content.exam_saveError || "Erreur d'enregistrement");
       setMessage(
         editId
           ? (content.exam_updateSuccess || "Examen mis à jour avec succès.")
@@ -117,7 +115,7 @@ const ExamProgram = ({ language }) => {
 
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`${baseUrl}/api/exams/${id}`, { method: "DELETE", headers: buildHeaders() });
+      const res = await fetch(apiUrlFor(`/exams/${id}`), { method: "DELETE", headers: buildHeaders() });
       if (!res.ok) throw new Error(content.exam_deleteError || "Erreur de suppression");
       setDeleteConfirm(null);
       setMessage(content.exam_deleteSuccess || "Examen supprimé.");

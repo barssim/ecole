@@ -3,6 +3,7 @@ import fr from "../locales/fr.json";
 import en from "../locales/en.json";
 import ar from "../locales/ar.json";
 import { getTenantId } from "../tenant";
+import { createApiUrlFor, readJsonResponse } from "../utils/apiClient";
 
 const StudentSchedulePage = ({ language }) => {
   const content =
@@ -13,20 +14,21 @@ const StudentSchedulePage = ({ language }) => {
   const [schedule, setSchedule] = useState([]);
   const [loading, setLoading] = useState(true);
   const userId = localStorage.getItem("userId");
+  const apiUrlFor = createApiUrlFor('http://localhost:8085');
 
   useEffect(() => {
     const fetchSchedule = async () => {
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_API_GATEWAY_URL}/api/studentschedule?user=${userId}`,
+          apiUrlFor(`/studentschedule?user=${userId}`),
           {
             headers: {
               "X-Tenant-Id": getTenantId(),
             },
           }
         );
-        const data = await response.json();
-        setSchedule(data);
+        const data = await readJsonResponse(response, content.schedule_noData || 'Unable to load schedule.');
+        setSchedule(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Failed to fetch student schedule:", error);
       } finally {

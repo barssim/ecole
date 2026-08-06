@@ -5,6 +5,7 @@ import en from "../locales/en.json";
 import ar from "../locales/ar.json";
 import { getTenantId } from '../tenant';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
+import { readJsonResponse } from '../utils/apiClient';
 import { normalizeRoles, hasAnyRole } from '../utils/roles';
 
 const ClassesPage = ({ language }) => {
@@ -26,7 +27,12 @@ const ClassesPage = ({ language }) => {
 
   // Get user roles and name for teacher block filtering
   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
-  const currentUserName = localStorage.getItem('userName') || '';
+  const currentUserName = (
+    localStorage.getItem('LoggedIn')
+    || localStorage.getItem('userName')
+    || localStorage.getItem('username')
+    || ''
+  );
   const isTeacherOnly = userRoles.length > 0 && userRoles.every(role => role === 'teacher' || role === 'role_teacher');
   const canManageClasses = hasAnyRole(userRoles, ['admin', 'manager', 'secretary']);
 
@@ -60,11 +66,8 @@ const ClassesPage = ({ language }) => {
     const fetchClasses = async () => {
       try {
         const response = await fetch(apiUrlFor('/classes'), { headers: buildHeaders() });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        const data = await response.json();
-        setClasses(data);
+        const data = await readJsonResponse(response, content.classes_noClasses || 'Unable to load classes.');
+        setClasses(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to fetch classes:', error);
         setClasses([]);
@@ -80,8 +83,7 @@ const ClassesPage = ({ language }) => {
       setStudentsLoading(true);
       try {
         const response = await fetch(apiUrlFor('/users/students'), { headers: buildHeaders() });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
+        const data = await readJsonResponse(response, content.classes_studentError || 'Unable to load students.');
         setAllStudents(Array.isArray(data) ? data : []);
       } catch {
         setAllStudents([]);
@@ -120,11 +122,14 @@ const ClassesPage = ({ language }) => {
       });
       if (!response.ok) {
         let message = content.classes_studentError || 'Unable to add student.';
-        try { const p = await response.json(); message = p.message || message; }
+        try {
+          const p = await readJsonResponse(response, message);
+          message = p?.message || message;
+        }
         catch { if (response.status === 409) message = content.classes_studentDuplicate || 'Student already in class.'; }
         throw new Error(message);
       }
-      const updated = await response.json();
+      const updated = await readJsonResponse(response, content.classes_studentSuccess || 'Student added successfully.');
       setClasses((prev) => prev.map((c) => c.id === cls.id ? updated : c));
       setInlineSuccess(content.classes_studentSuccess || 'Student added successfully.');
       setSelectedStudentName('');
@@ -163,7 +168,7 @@ const ClassesPage = ({ language }) => {
       if (!response.ok) {
         let message = content.classes_createError;
         try {
-          const errorPayload = await response.json();
+          const errorPayload = await readJsonResponse(response, message);
           message = errorPayload.message || errorPayload.error || message;
         } catch {
           if (response.status === 409) {
@@ -173,7 +178,7 @@ const ClassesPage = ({ language }) => {
         throw new Error(message);
       }
 
-      const createdClass = await response.json();
+      const createdClass = await readJsonResponse(response, content.classes_createSuccess);
       setClasses((current) => [...current, createdClass].sort((a, b) => a.name.localeCompare(b.name)));
       setNewClassName('');
       setSubmitSuccess(content.classes_createSuccess);

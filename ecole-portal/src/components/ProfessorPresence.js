@@ -3,6 +3,7 @@ import fr from "../locales/fr.json";
 import en from "../locales/en.json";
 import ar from "../locales/ar.json";
 import { getTenantId } from "../tenant";
+import { createApiUrlFor, readJsonResponse } from "../utils/apiClient";
 
 const ProfessorPresence = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
@@ -13,7 +14,7 @@ const ProfessorPresence = ({ language }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
+  const apiUrlFor = createApiUrlFor('http://localhost:8085');
   const token = sessionStorage.getItem('jwt_token');
   const userRoles = JSON.parse(localStorage.getItem('user_roles') || '[]');
   const rolesHeader = userRoles.join(',');
@@ -24,7 +25,7 @@ const ProfessorPresence = ({ language }) => {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`${baseUrl}/api/presence/professors?date=${selectedDate}`, {
+        const response = await fetch(apiUrlFor(`/presence/professors?date=${selectedDate}`), {
           headers: {
             'Content-Type': 'application/json',
               'X-Tenant-Id': getTenantId(),
@@ -33,11 +34,7 @@ const ProfessorPresence = ({ language }) => {
           },
         });
 
-        if (!response.ok) {
-          throw new Error(content.presence_error || 'Failed to fetch attendance');
-        }
-
-        const data = await response.json();
+        const data = await readJsonResponse(response, content.presence_error || 'Failed to fetch attendance');
         setPresenceList(Array.isArray(data) ? data : []);
       } catch (fetchError) {
         setError(fetchError.message || content.presence_error);
@@ -47,7 +44,7 @@ const ProfessorPresence = ({ language }) => {
     };
 
     fetchPresence();
-  }, [baseUrl, selectedDate, token, rolesHeader, content.presence_error]);
+  }, [selectedDate, token, rolesHeader, content.presence_error]);
 
   const presentCount = presenceList.filter((item) => item.status === 'present').length;
   const lateCount = presenceList.filter((item) => item.status === 'late').length;

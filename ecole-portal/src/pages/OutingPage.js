@@ -5,6 +5,7 @@ import fr from "../locales/fr.json";
 import ar from "../locales/ar.json";
 import { getTenantId } from "../tenant";
 import { hasAnyRole, normalizeRoles } from "../utils/roles";
+import { createApiUrlFor, readJsonResponse } from "../utils/apiClient";
 
 const OutingPage = ({ language }) => {
   const activityType = "sorties";
@@ -23,7 +24,7 @@ const OutingPage = ({ language }) => {
     : (isSecretaryAuthorized || isTeacherAuthorized);
   const userName = localStorage.getItem("LoggedIn") || "";
   const token = sessionStorage.getItem("jwt_token");
-  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || "http://localhost:8085").replace(/\/$/, "");
+  const apiUrlFor = createApiUrlFor('http://localhost:8085');
 
   const [activities, setActivities] = useState([]);
   const [classes, setClasses] = useState([]);
@@ -69,11 +70,8 @@ const OutingPage = ({ language }) => {
     try {
       setLoading(true);
       setError("");
-      const response = await fetch(`${baseUrl}/api/activities?type=${encodeURIComponent(activityType)}`, { headers });
-      if (!response.ok) {
-        throw new Error(content.presence_error || "Failed to load activities");
-      }
-      const data = await response.json();
+        const response = await fetch(apiUrlFor(`/activities?type=${encodeURIComponent(activityType)}`), { headers });
+        const data = await readJsonResponse(response, content.presence_error || "Failed to load activities");
       setActivities(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message || "Error while loading activities");
@@ -85,13 +83,10 @@ const OutingPage = ({ language }) => {
   const fetchClasses = async () => {
     try {
       const classesUrl = isTeacherOnly
-        ? `${baseUrl}/api/classes?teacherName=${encodeURIComponent(userName)}`
-        : `${baseUrl}/api/classes`;
+        ? apiUrlFor(`/classes?teacherName=${encodeURIComponent(userName)}`)
+        : apiUrlFor('/classes');
       const response = await fetch(classesUrl, { headers });
-      if (!response.ok) {
-        throw new Error("Failed to load classes");
-      }
-      const data = await response.json();
+      const data = await readJsonResponse(response, 'Failed to load classes');
       setClasses(Array.isArray(data) ? data : []);
       if (Array.isArray(data) && data.length > 0) {
         setForm((prev) => ({ ...prev, className: prev.className || data[0].name }));
@@ -144,8 +139,8 @@ const OutingPage = ({ language }) => {
       setError("");
       setMessage("");
       const url = isEditing && selectedActivity
-        ? `${baseUrl}/api/activities/${selectedActivity.id}`
-        : `${baseUrl}/api/activities`;
+        ? apiUrlFor(`/activities/${selectedActivity.id}`)
+        : apiUrlFor('/activities');
       const method = isEditing ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -162,7 +157,14 @@ const OutingPage = ({ language }) => {
       });
 
       if (!response.ok) {
-        const backendMessage = await response.text();
+        const backendMessage = await (async () => {
+          try {
+            await readJsonResponse(response, "Unable to save activity");
+            return "Unable to save activity";
+          } catch (error) {
+            return error.message;
+          }
+        })();
         throw new Error(backendMessage || "Unable to save activity");
       }
 
@@ -211,7 +213,7 @@ const OutingPage = ({ language }) => {
     try {
       setError("");
       setMessage("");
-      const response = await fetch(`${baseUrl}/api/activities/${id}`, {
+      const response = await fetch(apiUrlFor(`/activities/${id}`), {
         method: "DELETE",
         headers,
       });
