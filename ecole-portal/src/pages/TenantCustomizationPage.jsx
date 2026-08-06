@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { getTenantId } from "../tenant";
 import { hasAnyRole, normalizeRoles } from "../utils/roles";
+import { createApiUrlFor, readJsonResponse } from "../utils/apiClient";
 
 const TenantCustomizationPage = () => {
   const tenantId = getTenantId();
@@ -32,7 +33,7 @@ const TenantCustomizationPage = () => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || "http://localhost:8085").replace(/\/$/, "");
+  const apiUrlFor = createApiUrlFor('http://localhost:8085');
 
   const requestHeaders = {
     "Content-Type": "application/json",
@@ -47,15 +48,11 @@ const TenantCustomizationPage = () => {
         setLoading(true);
         setError("");
 
-        const response = await fetch(`${baseUrl}/api/tenant-customization`, {
+        const response = await fetch(apiUrlFor('/tenant-customization'), {
           headers: requestHeaders,
         });
 
-        if (!response.ok) {
-          throw new Error(`Unable to load customization (HTTP ${response.status})`);
-        }
-
-        const data = await response.json();
+        const data = await readJsonResponse(response, "Unable to load customization");
         setForm({
           nameFr: data?.name?.fr || "",
           nameEn: data?.name?.en || "",
@@ -107,16 +104,13 @@ const TenantCustomizationPage = () => {
         footerText: form.footerText,
       };
 
-      const response = await fetch(`${baseUrl}/api/tenant-customization`, {
+      const response = await fetch(apiUrlFor('/tenant-customization'), {
         method: "PUT",
         headers: requestHeaders,
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const backendMessage = await response.text();
-        throw new Error(backendMessage || `Update failed (HTTP ${response.status})`);
-      }
+      await readJsonResponse(response, "Unable to save customization");
 
       setMessage("Customization saved. Refresh the page to see updated tenant theme/text.");
     } catch (err) {
