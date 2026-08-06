@@ -281,39 +281,6 @@ const TeacherCourses = ({ language }) => {
       {error && <div className="tc-alert tc-alert-error">{error}</div>}
       {success && <div className="tc-alert tc-alert-success">{success}</div>}
 
-      <form className="tc-add-form" onSubmit={handleUploadCourse}>
-        <h3>{content.course_upload_title || "➕ Envoyer un fichier de cours"}</h3>
-        <div className="tc-form-group">
-          <label>Titre du cours</label>
-          <input
-            type="text"
-            value={courseTitle}
-            onChange={(e) => setCourseTitle(e.target.value)}
-            placeholder="Ex: Mathématiques - Chapitre 1"
-          />
-        </div>
-        <div className="tc-form-group">
-          <label>Fichier du cours *</label>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/pdf,.pdf"
-            onChange={(e) => setCourseFile(e.target.files?.[0] || null)}
-            required
-          />
-        </div>
-        <p style={{ marginTop: -4, marginBottom: 0, color: "#6b7280", fontSize: 13 }}>
-          {content.course_uploaded_hint || "Le fichier téléchargé apparaîtra immédiatement dans la liste ci-dessous."}
-        </p>
-        <div className="tc-form-actions">
-          <button type="submit" className="tc-btn tc-btn-success" disabled={uploading}>
-            {uploading
-              ? (content.course_uploading || "Envoi...")
-              : (content.course_upload_action || "📤 Envoyer le cours")}
-          </button>
-        </div>
-      </form>
-
       {loading ? (
         <p className="tc-loading">Chargement des cours...</p>
       ) : mergedCourses.length === 0 ? (
@@ -358,6 +325,39 @@ const TeacherCourses = ({ language }) => {
           ))}
         </div>
       )}
+
+      <form className="tc-add-form" onSubmit={handleUploadCourse}>
+        <h3>{content.course_upload_title || "➕ Envoyer un fichier de cours"}</h3>
+        <div className="tc-form-group">
+          <label>Titre du cours</label>
+          <input
+            type="text"
+            value={courseTitle}
+            onChange={(e) => setCourseTitle(e.target.value)}
+            placeholder="Ex: Mathématiques - Chapitre 1"
+          />
+        </div>
+        <div className="tc-form-group">
+          <label>Fichier du cours *</label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            onChange={(e) => setCourseFile(e.target.files?.[0] || null)}
+            required
+          />
+        </div>
+        <p style={{ marginTop: -4, marginBottom: 0, color: "#6b7280", fontSize: 13 }}>
+          {content.course_uploaded_hint || "Le fichier téléchargé apparaîtra immédiatement dans la liste ci-dessous."}
+        </p>
+        <div className="tc-form-actions">
+          <button type="submit" className="tc-btn tc-btn-success" disabled={uploading}>
+            {uploading
+              ? (content.course_uploading || "Envoi...")
+              : (content.course_upload_action || "📤 Envoyer le cours")}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

@@ -324,6 +324,42 @@ const TeacherNotesPage = ({ language }) => {
       {error && <div className="error-message">{error}</div>}
       {message && <div className="success-message">{message}</div>}
 
+      {savedEntries.length > 0 && (
+        <div>
+          <h3>{content.notes_savedTitle || 'Notes enregistrées'}{selectedClass ? ` — ${selectedClass.name}` : ''}</h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#dbeafe' }}>
+                  <th style={th}>{content.notes_date || 'Date'}</th>
+                  <th style={th}>{content.notes_class || 'Classe'}</th>
+                  <th style={th}>{content.notes_studentName || 'Élève'}</th>
+                  <th style={th}>{content.notes_subject || 'Matière'}</th>
+                  <th style={th}>{content.notes_grade || 'Note'}</th>
+                  <th style={th}>{content.notes_actions || 'Actions'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {savedEntries.map((entry, i) => (
+                  <tr key={entry.id || i} style={{ background: String(entry.id) === String(selectedSavedEntryId) ? '#bfdbfe' : i % 2 === 0 ? '#f0f9ff' : '#fff' }}>
+                    <td style={td}>{entry.date}</td>
+                    <td style={td}>{entry.className}</td>
+                    <td style={td}>{entry.studentName}</td>
+                    <td style={td}>{entry.subject}</td>
+                    <td style={td}><strong>{entry.grade} / 20</strong></td>
+                    <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                      <button type="button" className="signup-button" style={{ padding: '6px 14px', width: 'auto' }} onClick={() => selectForEdit(entry.id)}>
+                        {content.notes_edit || 'Modifier'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleAddEntry} className="signup-form" style={{ maxWidth: '100%', width: '100%' }}>
         <h3 style={{ marginTop: 0, marginBottom: 15 }}>{content.notes_addTitle || 'Ajouter une note'}</h3>
 
@@ -438,42 +474,6 @@ const TeacherNotesPage = ({ language }) => {
             </button>
           </div>
         </form>
-      )}
-
-      {savedEntries.length > 0 && (
-        <div>
-          <h3>{content.notes_savedTitle || 'Notes enregistrées'}{selectedClass ? ` — ${selectedClass.name}` : ''}</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#dbeafe' }}>
-                  <th style={th}>{content.notes_date || 'Date'}</th>
-                  <th style={th}>{content.notes_class || 'Classe'}</th>
-                  <th style={th}>{content.notes_studentName || 'Élève'}</th>
-                  <th style={th}>{content.notes_subject || 'Matière'}</th>
-                  <th style={th}>{content.notes_grade || 'Note'}</th>
-                  <th style={th}>{content.notes_actions || 'Actions'}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {savedEntries.map((entry, i) => (
-                  <tr key={entry.id || i} style={{ background: String(entry.id) === String(selectedSavedEntryId) ? '#bfdbfe' : i % 2 === 0 ? '#f0f9ff' : '#fff' }}>
-                    <td style={td}>{entry.date}</td>
-                    <td style={td}>{entry.className}</td>
-                    <td style={td}>{entry.studentName}</td>
-                    <td style={td}>{entry.subject}</td>
-                    <td style={td}><strong>{entry.grade} / 20</strong></td>
-                    <td style={{ ...td, whiteSpace: 'nowrap' }}>
-                      <button type="button" className="signup-button" style={{ padding: '6px 14px', width: 'auto' }} onClick={() => selectForEdit(entry.id)}>
-                        {content.notes_edit || 'Modifier'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
       )}
     </div>
   );

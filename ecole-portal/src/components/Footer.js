@@ -64,7 +64,7 @@ if (language === "fr") {
             </address>
             <p className="legal-notice">{renderLegalNotice()}</p>
             <p style={{ marginTop: "4px", fontSize: "0.85rem", opacity: 0.85 }}>
-              {`Release: ${appVersion}`}
+              {`Version: ${appVersion}`}
             </p>
             {trialIndicatorColor ? (
               <span

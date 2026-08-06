@@ -348,6 +348,81 @@ const TeacherAssignmentsPage = ({ language }) => {
       {error && <div className="error-message">{error}</div>}
       {message && <div className="success-message">{message}</div>}
 
+      {assignments.length > 0 ? (
+        <div>
+          <h3>{content.assignment_list || 'Assignments'}</h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#dbeafe' }}>
+                  <th style={th}>{content.assignment_title || 'Title'}</th>
+                  <th style={th}>{content.assignment_description || 'Description'}</th>
+                  <th style={th}>{content.assignment_dueDate || 'Due Date'}</th>
+                  <th style={th}>{content.notes_class || 'Class'}</th>
+                  <th style={th}>{content.assignment_attachment || 'Attachment'}</th>
+                  <th style={th}>{content.notes_actions || 'Actions'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assignments.map((assignment, i) => (
+                  <tr
+                    key={assignment.id || i}
+                    style={{
+                      background:
+                        String(assignment.id) === String(editingId)
+                          ? '#bfdbfe'
+                          : isOverdue(assignment.dueDate)
+                            ? '#fee2e2'
+                            : i % 2 === 0
+                              ? '#f0f9ff'
+                              : '#fff',
+                    }}
+                  >
+                    <td style={td}><strong>{assignment.title}</strong></td>
+                    <td style={td}>
+                      <span style={{ fontSize: '0.9em', color: '#666' }}>
+                        {assignment.description
+                          ? assignment.description.substring(0, 50) + (assignment.description.length > 50 ? '...' : '')
+                          : '—'}
+                      </span>
+                    </td>
+                    <td style={td}>
+                      <span style={{ color: isOverdue(assignment.dueDate) ? '#dc2626' : '#000' }}>
+                        {formatDate(assignment.dueDate)}
+                      </span>
+                    </td>
+                    <td style={td}>{assignment.className || '—'}</td>
+                    <td style={td}>
+                      {assignment.attachmentUrl ? (
+                        <a href={resolveAttachmentUrl(assignment.attachmentUrl)} target="_blank" rel="noreferrer">
+                          {assignment.attachmentName || (content.assignment_attachmentDownload || 'Uploaded file')}
+                        </a>
+                      ) : '—'}
+                    </td>
+                    <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                      <button
+                        type="button"
+                        className="signup-button"
+                        style={{ padding: '6px 12px', width: 'auto', fontSize: '0.9em' }}
+                        onClick={() => setEditingId(String(assignment.id))}
+                      >
+                        {content.notes_edit || 'Edit'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        selectedClassId && (
+          <div style={{ padding: '20px', background: '#f0f9ff', borderRadius: '8px', textAlign: 'center', color: '#666' }}>
+            {content.assignment_noAssignments || 'No assignments yet. Create one above!'}
+          </div>
+        )
+      )}
+
       <form onSubmit={handleCreateAssignment} className="signup-form" style={{ maxWidth: '100%', width: '100%' }}>
         <h3 style={{ marginTop: 0, marginBottom: 15 }}>{content.assignment_new || 'New Assignment'}</h3>
 
@@ -526,81 +601,6 @@ const TeacherAssignmentsPage = ({ language }) => {
             </>
           )}
         </form>
-      )}
-
-      {assignments.length > 0 ? (
-        <div>
-          <h3>{content.assignment_list || 'Assignments'}</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#dbeafe' }}>
-                  <th style={th}>{content.assignment_title || 'Title'}</th>
-                  <th style={th}>{content.assignment_description || 'Description'}</th>
-                  <th style={th}>{content.assignment_dueDate || 'Due Date'}</th>
-                  <th style={th}>{content.notes_class || 'Class'}</th>
-                  <th style={th}>{content.assignment_attachment || 'Attachment'}</th>
-                  <th style={th}>{content.notes_actions || 'Actions'}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {assignments.map((assignment, i) => (
-                  <tr
-                    key={assignment.id || i}
-                    style={{
-                      background:
-                        String(assignment.id) === String(editingId)
-                          ? '#bfdbfe'
-                          : isOverdue(assignment.dueDate)
-                            ? '#fee2e2'
-                            : i % 2 === 0
-                              ? '#f0f9ff'
-                              : '#fff',
-                    }}
-                  >
-                    <td style={td}><strong>{assignment.title}</strong></td>
-                    <td style={td}>
-                      <span style={{ fontSize: '0.9em', color: '#666' }}>
-                        {assignment.description
-                          ? assignment.description.substring(0, 50) + (assignment.description.length > 50 ? '...' : '')
-                          : '—'}
-                      </span>
-                    </td>
-                    <td style={td}>
-                      <span style={{ color: isOverdue(assignment.dueDate) ? '#dc2626' : '#000' }}>
-                        {formatDate(assignment.dueDate)}
-                      </span>
-                    </td>
-                    <td style={td}>{assignment.className || '—'}</td>
-                    <td style={td}>
-                      {assignment.attachmentUrl ? (
-                        <a href={resolveAttachmentUrl(assignment.attachmentUrl)} target="_blank" rel="noreferrer">
-                          {assignment.attachmentName || (content.assignment_attachmentDownload || 'Uploaded file')}
-                        </a>
-                      ) : '—'}
-                    </td>
-                    <td style={{ ...td, whiteSpace: 'nowrap' }}>
-                      <button
-                        type="button"
-                        className="signup-button"
-                        style={{ padding: '6px 12px', width: 'auto', fontSize: '0.9em' }}
-                        onClick={() => setEditingId(String(assignment.id))}
-                      >
-                        {content.notes_edit || 'Edit'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : (
-        selectedClassId && (
-          <div style={{ padding: '20px', background: '#f0f9ff', borderRadius: '8px', textAlign: 'center', color: '#666' }}>
-            {content.assignment_noAssignments || 'No assignments yet. Create one above!'}
-          </div>
-        )
       )}
     </div>
   );

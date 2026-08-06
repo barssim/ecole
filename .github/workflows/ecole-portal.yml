@@ -42,7 +42,7 @@ jobs:
           build-args: |
             REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_TEST }}
             REACT_APP_APP_VERSION=test-${{ github.sha }}
-            REACT_APP_RELEASE_VERSION=test-${{ github.sha }}
+            REACT_APP_RELEASE_VERSION=0.1.0-test
 
       # Build & Push (DEVELOP)
       - name: Build & Push Develop Image
@@ -58,7 +58,7 @@ jobs:
           build-args: |
             REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_DEV }}
             REACT_APP_APP_VERSION=develop-${{ github.sha }}
-            REACT_APP_RELEASE_VERSION=develop-${{ github.sha }}
+            REACT_APP_RELEASE_VERSION=0.1.0-dev
 
       # Build & Push (MAIN / PRODUCTION)
       - name: Build & Push Production Image
@@ -75,7 +75,7 @@ jobs:
           build-args: |
             REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_PROD }}
             REACT_APP_APP_VERSION=main-${{ github.sha }}
-            REACT_APP_RELEASE_VERSION=main-${{ github.sha }}
+            REACT_APP_RELEASE_VERSION=0.1.0
 
   deploy:
     name: Deploy to Server (main + develop + test)
