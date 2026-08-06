@@ -10,7 +10,7 @@ import '../cssFiles/Inscription.css';
 const TeacherAssignmentsPage = ({ language }) => {
   const content = language === 'fr' ? fr : language === 'en' ? en : ar;
   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
-  const currentUserName = (localStorage.getItem('userName') || '').trim().toLowerCase();
+  const currentUserName = (localStorage.getItem('LoggedIn') || '').trim().toLowerCase();
   const currentUserId = localStorage.getItem('userId') || '';
   const isTeacherOnly = userRoles.length > 0 && userRoles.every((role) => role === 'teacher' || role === 'role_teacher');
 
