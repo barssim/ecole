@@ -111,7 +111,8 @@ const TeacherNotesPage = ({ language }) => {
 
     const fetchClassStudents = async () => {
       try {
-        const response = await fetch(apiUrlFor(`/teacher/classes/${cls.id}/students`), { headers: buildHeaders() });
+        const query = currentUserName ? `?teacherName=${encodeURIComponent(currentUserName)}` : '';
+        const response = await fetch(apiUrlFor(`/teacher/classes/${cls.id}/students${query}`), { headers: buildHeaders() });
         if (!response.ok) return;
         const data = await response.json();
         const students = Array.isArray(data) ? data.map(extractStudentName).filter(Boolean) : [];
@@ -191,6 +192,7 @@ const TeacherNotesPage = ({ language }) => {
     try {
       const payload = {
         teacherId: currentUserId,
+        teacherName: currentUserName,
         classId: String(selectedClassId),
         className: selectedClass?.name || '',
         studentName: newEntry.studentName,
@@ -230,6 +232,7 @@ const TeacherNotesPage = ({ language }) => {
     try {
       const payload = {
         teacherId: currentUserId,
+        teacherName: currentUserName,
         classId: String(selectedSavedEntry.classId || selectedClassId),
         className: selectedSavedEntry.className || selectedClass?.name || '',
         studentName: selectedSavedEntry.studentName,

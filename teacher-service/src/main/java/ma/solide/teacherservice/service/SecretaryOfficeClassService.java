@@ -1,12 +1,10 @@
 package ma.solide.teacherservice.service;
 
-import java.util.ArrayList;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
-    import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 import ma.solide.teacherservice.dto.SecretaryClassDTO;
 import ma.solide.teacherservice.tenant.TenantContext;
@@ -34,36 +32,32 @@ public class SecretaryOfficeClassService {
     }
 
     public List<SecretaryClassDTO> getClasses(String teacherName) {
-        List<SecretaryClassDTO> classes = fetchClasses(teacherName);
-        if (teacherName == null || teacherName.isBlank()) {
-            return classes;
-        }
-
-        String normalized = teacherName.trim().toLowerCase(Locale.ROOT);
-        List<SecretaryClassDTO> filtered = new ArrayList<>();
-        for (SecretaryClassDTO schoolClass : classes) {
-            boolean match = schoolClass.getTeachers() != null
-                    && schoolClass.getTeachers().stream()
-                    .filter(Objects::nonNull)
-                    .map(value -> value.trim().toLowerCase(Locale.ROOT))
-                    .anyMatch(normalized::equals);
-            if (match) {
-                filtered.add(schoolClass);
-            }
-        }
-        return filtered;
+        return fetchClasses(teacherName);
     }
 
-    public List<String> getStudentsByClassId(Integer classId) {
+    public List<String> getStudentsByClassId(Integer classId, String teacherName) {
         if (classId == null) {
             return Collections.emptyList();
         }
-        for (SecretaryClassDTO schoolClass : fetchClasses(null)) {
+        for (SecretaryClassDTO schoolClass : getClasses(teacherName)) {
             if (Objects.equals(schoolClass.getId(), classId)) {
                 return schoolClass.getStudents() == null ? Collections.emptyList() : schoolClass.getStudents();
             }
         }
         return Collections.emptyList();
+    }
+
+    public SecretaryClassDTO getAssignedClass(Integer classId, String teacherName) {
+        if (classId == null || teacherName == null || teacherName.isBlank()) {
+            return null;
+        }
+
+        for (SecretaryClassDTO schoolClass : getClasses(teacherName)) {
+            if (Objects.equals(schoolClass.getId(), classId)) {
+                return schoolClass;
+            }
+        }
+        return null;
     }
 
     private List<SecretaryClassDTO> fetchClasses(String teacherName) {

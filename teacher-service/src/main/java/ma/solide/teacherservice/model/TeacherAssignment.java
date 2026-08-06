@@ -44,6 +44,12 @@ public class TeacherAssignment {
     @Column(length = 3000)
     private String description;
 
+    @Column(name = "attachment_name")
+    private String attachmentName;
+
+    @Column(name = "attachment_url", length = 1000)
+    private String attachmentUrl;
+
     @Column(name = "due_date", nullable = false)
     private LocalDate dueDate;
 

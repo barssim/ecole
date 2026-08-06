@@ -54,13 +54,14 @@ public class ProfessorAttendanceController {
     @GetMapping("/{teacherId}/history")
     public ResponseEntity<List<ProfessorAttendance>> getTeacherAttendanceHistory(
             @PathVariable Integer teacherId,
-            @RequestParam(required = false, defaultValue = "30") Integer days,
+            @RequestParam(required = false) LocalDate endDate,
+            @RequestParam(required = false, defaultValue = "7") Integer days,
             @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
         if (!hasAnyRole(userRolesHeader, "teacher", "secretary", "admin", "manager")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Only teacher, secretary, admin and manager can access attendance history");
         }
-        return ResponseEntity.ok(service.getTeacherAttendanceHistory(teacherId, days));
+        return ResponseEntity.ok(service.getTeacherAttendanceHistory(teacherId, endDate, days));
     }
 
     @PostMapping

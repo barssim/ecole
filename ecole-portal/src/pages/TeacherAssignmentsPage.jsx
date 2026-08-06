@@ -29,7 +29,14 @@ const TeacherAssignmentsPage = ({ language }) => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState('');
-  const [editValues, setEditValues] = useState({ title: '', description: '', dueDate: '' });
+  const [editValues, setEditValues] = useState({ title: '', description: '', dueDate: '', attachmentName: '', attachmentUrl: '' });
+  const [newAttachmentFile, setNewAttachmentFile] = useState(null);
+  const [editAttachmentFile, setEditAttachmentFile] = useState(null);
+  const [removeExistingAttachment, setRemoveExistingAttachment] = useState(false);
+  const [createSubmitting, setCreateSubmitting] = useState(false);
+  const [updateSubmitting, setUpdateSubmitting] = useState(false);
+  const [createFileInputKey, setCreateFileInputKey] = useState(0);
+  const [editFileInputKey, setEditFileInputKey] = useState(0);
 
   const apiUrlFor = (path) => {
     if (useRelativeApi) return `/api${path}`;
@@ -44,6 +51,38 @@ const TeacherAssignmentsPage = ({ language }) => {
     };
     if (includeJson) headers['Content-Type'] = 'application/json';
     return headers;
+  };
+
+  const resolveAttachmentUrl = (url) => {
+    if (!url) return '';
+    if (/^https?:\/\//i.test(url)) return url;
+    return useRelativeApi ? url : `${effectiveBase}${url}`;
+  };
+
+  const uploadAttachment = async (file) => {
+    if (!file) {
+      return { attachmentName: null, attachmentUrl: null };
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('filename', file.name);
+
+    const response = await fetch(apiUrlFor('/upload'), {
+      method: 'POST',
+      headers: buildHeaders(),
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(content.assignment_uploadError || 'Could not upload assignment file.');
+    }
+
+    const data = await response.json();
+    return {
+      attachmentName: data?.filename || file.name,
+      attachmentUrl: data?.url || null,
+    };
   };
 
   useEffect(() => {
@@ -96,14 +135,22 @@ const TeacherAssignmentsPage = ({ language }) => {
 
   useEffect(() => {
     if (!selectedAssignment) {
-      setEditValues({ title: '', description: '', dueDate: '' });
+      setEditValues({ title: '', description: '', dueDate: '', attachmentName: '', attachmentUrl: '' });
+      setEditAttachmentFile(null);
+      setRemoveExistingAttachment(false);
+      setEditFileInputKey((value) => value + 1);
       return;
     }
     setEditValues({
       title: selectedAssignment.title || '',
       description: selectedAssignment.description || '',
       dueDate: selectedAssignment.dueDate || '',
+      attachmentName: selectedAssignment.attachmentName || '',
+      attachmentUrl: selectedAssignment.attachmentUrl || '',
     });
+    setEditAttachmentFile(null);
+    setRemoveExistingAttachment(false);
+    setEditFileInputKey((value) => value + 1);
   }, [selectedAssignment]);
 
   const handleCreateAssignment = async (event) => {
@@ -127,13 +174,17 @@ const TeacherAssignmentsPage = ({ language }) => {
     }
 
     try {
+      setCreateSubmitting(true);
       const className = classes.find((cls) => String(cls.id) === String(selectedClassId))?.name || '';
+      const uploadedAttachment = await uploadAttachment(newAttachmentFile);
       const payload = {
         teacherId: currentUserId,
         classId: String(selectedClassId),
         className,
         title: newAssignment.title.trim(),
         description: newAssignment.description.trim(),
+        attachmentName: uploadedAttachment.attachmentName,
+        attachmentUrl: uploadedAttachment.attachmentUrl,
         dueDate: newAssignment.dueDate,
         createdBy: currentUserName || currentUserId || 'teacher',
       };
@@ -148,9 +199,13 @@ const TeacherAssignmentsPage = ({ language }) => {
 
       await fetchAssignments();
       setNewAssignment({ title: '', description: '', dueDate: '' });
+      setNewAttachmentFile(null);
+      setCreateFileInputKey((value) => value + 1);
       setMessage(content.assignment_createSuccess || 'Assignment created successfully.');
-    } catch {
-      setError(content.assignment_createError || 'Could not create assignment.');
+    } catch (err) {
+      setError(err.message || content.assignment_createError || 'Could not create assignment.');
+    } finally {
+      setCreateSubmitting(false);
     }
   };
 
@@ -175,12 +230,27 @@ const TeacherAssignmentsPage = ({ language }) => {
     }
 
     try {
+      setUpdateSubmitting(true);
+      let attachmentName = editValues.attachmentName || null;
+      let attachmentUrl = editValues.attachmentUrl || null;
+
+      if (editAttachmentFile) {
+        const uploadedAttachment = await uploadAttachment(editAttachmentFile);
+        attachmentName = uploadedAttachment.attachmentName;
+        attachmentUrl = uploadedAttachment.attachmentUrl;
+      } else if (removeExistingAttachment) {
+        attachmentName = null;
+        attachmentUrl = null;
+      }
+
       const payload = {
         teacherId: currentUserId,
         classId: String(selectedAssignment.classId || selectedClassId),
         className: selectedAssignment.className || '',
         title: editValues.title.trim(),
         description: editValues.description.trim(),
+        attachmentName,
+        attachmentUrl,
         dueDate: editValues.dueDate,
         createdBy: selectedAssignment.createdBy || currentUserName || 'teacher',
       };
@@ -194,9 +264,14 @@ const TeacherAssignmentsPage = ({ language }) => {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       await fetchAssignments();
+      setEditAttachmentFile(null);
+      setRemoveExistingAttachment(false);
+      setEditFileInputKey((value) => value + 1);
       setMessage(content.assignment_updateSuccess || 'Assignment updated successfully.');
-    } catch {
-      setError(content.assignment_updateError || 'Could not update assignment.');
+    } catch (err) {
+      setError(err.message || content.assignment_updateError || 'Could not update assignment.');
+    } finally {
+      setUpdateSubmitting(false);
     }
   };
 
@@ -215,7 +290,10 @@ const TeacherAssignmentsPage = ({ language }) => {
 
       await fetchAssignments();
       setEditingId('');
-      setEditValues({ title: '', description: '', dueDate: '' });
+      setEditValues({ title: '', description: '', dueDate: '', attachmentName: '', attachmentUrl: '' });
+      setEditAttachmentFile(null);
+      setRemoveExistingAttachment(false);
+      setEditFileInputKey((value) => value + 1);
       setMessage(content.assignment_deleteSuccess || 'Assignment deleted successfully.');
       setError('');
     } catch {
@@ -305,8 +383,21 @@ const TeacherAssignmentsPage = ({ language }) => {
           />
         </div>
 
-        <button type="submit" className="signup-button" disabled={!selectedClassId}>
-          {content.assignment_create || 'Create Assignment'}
+        <div className="form-group">
+          <label>{content.assignment_attachment || 'Devoir file'}</label>
+          <input
+            key={createFileInputKey}
+            type="file"
+            disabled={!selectedClassId || createSubmitting}
+            onChange={(e) => setNewAttachmentFile(e.target.files?.[0] || null)}
+          />
+          <small style={{ color: '#555', display: 'block', marginTop: 4 }}>
+            {newAttachmentFile?.name || (content.assignment_attachmentOptional || 'Optional: add a PDF, image, or document.')}
+          </small>
+        </div>
+
+        <button type="submit" className="signup-button" disabled={!selectedClassId || createSubmitting}>
+          {createSubmitting ? (content.loading || 'Loading...') : (content.assignment_create || 'Create Assignment')}
         </button>
       </form>
 
@@ -360,15 +451,53 @@ const TeacherAssignmentsPage = ({ language }) => {
                 />
               </div>
 
+              <div className="form-group">
+                <label>{content.assignment_attachment || 'Devoir file'}</label>
+                {editValues.attachmentUrl && !removeExistingAttachment && !editAttachmentFile && (
+                  <small style={{ color: '#555', display: 'block', marginBottom: 8 }}>
+                    <a href={resolveAttachmentUrl(editValues.attachmentUrl)} target="_blank" rel="noreferrer">
+                      {editValues.attachmentName || content.assignment_attachmentDownload || 'Download current file'}
+                    </a>
+                  </small>
+                )}
+                <input
+                  key={editFileInputKey}
+                  type="file"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setEditAttachmentFile(file);
+                    if (file) {
+                      setRemoveExistingAttachment(false);
+                    }
+                  }}
+                  disabled={updateSubmitting}
+                />
+                <small style={{ color: '#555', display: 'block', marginTop: 4 }}>
+                  {editAttachmentFile?.name || (content.assignment_attachmentReplaceHint || 'Select a file to replace the current attachment.')}
+                </small>
+                {(editValues.attachmentUrl || editAttachmentFile) && (
+                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                    <input
+                      type="checkbox"
+                      checked={removeExistingAttachment}
+                      disabled={!!editAttachmentFile || updateSubmitting}
+                      onChange={(e) => setRemoveExistingAttachment(e.target.checked)}
+                    />
+                    <span>{content.assignment_attachmentRemove || 'Remove current attachment'}</span>
+                  </label>
+                )}
+              </div>
+
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <button type="submit" className="signup-button" style={{ flex: '1 1 180px' }}>
-                  {content.assignment_update || 'Update'}
+                <button type="submit" className="signup-button" style={{ flex: '1 1 180px' }} disabled={updateSubmitting}>
+                  {updateSubmitting ? (content.loading || 'Loading...') : (content.assignment_update || 'Update')}
                 </button>
                 <button
                   type="button"
                   className="signup-button"
                   onClick={handleDeleteAssignment}
                   style={{ flex: '1 1 180px', background: '#dc2626' }}
+                  disabled={updateSubmitting}
                 >
                   {content.assignment_delete || 'Delete'}
                 </button>
@@ -389,6 +518,7 @@ const TeacherAssignmentsPage = ({ language }) => {
                   <th style={th}>{content.assignment_description || 'Description'}</th>
                   <th style={th}>{content.assignment_dueDate || 'Due Date'}</th>
                   <th style={th}>{content.notes_class || 'Class'}</th>
+                  <th style={th}>{content.assignment_attachment || 'Attachment'}</th>
                   <th style={th}>{content.notes_actions || 'Actions'}</th>
                 </tr>
               </thead>
@@ -421,6 +551,13 @@ const TeacherAssignmentsPage = ({ language }) => {
                       </span>
                     </td>
                     <td style={td}>{assignment.className || '—'}</td>
+                    <td style={td}>
+                      {assignment.attachmentUrl ? (
+                        <a href={resolveAttachmentUrl(assignment.attachmentUrl)} target="_blank" rel="noreferrer">
+                          {assignment.attachmentName || (content.assignment_attachmentDownload || 'Download')}
+                        </a>
+                      ) : '—'}
+                    </td>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>
                       <button
                         type="button"

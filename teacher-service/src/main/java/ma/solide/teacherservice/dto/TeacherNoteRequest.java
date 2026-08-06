@@ -6,6 +6,7 @@ import lombok.Data;
 public class TeacherNoteRequest {
 
     private String teacherId;
+    private String teacherName;
     private String classId;
     private String className;
     private String studentName;

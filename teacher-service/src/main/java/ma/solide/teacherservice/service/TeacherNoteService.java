@@ -2,8 +2,11 @@ package ma.solide.teacherservice.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
+import ma.solide.teacherservice.dto.SecretaryClassDTO;
 import ma.solide.teacherservice.dto.TeacherNoteRequest;
 import ma.solide.teacherservice.model.TeacherNote;
 import ma.solide.teacherservice.repository.TeacherNoteRepository;
@@ -17,9 +20,12 @@ import org.springframework.web.server.ResponseStatusException;
 public class TeacherNoteService {
 
     private final TeacherNoteRepository repository;
+    private final SecretaryOfficeClassService secretaryOfficeClassService;
 
-    public TeacherNoteService(TeacherNoteRepository repository) {
+    public TeacherNoteService(TeacherNoteRepository repository,
+                              SecretaryOfficeClassService secretaryOfficeClassService) {
         this.repository = repository;
+        this.secretaryOfficeClassService = secretaryOfficeClassService;
     }
 
     public List<TeacherNote> list(String teacherId, String classId) {
@@ -46,12 +52,13 @@ public class TeacherNoteService {
     public TeacherNote create(TeacherNoteRequest request) {
         String tenantId = TenantContext.getRequiredTenantId();
         validateRequest(request);
+        SecretaryClassDTO assignedClass = validateTeacherAssignment(request);
 
         TeacherNote note = TeacherNote.builder()
                 .tenantId(tenantId)
                 .teacherId(request.getTeacherId().trim())
                 .classId(request.getClassId().trim())
-                .className(StringUtils.hasText(request.getClassName()) ? request.getClassName().trim() : null)
+                .className(resolveClassName(request, assignedClass))
                 .studentName(request.getStudentName().trim())
                 .subject(request.getSubject().trim())
                 .grade(toGrade(request.getGrade()))
@@ -64,6 +71,7 @@ public class TeacherNoteService {
     public TeacherNote update(Long id, TeacherNoteRequest request) {
         String tenantId = TenantContext.getRequiredTenantId();
         validateRequest(request);
+        SecretaryClassDTO assignedClass = validateTeacherAssignment(request);
 
         TeacherNote note = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found"));
@@ -73,7 +81,7 @@ public class TeacherNoteService {
 
         note.setTeacherId(request.getTeacherId().trim());
         note.setClassId(request.getClassId().trim());
-        note.setClassName(StringUtils.hasText(request.getClassName()) ? request.getClassName().trim() : null);
+        note.setClassName(resolveClassName(request, assignedClass));
         note.setStudentName(request.getStudentName().trim());
         note.setSubject(request.getSubject().trim());
         note.setGrade(toGrade(request.getGrade()));
@@ -96,6 +104,9 @@ public class TeacherNoteService {
         if (!StringUtils.hasText(request.getTeacherId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "teacherId is required");
         }
+        if (!StringUtils.hasText(request.getTeacherName())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "teacherName is required");
+        }
         if (!StringUtils.hasText(request.getClassId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "classId is required");
         }
@@ -108,6 +119,42 @@ public class TeacherNoteService {
         if (!StringUtils.hasText(request.getGrade())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "grade is required");
         }
+    }
+
+    private SecretaryClassDTO validateTeacherAssignment(TeacherNoteRequest request) {
+        Integer classId = parseClassId(request.getClassId());
+        SecretaryClassDTO assignedClass = secretaryOfficeClassService.getAssignedClass(classId, request.getTeacherName());
+        if (assignedClass == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You can add grades only for your assigned classes");
+        }
+
+        List<String> students = assignedClass.getStudents() == null ? Collections.emptyList() : assignedClass.getStudents();
+        boolean studentMatch = students.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .anyMatch(student -> student.equalsIgnoreCase(request.getStudentName().trim()));
+        if (!studentMatch) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "studentName must belong to the selected class");
+        }
+
+        return assignedClass;
+    }
+
+    private Integer parseClassId(String classId) {
+        try {
+            return Integer.valueOf(classId.trim());
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "classId must be numeric");
+        }
+    }
+
+    private String resolveClassName(TeacherNoteRequest request, SecretaryClassDTO assignedClass) {
+        if (assignedClass != null && StringUtils.hasText(assignedClass.getName())) {
+            return assignedClass.getName().trim();
+        }
+        return StringUtils.hasText(request.getClassName()) ? request.getClassName().trim() : null;
     }
 
     private BigDecimal toGrade(String gradeInput) {

@@ -54,6 +54,8 @@ public class TeacherAssignmentService {
                 .className(StringUtils.hasText(request.getClassName()) ? request.getClassName().trim() : null)
                 .title(request.getTitle().trim())
                 .description(StringUtils.hasText(request.getDescription()) ? request.getDescription().trim() : null)
+                .attachmentName(StringUtils.hasText(request.getAttachmentName()) ? request.getAttachmentName().trim() : null)
+                .attachmentUrl(StringUtils.hasText(request.getAttachmentUrl()) ? request.getAttachmentUrl().trim() : null)
                 .dueDate(LocalDate.parse(request.getDueDate().trim()))
                 .createdBy(StringUtils.hasText(request.getCreatedBy()) ? request.getCreatedBy().trim() : "teacher")
                 .createdAt(LocalDateTime.now())
@@ -77,6 +79,8 @@ public class TeacherAssignmentService {
         entity.setClassName(StringUtils.hasText(request.getClassName()) ? request.getClassName().trim() : null);
         entity.setTitle(request.getTitle().trim());
         entity.setDescription(StringUtils.hasText(request.getDescription()) ? request.getDescription().trim() : null);
+        entity.setAttachmentName(StringUtils.hasText(request.getAttachmentName()) ? request.getAttachmentName().trim() : null);
+        entity.setAttachmentUrl(StringUtils.hasText(request.getAttachmentUrl()) ? request.getAttachmentUrl().trim() : null);
         entity.setDueDate(LocalDate.parse(request.getDueDate().trim()));
 
         return repository.save(entity);

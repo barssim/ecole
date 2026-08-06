@@ -27,8 +27,10 @@ public class TeacherClassController {
     }
 
     @GetMapping("/{classId}/students")
-    public ResponseEntity<List<String>> listStudents(@PathVariable Integer classId) {
-        return ResponseEntity.ok(secretaryOfficeClassService.getStudentsByClassId(classId));
+    public ResponseEntity<List<String>> listStudents(
+            @PathVariable Integer classId,
+            @RequestParam(required = false) String teacherName) {
+        return ResponseEntity.ok(secretaryOfficeClassService.getStudentsByClassId(classId, teacherName));
     }
 }
 

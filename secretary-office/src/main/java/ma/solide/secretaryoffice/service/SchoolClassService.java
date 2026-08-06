@@ -30,11 +30,11 @@ public class SchoolClassService {
 
     public List<SchoolClassResponse> getClasses(String teacherName) {
         String tenantId = TenantContext.getRequiredTenantId();
-        String normalizedTeacher = teacherName == null ? "" : teacherName.trim();
-        return schoolClassRepository.findAllByTenantIdOrderByNameAsc(tenantId)
+        List<SchoolClass> classes = StringUtils.hasText(teacherName)
+                ? schoolClassRepository.findAllByTenantIdAndTeacherNameOrderByNameAsc(tenantId, teacherName.trim())
+                : schoolClassRepository.findAllByTenantIdOrderByNameAsc(tenantId);
+        return classes
                 .stream()
-                .filter(schoolClass -> normalizedTeacher.isEmpty() || schoolClass.getTeachers().stream()
-                        .anyMatch(teacher -> teacher.equalsIgnoreCase(normalizedTeacher)))
                 .map(this::toResponse)
                 .toList();
     }

@@ -25,6 +25,10 @@ spring:
     web-application-type: servlet
 
 teacher:
+  attendance:
+    history:
+      default-days: ${TEACHER_ATTENDANCE_HISTORY_DEFAULT_DAYS:7}
+      max-days: ${TEACHER_ATTENDANCE_HISTORY_MAX_DAYS:365}
   uploads:
     directory: ${TEACHER_UPLOADS_DIR:/tmp/teacher-uploads}
 

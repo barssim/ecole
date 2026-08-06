@@ -7,6 +7,7 @@ import { getTenantId } from '../tenant';
 const TeacherAttendancePage = ({ language }) => {
   const content = language === 'fr' ? fr : language === 'en' ? en : ar;
   const today = new Date().toISOString().split('T')[0];
+  const historyDays = 7;
 
   const [form, setForm] = useState({
     attendanceDate: today,
@@ -85,7 +86,7 @@ const TeacherAttendancePage = ({ language }) => {
   const fetchAttendanceHistory = async () => {
     try {
       setHistoryLoading(true);
-      const response = await fetch(`${baseUrl}/api/presence/professors/${userId}/history?days=30`, {
+      const response = await fetch(`${baseUrl}/api/presence/professors/${userId}/history?days=${historyDays}&endDate=${today}`, {
         headers,
       });
 
@@ -214,11 +215,11 @@ const TeacherAttendancePage = ({ language }) => {
       )}
 
       <div style={{ background: '#fff', padding: 16, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}>
-        <h3 style={{ marginTop: 0 }}>{content.teacher_attendance_historyTitle || 'Mes présences (30 derniers jours)'}</h3>
+        <h3 style={{ marginTop: 0 }}>{content.teacher_attendance_historyTitle || `Mes présences (${historyDays} derniers jours)`}</h3>
         {historyLoading ? (
           <p>{content.presence_loading || 'Chargement...'}</p>
         ) : attendanceHistory.length === 0 ? (
-          <p>{content.teacher_attendance_noHistory || 'Aucune présence enregistrée durant les 30 derniers jours.'}</p>
+          <p>{content.teacher_attendance_noHistory || `Aucune présence enregistrée durant les ${historyDays} derniers jours.`}</p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
