@@ -36,9 +36,12 @@ jobs:
           context: ./ecole-portal
           file: ./ecole-portal/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:test
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:test
+            ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:test-${{ github.sha }}
           build-args: |
             REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_TEST }}
+            REACT_APP_APP_VERSION=test-${{ github.sha }}
 
       # Build & Push (DEVELOP)
       - name: Build & Push Develop Image
@@ -48,9 +51,12 @@ jobs:
           context: ./ecole-portal
           file: ./ecole-portal/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:develop
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:develop
+            ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:develop-${{ github.sha }}
           build-args: |
             REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_DEV }}
+            REACT_APP_APP_VERSION=develop-${{ github.sha }}
 
       # Build & Push (MAIN / PRODUCTION)
       - name: Build & Push Production Image
@@ -60,9 +66,13 @@ jobs:
           context: ./ecole-portal
           file: ./ecole-portal/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:latest
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:main
+            ${{ secrets.DOCKER_HUB_USERNAME }}/ecole-portal:main-${{ github.sha }}
           build-args: |
             REACT_APP_API_GATEWAY_URL=${{ secrets.REACT_APP_API_GATEWAY_URL_PROD }}
+            REACT_APP_APP_VERSION=main-${{ github.sha }}
 
   deploy:
     name: Deploy to Server (main + develop + test)

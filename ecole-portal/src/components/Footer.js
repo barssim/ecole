@@ -6,6 +6,7 @@ import en from "../locales/footer/en.json";
 const Footer = ({ language, tenantCustomization }) => {
 	let content;
   const tenant = tenantCustomization || {};
+  const appVersion = (process.env.REACT_APP_APP_VERSION || "dev").trim();
   const customerVersion = (tenant.customerVersion || "").toLowerCase();
   let trialIndicatorColor = null;
 
@@ -58,6 +59,9 @@ if (language === "fr") {
                  Email: {tenant.mail || ""}
             </address>
             <p className="legal-notice">{renderLegalNotice()}</p>
+            <p style={{ marginTop: "4px", fontSize: "0.85rem", opacity: 0.85 }}>
+              {`Version: ${appVersion}`}
+            </p>
             {trialIndicatorColor ? (
               <span
                 className="trial-indicator"
