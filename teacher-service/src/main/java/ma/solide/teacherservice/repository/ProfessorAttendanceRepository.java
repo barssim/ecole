@@ -16,5 +16,12 @@ public interface ProfessorAttendanceRepository extends JpaRepository<ProfessorAt
             Integer teacherId,
             LocalDate date
     );
+
+    List<ProfessorAttendance> findAllByTenantIdAndTeacherIdAndAttendanceDateBetweenOrderByAttendanceDateDesc(
+            String tenantId,
+            Integer teacherId,
+            LocalDate startDate,
+            LocalDate endDate
+    );
 }
 

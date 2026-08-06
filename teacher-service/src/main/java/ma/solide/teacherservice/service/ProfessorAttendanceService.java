@@ -44,6 +44,24 @@ public class ProfessorAttendanceService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Attendance not found"));
     }
 
+    public List<ProfessorAttendance> getTeacherAttendanceHistory(Integer teacherId, Integer days) {
+        String tenantId = TenantContext.getRequiredTenantId();
+        if (teacherId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "teacherId is required");
+        }
+
+        int effectiveDays = (days == null || days < 1) ? 30 : Math.min(days, 365);
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(effectiveDays - 1L);
+
+        return repository.findAllByTenantIdAndTeacherIdAndAttendanceDateBetweenOrderByAttendanceDateDesc(
+                tenantId,
+                teacherId,
+                startDate,
+                endDate
+        );
+    }
+
     public ProfessorAttendance saveAttendance(ProfessorAttendanceRequestDTO dto) {
         String tenantId = TenantContext.getRequiredTenantId();
         if (dto.getTeacherId() == null) {

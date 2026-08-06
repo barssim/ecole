@@ -15,7 +15,9 @@ const TeacherAttendancePage = ({ language }) => {
     notes: '',
   });
   const [existingAttendance, setExistingAttendance] = useState(null);
+  const [attendanceHistory, setAttendanceHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -37,12 +39,14 @@ const TeacherAttendancePage = ({ language }) => {
   useEffect(() => {
     if (!userId) {
       setLoading(false);
+      setHistoryLoading(false);
       setError(content.teacher_attendance_missingUser || 'Utilisateur introuvable.');
       return;
     }
 
-    fetchMyAttendance(form.attendanceDate);
-  }, [userId, form.attendanceDate, language]);
+    fetchMyAttendance(today);
+    fetchAttendanceHistory();
+  }, [userId, language]);
 
   const fetchMyAttendance = async (date) => {
     try {
@@ -78,6 +82,26 @@ const TeacherAttendancePage = ({ language }) => {
     }
   };
 
+  const fetchAttendanceHistory = async () => {
+    try {
+      setHistoryLoading(true);
+      const response = await fetch(`${baseUrl}/api/presence/professors/${userId}/history?days=30`, {
+        headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(content.teacher_attendance_loadError || 'Impossible de charger votre présence.');
+      }
+
+      const data = await response.json();
+      setAttendanceHistory(Array.isArray(data) ? data : []);
+    } catch {
+      setAttendanceHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -92,7 +116,7 @@ const TeacherAttendancePage = ({ language }) => {
         body: JSON.stringify({
           teacherId: Number(userId),
           teacherName,
-          attendanceDate: form.attendanceDate,
+          attendanceDate: today,
           scheduledTime: form.scheduledTime,
           status: form.status,
           notes: form.notes,
@@ -106,6 +130,8 @@ const TeacherAttendancePage = ({ language }) => {
 
       const data = await response.json();
       setExistingAttendance(data);
+      await fetchMyAttendance(today);
+      await fetchAttendanceHistory();
       setMessage(content.teacher_attendance_saveSuccess || 'Présence enregistrée avec succès.');
     } catch (err) {
       setError(err.message || content.teacher_attendance_saveError || 'Impossible d\'enregistrer la présence.');
@@ -127,10 +153,10 @@ const TeacherAttendancePage = ({ language }) => {
           <label>{content.payment_date || 'Date'}</label>
           <input
             type="date"
-            value={form.attendanceDate}
-            onChange={(e) => setForm({ ...form, attendanceDate: e.target.value })}
+            value={today}
             style={{ width: '100%' }}
-            required
+            disabled
+            readOnly
           />
         </div>
 
@@ -186,9 +212,46 @@ const TeacherAttendancePage = ({ language }) => {
       ) : (
         <p>{content.teacher_attendance_noEntry || 'Aucune présence enregistrée pour cette date.'}</p>
       )}
+
+      <div style={{ background: '#fff', padding: 16, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}>
+        <h3 style={{ marginTop: 0 }}>{content.teacher_attendance_historyTitle || 'Mes présences (30 derniers jours)'}</h3>
+        {historyLoading ? (
+          <p>{content.presence_loading || 'Chargement...'}</p>
+        ) : attendanceHistory.length === 0 ? (
+          <p>{content.teacher_attendance_noHistory || 'Aucune présence enregistrée durant les 30 derniers jours.'}</p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#dbeafe' }}>
+                  <th style={th}>{content.payment_date || 'Date'}</th>
+                  <th style={th}>{content.presence_status || 'Statut'}</th>
+                  <th style={th}>{content.presence_scheduled || 'Heure prévue'}</th>
+                  <th style={th}>{content.presence_checkin || 'Heure d’arrivée'}</th>
+                  <th style={th}>{content.presence_notes || 'Notes'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attendanceHistory.map((item, index) => (
+                  <tr key={item.id || `${item.attendanceDate}-${index}`} style={{ background: index % 2 === 0 ? '#f8fafc' : '#fff' }}>
+                    <td style={td}>{item.attendanceDate || '-'}</td>
+                    <td style={td}>{content[`presence_status_${item.status}`] || item.status || '-'}</td>
+                    <td style={td}>{item.scheduledTime || '-'}</td>
+                    <td style={td}>{item.checkInTime || '-'}</td>
+                    <td style={td}>{item.notes || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
+
+const th = { padding: '8px 12px', textAlign: 'left', fontWeight: 600 };
+const td = { padding: '8px 12px' };
 
 export default TeacherAttendancePage;
 
