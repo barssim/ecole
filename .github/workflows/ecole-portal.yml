@@ -85,24 +85,25 @@ jobs:
           script: |
             set -euo pipefail
 
+            cd /home/ecole
+
             echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
             BRANCH="${{ github.ref_name }}"
-
             if [ "$BRANCH" = "main" ]; then
-              SERVICE_NAME=ecole-portal
-
+              COMPOSE_FILE=docker-compose.prod.yml
             elif [ "$BRANCH" = "test" ]; then
-              SERVICE_NAME=ecole-portal-test
-
+              COMPOSE_FILE=docker-compose.test.yml
             else
-              SERVICE_NAME=ecole-portal-dev
+              COMPOSE_FILE=docker-compose.dev.yml
             fi
 
-            # ensure the Docker network used by docker-compose (and other services) exists on the target host
+
+            # ensure the Docker network used by docker-compose exists on the target host
+            # this avoids issues where services expect a named network (e.g. `ecole`) to exist
             docker network inspect ecole >/dev/null 2>&1 || docker network create ecole
 
-            docker compose pull "$SERVICE_NAME"
-            docker compose up -d "$SERVICE_NAME"
-
+            docker compose -f "$COMPOSE_FILE" pull ecole-portal
+            docker compose -f "$COMPOSE_FILE" up -d ecole-portal
+            
             docker image prune -a -f
