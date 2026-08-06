@@ -201,6 +201,7 @@ const AppContent = () => {
                       <Route path="/enseignant/absence" element={<TeacherAttendancePage language={language} />} />
                       <Route path="/enseignant/notes" element={<TeacherNotesPage language={language} />} />
                        <Route path="/enseignant/assignments" element={<TeacherAssignmentsPage language={language} />} />
+                        <Route path="/enseignant/devoirs" element={<TeacherAssignmentsPage language={language} />} />
                       <Route path="/services/bibliotheque" element={<Bibliotheque />} />
                       <Route path="/services/bibliotheque/catalogue" element={<Catalogue />} />
                       <Route path="/services/bibliotheque/emprunts" element={<Borrow />} />

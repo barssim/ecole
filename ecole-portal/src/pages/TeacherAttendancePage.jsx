@@ -149,6 +149,40 @@ const TeacherAttendancePage = ({ language }) => {
       {error && <div style={{ color: '#b91c1c' }}>{error}</div>}
       {message && <div style={{ color: '#15803d' }}>{message}</div>}
 
+      <div style={{ background: '#fff', padding: 16, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}>
+        <h3 style={{ marginTop: 0 }}>{content.teacher_attendance_historyTitle || `Mes présences (${historyDays} derniers jours)`}</h3>
+        {historyLoading ? (
+          <p>{content.presence_loading || 'Chargement...'}</p>
+        ) : attendanceHistory.length === 0 ? (
+          <p>{content.teacher_attendance_noHistory || `Aucune présence enregistrée durant les ${historyDays} derniers jours.`}</p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#dbeafe' }}>
+                  <th style={th}>{content.payment_date || 'Date'}</th>
+                  <th style={th}>{content.presence_status || 'Statut'}</th>
+                  <th style={th}>{content.presence_scheduled || 'Heure prévue'}</th>
+                  <th style={th}>{content.presence_checkin || 'Heure d’arrivée'}</th>
+                  <th style={th}>{content.presence_notes || 'Notes'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attendanceHistory.map((item, index) => (
+                  <tr key={item.id || `${item.attendanceDate}-${index}`} style={{ background: index % 2 === 0 ? '#f8fafc' : '#fff' }}>
+                    <td style={td}>{item.attendanceDate || '-'}</td>
+                    <td style={td}>{content[`presence_status_${item.status}`] || item.status || '-'}</td>
+                    <td style={td}>{item.scheduledTime || '-'}</td>
+                    <td style={td}>{item.checkInTime || '-'}</td>
+                    <td style={td}>{item.notes || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12, background: '#fff', padding: 20, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}>
         <div>
           <label>{content.payment_date || 'Date'}</label>
@@ -214,39 +248,6 @@ const TeacherAttendancePage = ({ language }) => {
         <p>{content.teacher_attendance_noEntry || 'Aucune présence enregistrée pour cette date.'}</p>
       )}
 
-      <div style={{ background: '#fff', padding: 16, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}>
-        <h3 style={{ marginTop: 0 }}>{content.teacher_attendance_historyTitle || `Mes présences (${historyDays} derniers jours)`}</h3>
-        {historyLoading ? (
-          <p>{content.presence_loading || 'Chargement...'}</p>
-        ) : attendanceHistory.length === 0 ? (
-          <p>{content.teacher_attendance_noHistory || `Aucune présence enregistrée durant les ${historyDays} derniers jours.`}</p>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#dbeafe' }}>
-                  <th style={th}>{content.payment_date || 'Date'}</th>
-                  <th style={th}>{content.presence_status || 'Statut'}</th>
-                  <th style={th}>{content.presence_scheduled || 'Heure prévue'}</th>
-                  <th style={th}>{content.presence_checkin || 'Heure d’arrivée'}</th>
-                  <th style={th}>{content.presence_notes || 'Notes'}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attendanceHistory.map((item, index) => (
-                  <tr key={item.id || `${item.attendanceDate}-${index}`} style={{ background: index % 2 === 0 ? '#f8fafc' : '#fff' }}>
-                    <td style={td}>{item.attendanceDate || '-'}</td>
-                    <td style={td}>{content[`presence_status_${item.status}`] || item.status || '-'}</td>
-                    <td style={td}>{item.scheduledTime || '-'}</td>
-                    <td style={td}>{item.checkInTime || '-'}</td>
-                    <td style={td}>{item.notes || '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
     </div>
   );
 };
