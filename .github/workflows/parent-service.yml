@@ -14,7 +14,6 @@ on:
 jobs:
   build-deploy:
     name: Build & Deploy
-    if: ${{ hashFiles('parent-service/pom.xml') != '' }}
     runs-on: ubuntu-latest
     env:
       JAVA_VERSION: '17'
@@ -38,6 +37,9 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+
+      - name: Verify pom.xml exists
+        run: test -f ./parent-service/pom.xml
 
       - name: Build with Maven
         working-directory: ./parent-service
