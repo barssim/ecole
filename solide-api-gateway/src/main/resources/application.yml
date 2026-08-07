@@ -87,6 +87,13 @@ spring:
           filters:
             - StripPrefix=0
 
+        - id: parent-service
+          uri: "http://parent-service:8098"
+          predicates:
+            - Path=/api/parents/registration,/api/parents/registration/**,/api/parents/attendance,/api/parents/attendance/**,/api/parents/payments,/api/parents/payments/**,/api/parents/progress,/api/parents/progress/**,/api/parents/attestation-requests,/api/parents/attestation-requests/**
+          filters:
+            - StripPrefix=0
+
         - id: secretary-office
           uri: "http://secretary-office:8095"
           predicates:

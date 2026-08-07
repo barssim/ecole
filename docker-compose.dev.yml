@@ -74,6 +74,20 @@ services:
       timeout: 5s
       retries: 10
 
+  mysql-parent:
+    image: mysql:8
+    container_name: mysql-parent
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: parentDB
+    networks:
+      - ecole
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   usermanagement:
     build:
       context: ./usermanagement
@@ -130,6 +144,20 @@ services:
     networks:
       - ecole
 
+  parent-service:
+    build:
+      context: ./parent-service
+      dockerfile: Dockerfile
+    depends_on:
+      mysql-parent:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-parent:3306/parentDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - ecole
+
   eureka-server:
     build:
       context: ./eureka-server
@@ -148,6 +176,7 @@ services:
       - finance-manager
       - secretary-office
       - student-service
+      - parent-service
       - eureka-server
     networks:
       - ecole
