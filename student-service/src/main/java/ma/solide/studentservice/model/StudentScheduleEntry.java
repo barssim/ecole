@@ -29,7 +29,7 @@ public class StudentScheduleEntry {
     @Column(name = "student_id", nullable = false)
     private String studentId;
 
-    @Column(nullable = false)
+    @Column(name = "day_name", nullable = false)
     private String day;
 
     @Column(name = "slot_order", nullable = false)
