@@ -36,6 +36,15 @@ services:
     networks:
       - ecole
 
+  mysql-student:
+    image: mysql:8
+    container_name: mysql-student
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: studentDB
+    networks:
+      - ecole
+
   usermanagement:
     image: barssim/usermanagement:latest
     container_name: usermanagement
@@ -90,6 +99,21 @@ services:
     networks:
       - ecole
 
+  student-service:
+    build:
+      context: ./student-service
+      dockerfile: Dockerfile
+    image: barssim/student-service:latest
+    container_name: student-service
+    depends_on:
+      - mysql-student
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-student:3306/studentDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - ecole
+
   eureka-server:
     image: barssim/eureka-server:latest
     container_name: eureka-server
@@ -109,6 +133,7 @@ services:
       - finance-manager
       - secretary-office
       - teacher-service
+      - student-service
       - eureka-server
     networks:
       - ecole

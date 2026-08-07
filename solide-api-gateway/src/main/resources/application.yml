@@ -80,6 +80,13 @@ spring:
           filters:
             - StripPrefix=0
 
+        - id: student-service
+          uri: "http://student-service:8097"
+          predicates:
+            - Path=/api/studentschedule,/api/studentschedule/**,/api/student/**
+          filters:
+            - StripPrefix=0
+
         - id: secretary-office
           uri: "http://secretary-office:8095"
           predicates:
