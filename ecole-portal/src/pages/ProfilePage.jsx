@@ -3,6 +3,7 @@ import fr from '../locales/fr.json';
 import ar from '../locales/ar.json';
 import en from '../locales/en.json';
 import { getTenantId } from '../tenant';
+import { createApiUrlFor, readJsonResponse } from '../utils/apiClient';
 
 const ProfilePage = ({ language = 'fr' }) => {
   const content = language === 'fr' ? fr : language === 'en' ? en : ar;
@@ -15,7 +16,7 @@ const ProfilePage = ({ language = 'fr' }) => {
 
   const token = sessionStorage.getItem('jwt_token');
   const userId = localStorage.getItem('userId');
-  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
+  const apiUrlFor = createApiUrlFor('http://localhost:8085');
 
   const authHeaders = {
     'Content-Type': 'application/json',
@@ -39,28 +40,20 @@ const ProfilePage = ({ language = 'fr' }) => {
       setError('');
       setMessage('');
 
-      const response = await fetch(`${baseUrl}/api/users/${userId}/profile`, {
+      const response = await fetch(apiUrlFor(`/users/${userId}/profile`), {
         headers: authHeaders,
       });
 
-      if (!response.ok) {
-        let backendMessage = '';
-        try {
-          backendMessage = (await response.text()).trim();
-        } catch {
-          // ignore body parse failure
-        }
-        const fallbackMessage = `${content.profile_load_error || 'Impossible de charger le profil'} (HTTP ${response.status})`;
-        throw new Error(backendMessage || fallbackMessage);
-      }
-
-      const data = await response.json();
+      const data = await readJsonResponse(
+        response,
+        content.profile_load_error || 'Impossible de charger le profil'
+      );
       setProfile(data);
       setProfileForm({
-        firstname: data.firstname || '',
-        username: data.username || '',
-        email: data.email || '',
-        adresse: data.adresse || '',
+        firstname: data?.firstname || '',
+        username: data?.username || '',
+        email: data?.email || '',
+        adresse: data?.adresse || '',
       });
     } catch (err) {
       setError(err.message || content.profile_load_error || 'Erreur lors du chargement du profil');
@@ -76,20 +69,28 @@ const ProfilePage = ({ language = 'fr' }) => {
       setError('');
       setMessage('');
 
-      const response = await fetch(`${baseUrl}/api/users/${userId}/profile`, {
+      const response = await fetch(apiUrlFor(`/users/${userId}/profile`), {
         method: 'PUT',
         headers: authHeaders,
         body: JSON.stringify(profileForm),
       });
 
-      if (!response.ok) {
-        throw new Error('Impossible de mettre a jour le profil');
-      }
-
-      const data = await response.json();
-      setProfile(data);
-      localStorage.setItem('LoggedIn', data.username || profileForm.username);
-      setMessage('Profil mis a jour avec succes.');
+      const data = await readJsonResponse(
+        response,
+        content.unsuccessfull_profile_update || 'Impossible de mettre a jour le profil'
+      );
+      const updatedProfile = data && typeof data === 'object'
+        ? data
+        : { ...(profile || {}), ...profileForm };
+      setProfile(updatedProfile);
+      setProfileForm({
+        firstname: updatedProfile.firstname || '',
+        username: updatedProfile.username || '',
+        email: updatedProfile.email || '',
+        adresse: updatedProfile.adresse || '',
+      });
+      localStorage.setItem('LoggedIn', updatedProfile.username || profileForm.username);
+      setMessage(content.successfull_profile_update || 'Profil mis a jour avec succes.');
     } catch (err) {
       setError(err.message || 'Erreur lors de la mise a jour du profil');
     }
@@ -102,21 +103,13 @@ const ProfilePage = ({ language = 'fr' }) => {
       setError('');
       setMessage('');
 
-      const response = await fetch(`${baseUrl}/api/users/${userId}/password`, {
+      const response = await fetch(apiUrlFor(`/users/${userId}/password`), {
         method: 'PATCH',
         headers: authHeaders,
         body: JSON.stringify(passwordForm),
       });
 
-      if (!response.ok) {
-        let backendMessage = 'Impossible de changer le mot de passe';
-        try {
-          backendMessage = await response.text();
-        } catch {
-          // ignore body parse failure
-        }
-        throw new Error(backendMessage);
-      }
+      await readJsonResponse(response, 'Impossible de changer le mot de passe');
 
       setPasswordForm({ currentPassword: '', newPassword: '' });
       setMessage('Mot de passe mis a jour avec succes.');
