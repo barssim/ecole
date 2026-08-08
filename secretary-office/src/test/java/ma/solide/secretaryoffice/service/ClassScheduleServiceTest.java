@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -72,6 +73,8 @@ class ClassScheduleServiceTest {
     @Test
     void createDayPlanShouldPersistTrimmedSlots() {
         when(schoolClassRepository.existsByIdAndTenantId(1, TENANT)).thenReturn(true);
+        when(classScheduleEntryRepository.findAllByTenantIdAndClassIdOrderByDayAscSlotOrderAsc(TENANT, 1))
+                .thenReturn(List.of());
         when(classScheduleEntryRepository.save(any(ClassScheduleEntry.class))).thenAnswer(invocation -> {
             ClassScheduleEntry entry = invocation.getArgument(0);
             entry.setId(entry.getSlotOrder().longValue());
@@ -85,10 +88,13 @@ class ClassScheduleServiceTest {
         ClassScheduleDayResponse response = classScheduleService.createDayPlan(1, request);
 
         ArgumentCaptor<ClassScheduleEntry> captor = ArgumentCaptor.forClass(ClassScheduleEntry.class);
-        verify(classScheduleEntryRepository).save(captor.capture());
-        assertThat(captor.getValue().getDay()).isEqualTo("Monday");
+        verify(classScheduleEntryRepository, times(2)).save(captor.capture());
+        assertThat(captor.getAllValues()).extracting(ClassScheduleEntry::getDay).containsOnly("Monday");
+        assertThat(captor.getAllValues()).extracting(ClassScheduleEntry::getSlotText)
+                .containsExactly("Math - 08:00", "Physics - 10:00");
         assertThat(response.getDay()).isEqualTo("Monday");
         assertThat(response.getSlots()).containsExactly("Math - 08:00", "Physics - 10:00");
+        assertThat(response.getEntries()).extracting("slotOrder").containsExactly(1, 2);
     }
 
     @Test
@@ -147,4 +153,3 @@ class ClassScheduleServiceTest {
         verify(classScheduleEntryRepository, never()).delete(any());
     }
 }
-
