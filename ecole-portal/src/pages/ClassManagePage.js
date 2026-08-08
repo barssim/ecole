@@ -265,6 +265,171 @@ const ClassManagePage = ({ language }) => {
     }
   };
 
+  // Timetable
+  const [schedule, setSchedule] = useState([]);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [scheduleDay, setScheduleDay] = useState('Monday');
+  const [scheduleSlotsText, setScheduleSlotsText] = useState('');
+  const [savingSchedule, setSavingSchedule] = useState(false);
+  const [removingScheduleEntry, setRemovingScheduleEntry] = useState(null);
+  const [scheduleError, setScheduleError] = useState('');
+  const [scheduleSuccess, setScheduleSuccess] = useState('');
+
+  const clearScheduleMessages = () => {
+    setScheduleError('');
+    setScheduleSuccess('');
+  };
+
+  const normalizeText = (value) => String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  const dayOptions = [
+    { value: 'Monday', label: content.schedule_monday || 'Monday' },
+    { value: 'Tuesday', label: content.schedule_tuesday || 'Tuesday' },
+    { value: 'Wednesday', label: content.schedule_wednesday || 'Wednesday' },
+    { value: 'Thursday', label: content.schedule_thursday || 'Thursday' },
+    { value: 'Friday', label: content.schedule_friday || 'Friday' },
+    { value: 'Saturday', label: content.schedule_saturday || 'Saturday' },
+    { value: 'Sunday', label: content.schedule_sunday || 'Sunday' },
+  ];
+
+  const loadClassSchedule = async (classId = cls?.id) => {
+    if (!classId) return;
+    setScheduleLoading(true);
+    try {
+      const response = await fetch(apiUrlFor(`/classes/${classId}/schedule`), { headers: buildHeaders() });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      setSchedule(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to fetch class schedule:', error);
+      setSchedule([]);
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
+
+  const handleSaveScheduleDay = async () => {
+    const slots = scheduleSlotsText
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    if (!scheduleDay.trim()) {
+      setScheduleError(content.classes_scheduleDayValidation || 'Please select a day.');
+      return;
+    }
+    if (slots.length === 0) {
+      setScheduleError(content.classes_scheduleSlotsValidation || 'Add at least one slot.');
+      return;
+    }
+
+    setSavingSchedule(true);
+    clearScheduleMessages();
+    try {
+      const response = await fetch(apiUrlFor(`/classes/${cls.id}/schedule`), {
+        method: 'POST',
+        headers: buildHeaders(true),
+        body: JSON.stringify({ day: scheduleDay, slots }),
+      });
+      if (!response.ok) {
+        let message = content.classes_scheduleError || 'Unable to save schedule.';
+        try { const p = await response.json(); message = p.message || message; } catch {}
+        throw new Error(message);
+      }
+      await loadClassSchedule(cls.id);
+      setScheduleDay('Monday');
+      setScheduleSlotsText('');
+      setScheduleSuccess(content.classes_scheduleSuccess || 'Schedule saved successfully.');
+    } catch (error) {
+      setScheduleError(error.message || content.classes_scheduleError || 'Unable to save schedule.');
+    } finally {
+      setSavingSchedule(false);
+    }
+  };
+
+  const handleRemoveScheduleEntry = async (entryId) => {
+    if (!window.confirm(content.classes_scheduleDeleteConfirm || 'Delete this timetable entry?')) return;
+    setRemovingScheduleEntry(entryId);
+    clearScheduleMessages();
+    try {
+      const response = await fetch(apiUrlFor(`/classes/${cls.id}/schedule/${entryId}`), {
+        method: 'DELETE',
+        headers: buildHeaders(),
+      });
+      if (!response.ok && response.status !== 204) throw new Error(`HTTP ${response.status}`);
+      await loadClassSchedule(cls.id);
+      setScheduleSuccess(content.classes_scheduleDeleteSuccess || 'Schedule entry removed.');
+    } catch (error) {
+      setScheduleError(error.message || content.classes_scheduleDeleteError || 'Unable to remove schedule entry.');
+    } finally {
+      setRemovingScheduleEntry(null);
+    }
+  };
+
+  useEffect(() => {
+    const fetchClass = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(apiUrlFor('/classes'), { headers: buildHeaders() });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const all = await response.json();
+        const found = all.find((c) => String(c.id) === String(id));
+        setCls(found || null);
+      } catch (error) {
+        console.error('Failed to fetch class:', error);
+        setCls(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchTeachers = async () => {
+      setTeachersLoading(true);
+      try {
+        const response = await fetch(apiUrlFor('/users/teachers'), { headers: buildHeaders() });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        setTeachers(Array.isArray(data) ? data : []);
+      } catch {
+        setTeachers([]);
+      } finally {
+        setTeachersLoading(false);
+      }
+    };
+
+    const fetchStudents = async () => {
+      setStudentsLoading(true);
+      try {
+        const response = await fetch(apiUrlFor('/users/students'), { headers: buildHeaders() });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        setAllStudents(Array.isArray(data) ? data : []);
+      } catch {
+        setAllStudents([]);
+      } finally {
+        setStudentsLoading(false);
+      }
+    };
+
+    fetchClass();
+    if (canManageClasses) {
+      fetchTeachers();
+      fetchStudents();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (cls?.id && canManageClasses) {
+      loadClassSchedule(cls.id);
+    } else {
+      setSchedule([]);
+    }
+  }, [cls?.id, canManageClasses]);
+
   // ── Render ────────────────────────────────────────────────────
   if (loading) {
     return <div className="p-6 max-w-4xl mx-auto"><p className="text-gray-500">Loading...</p></div>;
@@ -293,12 +458,14 @@ const ClassManagePage = ({ language }) => {
   }
 
   const unassignedTeachers = teachers.filter(
-    (t) => !(cls.teachers || []).some((a) => a.toLowerCase() === String(t.name || '').toLowerCase())
+    (t) => !(cls.teachers || []).some((a) => normalizeText(a) === normalizeText(t.name || ''))
   );
 
   const unassignedStudents = allStudents.filter(
-    (s) => !(cls.students || []).some((added) => added.toLowerCase() === String(s.name || '').toLowerCase())
+    (s) => !(cls.students || []).some((added) => normalizeText(added) === normalizeText(s.name || ''))
   );
+
+  const getTranslatedDay = (dayKey) => content[`schedule_${String(dayKey || '').toLowerCase()}`] || dayKey;
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
@@ -492,6 +659,106 @@ const ClassManagePage = ({ language }) => {
           </ul>
         ) : (
           <p className="italic text-gray-400 text-sm">{content.classes_noTeachers || 'No teacher assigned.'}</p>
+        )}
+      </div>
+
+      {/* Timetable */}
+      <div className="bg-white rounded shadow p-4 border border-gray-200 space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <h3 className="font-semibold text-gray-700">
+            📆 {content.classes_scheduleTitle || 'Class timetable'}
+          </h3>
+          <p className="text-xs text-gray-500">
+            {content.classes_scheduleHint || 'Create one day at a time; each line becomes one slot.'}
+          </p>
+        </div>
+
+        {scheduleError && <p className="text-sm text-red-600">{scheduleError}</p>}
+        {scheduleSuccess && <p className="text-sm text-green-600">{scheduleSuccess}</p>}
+
+        <div className="grid gap-3 md:grid-cols-3 items-start">
+          <label className="text-sm md:col-span-1">
+            <span className="block mb-1 font-medium text-gray-600">{content.classes_scheduleDayLabel || 'Day'}</span>
+            <select
+              value={scheduleDay}
+              onChange={(e) => setScheduleDay(e.target.value)}
+              className="border rounded px-3 py-2 w-full"
+              disabled={savingSchedule}
+            >
+              {dayOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-sm md:col-span-2">
+            <span className="block mb-1 font-medium text-gray-600">{content.classes_scheduleSlotsLabel || 'Time slots'}</span>
+            <textarea
+              value={scheduleSlotsText}
+              onChange={(e) => setScheduleSlotsText(e.target.value)}
+              rows={4}
+              className="border rounded px-3 py-2 w-full"
+              placeholder={content.classes_scheduleSlotsPlaceholder || 'Math - 08:00\nPhysics - 10:00'}
+              disabled={savingSchedule}
+            />
+          </label>
+        </div>
+
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleSaveScheduleDay}
+            disabled={savingSchedule}
+            className="text-xs bg-green-100 text-green-800 px-3 py-1 rounded hover:bg-green-200 disabled:opacity-50"
+          >
+            {savingSchedule ? '...' : (content.classes_scheduleSave || 'Save timetable')}
+          </button>
+        </div>
+
+        {scheduleLoading ? (
+          <p className="italic text-gray-500 text-sm">{content.loading || 'Loading...'}</p>
+        ) : schedule.length > 0 ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            {schedule.map((dayPlan, index) => {
+              const entries = Array.isArray(dayPlan.entries) && dayPlan.entries.length > 0
+                ? dayPlan.entries
+                : (dayPlan.slots || []).map((slot, slotIndex) => ({
+                    id: `${dayPlan.day}-${slotIndex}`,
+                    slotOrder: slotIndex + 1,
+                    slotText: slot,
+                    readOnly: true,
+                  }));
+
+              return (
+                <div key={`${dayPlan.day}-${index}`} className="rounded border border-gray-200 bg-gray-50 p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="font-semibold text-gray-700">{getTranslatedDay(dayPlan.day)}</h4>
+                    <span className="text-xs text-gray-500">{entries.length} slot{entries.length > 1 ? 's' : ''}</span>
+                  </div>
+                  <ul className="space-y-2">
+                    {entries.map((entry) => (
+                      <li key={entry.id || `${dayPlan.day}-${entry.slotOrder}`} className="flex items-center justify-between gap-2 text-sm bg-white rounded px-3 py-2 border border-gray-100">
+                        <span>{entry.slotOrder}. {entry.slotText}</span>
+                        {!entry.readOnly && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveScheduleEntry(entry.id)}
+                            disabled={removingScheduleEntry === entry.id}
+                            className="text-red-500 hover:text-red-700 text-xs disabled:opacity-50"
+                            title={content.classes_scheduleDeleteTooltip || 'Remove slot'}
+                          >
+                            {removingScheduleEntry === entry.id ? '...' : '✕'}
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="italic text-gray-400 text-sm">{content.classes_scheduleNoData || 'No timetable defined for this class yet.'}</p>
         )}
       </div>
     </div>

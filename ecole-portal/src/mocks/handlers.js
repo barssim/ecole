@@ -29,6 +29,88 @@ const teachersByTenant = {
   ],
 };
 
+const classSchedulesByTenant = {
+  gardinia: {
+    1: [
+      { id: 101, classId: 1, day: 'Monday', slotOrder: 1, slotText: 'Math - 08:00' },
+      { id: 102, classId: 1, day: 'Monday', slotOrder: 2, slotText: 'Physics - 10:00' },
+      { id: 103, classId: 1, day: 'Wednesday', slotOrder: 1, slotText: 'English - 09:00' },
+    ],
+    2: [
+      { id: 201, classId: 2, day: 'Tuesday', slotOrder: 1, slotText: 'Biology - 08:30' },
+      { id: 202, classId: 2, day: 'Thursday', slotOrder: 1, slotText: 'History - 10:30' },
+    ],
+    3: [
+      { id: 301, classId: 3, day: 'Friday', slotOrder: 1, slotText: 'French - 08:00' },
+      { id: 302, classId: 3, day: 'Friday', slotOrder: 2, slotText: 'Economics - 10:30' },
+    ],
+  },
+  qods: {
+    11: [
+      { id: 1101, classId: 11, day: 'Monday', slotOrder: 1, slotText: 'Math - 08:00' },
+      { id: 1102, classId: 11, day: 'Monday', slotOrder: 2, slotText: 'Arabic - 10:00' },
+    ],
+    12: [
+      { id: 1201, classId: 12, day: 'Wednesday', slotOrder: 1, slotText: 'Science - 09:00' },
+      { id: 1202, classId: 12, day: 'Thursday', slotOrder: 1, slotText: 'Art - 11:00' },
+    ],
+  },
+};
+
+const dayOrder = {
+  monday: 1,
+  tuesday: 2,
+  wednesday: 3,
+  thursday: 4,
+  friday: 5,
+  saturday: 6,
+  sunday: 7,
+};
+
+const groupScheduleEntries = (entries) => {
+  const grouped = [];
+  const sorted = [...entries].sort((left, right) => {
+    const leftDay = String(left.day || '').trim().toLowerCase();
+    const rightDay = String(right.day || '').trim().toLowerCase();
+    const dayCompare = (dayOrder[leftDay] || Number.MAX_SAFE_INTEGER) - (dayOrder[rightDay] || Number.MAX_SAFE_INTEGER);
+    if (dayCompare !== 0) return dayCompare;
+    return (left.slotOrder || 0) - (right.slotOrder || 0);
+  });
+
+  sorted.forEach((entry) => {
+    if (!grouped.some((item) => item.day === entry.day)) {
+      grouped.push({ day: entry.day, slots: [], entries: [] });
+    }
+    const dayGroup = grouped.find((item) => item.day === entry.day);
+    dayGroup.slots.push(entry.slotText);
+    dayGroup.entries.push({ id: entry.id, slotOrder: entry.slotOrder, slotText: entry.slotText });
+  });
+
+  return grouped;
+};
+
+const findStudentClass = (tenantId, studentName) => {
+  const normalized = String(studentName || '').trim().toLowerCase();
+  if (!normalized) return null;
+  return (classesByTenant[tenantId] || []).find((schoolClass) =>
+    (schoolClass.students || []).some((student) => String(student || '').trim().toLowerCase() === normalized)
+  ) || null;
+};
+
+const getClassScheduleStore = (tenantId) => {
+  if (!classSchedulesByTenant[tenantId]) {
+    classSchedulesByTenant[tenantId] = {};
+  }
+  return classSchedulesByTenant[tenantId];
+};
+
+const getNextScheduleId = (tenantId) => {
+  const schedules = getClassScheduleStore(tenantId);
+  return Object.values(schedules)
+    .flat()
+    .reduce((maxId, entry) => Math.max(maxId, Number(entry.id) || 0), 0) + 1;
+};
+
 const examsByTenant = {
   gardinia: [
     { id: 1, subject: 'Mathématiques', className: '3e A', date: '2025-07-22', startTime: '09:00', endTime: '11:00', room: 'Salle 101' },
@@ -182,6 +264,74 @@ export const handlers = [
 
       return HttpResponse.json(schoolClass);
     }),
+
+    http.get(`${BASE_URL}/api/classes/:id/schedule`, ({ request, params }) => {
+      const tenantId = getTenantId(request);
+      const classId = Number(params.id);
+      const classList = classesByTenant[tenantId] || classesByTenant.gardinia;
+      const schoolClass = classList.find((cls) => cls.id === classId);
+
+      if (!schoolClass) {
+        return HttpResponse.json({ message: 'Classe introuvable' }, { status: 404 });
+      }
+
+      const classSchedule = (getClassScheduleStore(tenantId)[classId] || []);
+      return HttpResponse.json(groupScheduleEntries(classSchedule));
+    }),
+
+    http.post(`${BASE_URL}/api/classes/:id/schedule`, async ({ request, params }) => {
+      const tenantId = getTenantId(request);
+      const classId = Number(params.id);
+      const body = await request.json();
+      const classList = classesByTenant[tenantId] || classesByTenant.gardinia;
+      const schoolClass = classList.find((cls) => cls.id === classId);
+      const day = String(body?.day || '').trim();
+      const slots = Array.isArray(body?.slots) ? body.slots.map((slot) => String(slot || '').trim()).filter(Boolean) : [];
+
+      if (!schoolClass) {
+        return HttpResponse.json({ message: 'Classe introuvable' }, { status: 404 });
+      }
+      if (!day) {
+        return HttpResponse.json({ message: 'day is required' }, { status: 400 });
+      }
+      if (slots.length === 0) {
+        return HttpResponse.json({ message: 'at least one slot is required' }, { status: 400 });
+      }
+
+      const schedules = getClassScheduleStore(tenantId);
+      const existing = schedules[classId] || [];
+      const nextId = getNextScheduleId(tenantId);
+      const nextOrder = existing
+        .filter((entry) => String(entry.day || '').trim().toLowerCase() === day.toLowerCase())
+        .reduce((maxOrder, entry) => Math.max(maxOrder, Number(entry.slotOrder) || 0), 0) + 1;
+      const createdEntries = slots.map((slotText, index) => ({
+        id: nextId + index,
+        classId,
+        day,
+        slotOrder: nextOrder + index,
+        slotText,
+      }));
+
+      schedules[classId] = [...existing, ...createdEntries];
+      return HttpResponse.json(groupScheduleEntries(createdEntries)[0]);
+    }),
+
+    http.delete(`${BASE_URL}/api/classes/:id/schedule/:entryId`, ({ request, params }) => {
+      const tenantId = getTenantId(request);
+      const classId = Number(params.id);
+      const entryId = Number(params.entryId);
+      const schedules = getClassScheduleStore(tenantId);
+      const classEntries = schedules[classId] || [];
+      const nextEntries = classEntries.filter((entry) => entry.id !== entryId);
+
+      if (nextEntries.length === classEntries.length) {
+        return HttpResponse.json({ message: 'Schedule entry not found' }, { status: 404 });
+      }
+
+      schedules[classId] = nextEntries;
+      return new HttpResponse(null, { status: 204 });
+    }),
+
     // 🧪 Handler for teacher courses
     http.get(`${BASE_URL}/api/teachercourses`, () => {
     const userId = localStorage.getItem("userId");
@@ -219,8 +369,16 @@ export const handlers = [
 
 
 // 🧪 Handler for schedule
-http.get(`${BASE_URL}/api/studentschedule`, () => {
+http.get(`${BASE_URL}/api/studentschedule`, ({ request }) => {
   const userId = localStorage.getItem("userId");
+  const studentName = localStorage.getItem("LoggedIn") || localStorage.getItem("userName") || localStorage.getItem("username") || '';
+  const tenantId = getTenantId(request);
+
+  const matchedClass = findStudentClass(tenantId, studentName);
+  if (matchedClass) {
+    const schedule = getClassScheduleStore(tenantId)[matchedClass.id] || [];
+    return HttpResponse.json(groupScheduleEntries(schedule));
+  }
 
   const userSchedules = {
     "5": [

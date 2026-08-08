@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-const AdminBlock = ({ isAuthorized, canAccessAttestations = false, canManageCustomization = false, content }) => {
+const AdminBlock = ({ isAuthorized, canAccessAttestations = false, canManageCustomization = false, canSeeActivities = true, content }) => {
   const [showActivites, setShowActivites] = useState(false);
   const canOpenAdministration = isAuthorized || canAccessAttestations;
 
@@ -56,7 +56,7 @@ const AdminBlock = ({ isAuthorized, canAccessAttestations = false, canManageCust
           </Link>
         </li>
         )}
-        {isAuthorized && (
+        {canSeeActivities && (
         <li>
           <Link
             to="/administration/outings"
@@ -66,7 +66,7 @@ const AdminBlock = ({ isAuthorized, canAccessAttestations = false, canManageCust
           </Link>
         </li>
         )}
-        {isAuthorized && (
+        {canSeeActivities && (
         <li>
           <Link
             to="/administration/parties"
@@ -76,7 +76,7 @@ const AdminBlock = ({ isAuthorized, canAccessAttestations = false, canManageCust
           </Link>
         </li>
         )}
-        {isAuthorized && (
+        {canSeeActivities && (
         <li>
           <Link
             to="/administration/meetings"

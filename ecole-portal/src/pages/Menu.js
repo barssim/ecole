@@ -17,6 +17,7 @@ const Menu = ({ language }) => {
   const isAdminAuthorized = hasAnyRole(normalizedRoles, ["admin", "manager", "secretary"]);
   const canAccessAdminAttestations = hasAnyRole(normalizedRoles, ["admin", "manager", "secretary"]);
   const canManageCustomization = hasAnyRole(normalizedRoles, ["manager"]);
+  const canSeeAdminActivities = hasAnyRole(normalizedRoles, ["admin", "manager"]);
 
   const isTeacherAuthorized = hasAnyRole(normalizedRoles, ["teacher", "manager"]);
 
@@ -26,6 +27,7 @@ const Menu = ({ language }) => {
   const isFinanceAuthorized = hasAnyRole(normalizedRoles, ["finance", "manager"]);
 
   const isServicesAuthorized = hasAnyRole(normalizedRoles, ["student", "teacher", "admin", "manager", "parent", "finance", "secretary"]);
+  const canSeeCoreServices = hasAnyRole(normalizedRoles, ["student", "teacher", "admin", "manager", "finance", "secretary"]);
 
   const menuBlocks = [
     {
@@ -35,6 +37,7 @@ const Menu = ({ language }) => {
           isAuthorized={isAdminAuthorized}
           canAccessAttestations={canAccessAdminAttestations}
           canManageCustomization={canManageCustomization}
+          canSeeActivities={canSeeAdminActivities}
         />
       ),
       isAuthorized: isAdminAuthorized,
@@ -42,7 +45,7 @@ const Menu = ({ language }) => {
     { component: <TeacherBlock content={content}  isAuthorized={isTeacherAuthorized}/> , isAuthorized : isTeacherAuthorized},
     { component: <StudentBlock content={content} isAuthorized={isStudentAuthorized}/>,isAuthorized : isStudentAuthorized},
     { component: <ParentBlock content={content} isAuthorized={isParentAuthorized}/> , isAuthorized : isParentAuthorized},
-    { component: <ServicesBlock content={content} isAuthorized={isServicesAuthorized}/> , isAuthorized : isServicesAuthorized},
+    { component: <ServicesBlock content={content} isAuthorized={isServicesAuthorized} canSeeCoreServices={canSeeCoreServices}/> , isAuthorized : isServicesAuthorized},
     { component: <FinanceBlock content={content} isAuthorized={isFinanceAuthorized}/> , isAuthorized : isFinanceAuthorized},
   ];
 
@@ -59,4 +62,3 @@ const Menu = ({ language }) => {
 };
 
 export default Menu;
-

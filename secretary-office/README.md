@@ -9,6 +9,9 @@ Spring Boot microservice for ECOLE attestations.
 - `GET /api/attestations/{id}`
 - `GET /api/attestations/{id}/view`
 - `GET /api/attestations/{id}/download`
+- `GET /api/classes/{classId}/schedule`
+- `POST /api/classes/{classId}/schedule`
+- `DELETE /api/classes/{classId}/schedule/{entryId}`
 
 ## Local build
 

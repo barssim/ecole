@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 
-const ServicesBlock = ({ isAuthorized, content }) => {
+const ServicesBlock = ({ isAuthorized, canSeeCoreServices = true, content }) => {
 const [showActivites, setShowActivites] = useState(false);
   return (
      <div className="bg-white p-4 shadow-md rounded-md">
@@ -14,6 +14,7 @@ const [showActivites, setShowActivites] = useState(false);
                     </li>
                     {showActivites && (
             <ul className="ml-6 mt-2 space-y-1 list-disc list-inside">
+              {canSeeCoreServices && (
               <li>
                 <Link
                   to="/services/bibliotheque"
@@ -22,6 +23,8 @@ const [showActivites, setShowActivites] = useState(false);
                   {content.bibliotheque || "Bibliothèque"}
                 </Link>
               </li>
+              )}
+              {canSeeCoreServices && (
               <li>
                 <Link
                   to="/services/cantine"
@@ -30,6 +33,8 @@ const [showActivites, setShowActivites] = useState(false);
                   {content.cantine || "Cantine"}
                 </Link>
               </li>
+              )}
+              {canSeeCoreServices && (
               <li>
                 <Link
                   to="/services/transport"
@@ -38,6 +43,8 @@ const [showActivites, setShowActivites] = useState(false);
                   {content.transport || "Transport"}
                 </Link>
               </li>
+              )}
+              {canSeeCoreServices && (
               <li>
                 <Link
                   to="/services/sport"
@@ -46,6 +53,7 @@ const [showActivites, setShowActivites] = useState(false);
                   {content.sport || "Sport"}
                 </Link>
               </li>
+              )}
               <li>
                 <Link
                   to="/services/outings"
