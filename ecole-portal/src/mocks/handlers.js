@@ -556,6 +556,9 @@ http.get(`${BASE_URL}/api/studentschedule`, ({ request }) => {
       if (!attestation) {
         return new HttpResponse(null, { status: 404 });
       }
+      if (attestation.status !== 'pending') {
+        return new HttpResponse(null, { status: 409 });
+      }
       attestation.status = 'approved';
       attestation.issuedBy = 'Traitée par secrétariat';
       return HttpResponse.json(attestation);
@@ -566,6 +569,9 @@ http.get(`${BASE_URL}/api/studentschedule`, ({ request }) => {
       const attestation = getAttestationStore(tenantId).find((item) => item.id === Number(params.id));
       if (!attestation) {
         return new HttpResponse(null, { status: 404 });
+      }
+      if (attestation.status !== 'pending') {
+        return new HttpResponse(null, { status: 409 });
       }
       attestation.status = 'rejected';
       attestation.issuedBy = 'Traitée par secrétariat';
