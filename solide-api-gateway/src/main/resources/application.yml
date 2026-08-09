@@ -2,6 +2,9 @@ server:
   port: 8085
   address: 0.0.0.0
 
+jwt:
+  secret: ${JWT_SECRET}
+
 spring:
   profiles:
     active: prod   # change to production
@@ -98,6 +101,13 @@ spring:
           uri: "http://secretary-office:8095"
           predicates:
             - Path=/api/attestations,/api/attestations/**,/api/attestationsproduction,/api/attestationsproduction/**,/api/classes,/api/classes/**,/api/exams,/api/exams/**,/api/activities,/api/activities/**
+          filters:
+            - StripPrefix=0
+
+        - id: school-activity
+          uri: "http://school-activity:8099"
+          predicates:
+            - Path=/api/school-activities,/api/school-activities/**
           filters:
             - StripPrefix=0
 

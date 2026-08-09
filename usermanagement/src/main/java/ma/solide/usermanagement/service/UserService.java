@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -23,14 +24,17 @@ public class UserService {
 	private final UserRepository userRepository;
 	private final TenantCustomizationService tenantCustomizationService;
 	private final CustomerVersionPolicy customerVersionPolicy;
+	private final PasswordEncoder passwordEncoder;
 
 	public UserService(
 			UserRepository userRepository,
 			TenantCustomizationService tenantCustomizationService,
-			CustomerVersionPolicy customerVersionPolicy) {
+			CustomerVersionPolicy customerVersionPolicy,
+			PasswordEncoder passwordEncoder) {
 		this.userRepository = userRepository;
 		this.tenantCustomizationService = tenantCustomizationService;
 		this.customerVersionPolicy = customerVersionPolicy;
+		this.passwordEncoder = passwordEncoder;
 	}
 
 	public Optional<User> getUser(Integer userNo) {
@@ -44,7 +48,8 @@ public class UserService {
 	public boolean existsBySurnameAndPassword(String username, String password)
 	{
 		String tenantId = TenantContext.getRequiredTenantId();
-		return userRepository.existsByTenantIdAndSurnameAndPassword(tenantId, username, password);
+		User user = userRepository.findByTenantIdAndSurname(tenantId, username).orElse(null);
+		return user != null && passwordEncoder.matches(password, user.getPassword());
 		
 	}
 
@@ -84,7 +89,8 @@ public class UserService {
 		String tenantId = TenantContext.getRequiredTenantId();
 		enforceTenantUserLimit(tenantId);
 		user.setTenantId(tenantId);
-		return userRepository.save(user); // Inserts or updates the user
+		user.setPassword(passwordEncoder.encode(user.getPassword()));
+		return userRepository.save(user);
 	}
 
 	private void enforceTenantUserLimit(String tenantId) {
@@ -140,11 +146,11 @@ public class UserService {
 		if (newPassword.length() < 6) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be at least 6 characters");
 		}
-		if (!currentPassword.equals(user.getPassword())) {
+		if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
 		}
 
-		user.setPassword(newPassword);
+		user.setPassword(passwordEncoder.encode(newPassword));
 		userRepository.save(user);
 	}
 

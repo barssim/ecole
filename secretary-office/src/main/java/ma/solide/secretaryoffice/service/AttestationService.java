@@ -37,9 +37,20 @@ public class AttestationService {
     }
 
     public List<AttestationResponse> getAttestations(Integer userId, String search) {
+        return getAttestations(userId, search, null);
+    }
+
+    /**
+     * Returns attestations for the current tenant, applying filters in priority order:
+     * userId+search &gt; userId &gt; search &gt; status &gt; all.
+     * When {@code userId} or {@code search} is set, the {@code status} parameter is intentionally
+     * ignored; callers must omit status when filtering by user or search text.
+     */
+    public List<AttestationResponse> getAttestations(Integer userId, String search, String status) {
         String tenantId = TenantContext.getRequiredTenantId();
         List<Attestation> attestations;
         boolean hasSearch = StringUtils.hasText(search);
+        boolean hasStatus = StringUtils.hasText(status);
 
         if (userId != null && hasSearch) {
             attestations = attestationRepository.findByTenantIdAndUserIdAndTitleContainingIgnoreCaseOrderByDateDesc(tenantId, userId, search.trim());
@@ -47,6 +58,8 @@ public class AttestationService {
             attestations = attestationRepository.findByTenantIdAndUserIdOrderByDateDesc(tenantId, userId);
         } else if (hasSearch) {
             attestations = attestationRepository.findByTenantIdAndTitleContainingIgnoreCaseOrderByDateDesc(tenantId, search.trim());
+        } else if (hasStatus) {
+            attestations = attestationRepository.findByTenantIdAndStatusOrderByDateDesc(tenantId, status.trim().toLowerCase());
         } else {
             attestations = attestationRepository.findAllByTenantIdOrderByDateDesc(tenantId);
         }

@@ -19,6 +19,12 @@ public class TenantFilter extends OncePerRequestFilter {
     private static final String TENANT_HEADER = "X-Tenant-Id";
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.startsWith("/actuator/");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         if (HttpMethod.OPTIONS.matches(request.getMethod())) {

@@ -5,7 +5,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/userDB?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://mysql-user:3306/userDB?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
     username: root
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -35,7 +35,7 @@ management:
     health:
       show-details: always
 jwt:
-  secret: 239487234972394e98er023r934o9342oi4uew0923w8734928374
+  secret: ${JWT_SECRET}
   expiration: 3600000 # 1 hour in milliseconds (optional)
 
 customer-version:

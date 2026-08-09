@@ -57,9 +57,13 @@ public class FileStorageService {
         String storedName = TS.format(LocalDateTime.now()) + "-" + UUID.randomUUID() + "-" + safeOriginal;
 
         try {
-            Path tenantDir = baseDir.resolve(tenantId);
+            Path tenantDir = baseDir.resolve(tenantId).normalize();
+            Path destPath = tenantDir.resolve(storedName).normalize();
+            if (!destPath.startsWith(tenantDir)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid filename");
+            }
             Files.createDirectories(tenantDir);
-            Files.copy(multipartFile.getInputStream(), tenantDir.resolve(storedName), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(multipartFile.getInputStream(), destPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not store file");
         }
@@ -80,7 +84,11 @@ public class FileStorageService {
         }
 
         try {
-            Path filePath = baseDir.resolve(tenantId).resolve(filename).normalize();
+            Path tenantDir = baseDir.resolve(tenantId).normalize();
+            Path filePath = tenantDir.resolve(filename).normalize();
+            if (!filePath.startsWith(tenantDir)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid filename");
+            }
             Resource resource = new UrlResource(filePath.toUri());
             if (!resource.exists() || !resource.isReadable()) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");

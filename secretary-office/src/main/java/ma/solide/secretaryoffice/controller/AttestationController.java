@@ -44,8 +44,9 @@ public class AttestationController {
     @GetMapping
     public ResponseEntity<List<AttestationResponse>> getAttestations(
             @RequestParam(required = false) Integer userId,
-            @RequestParam(required = false) String search) {
-        return ResponseEntity.ok(attestationService.getAttestations(userId, search));
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status) {
+        return ResponseEntity.ok(attestationService.getAttestations(userId, search, status));
     }
 
     @GetMapping("/{id}")

@@ -10,6 +10,8 @@ public interface AttestationRepository extends JpaRepository<Attestation, Intege
 
     List<Attestation> findAllByTenantIdOrderByDateDesc(String tenantId);
 
+    List<Attestation> findByTenantIdAndStatusOrderByDateDesc(String tenantId, String status);
+
     List<Attestation> findByTenantIdAndTitleContainingIgnoreCaseOrderByDateDesc(String tenantId, String search);
 
     List<Attestation> findByTenantIdAndUserIdOrderByDateDesc(String tenantId, Integer userId);

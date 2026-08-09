@@ -36,7 +36,7 @@
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-dependencies</artifactId>
-				<version>2021.0.9</version> <!-- Or latest stable version -->
+				<version>2023.0.3</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -55,7 +55,7 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>runtime</scope>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
