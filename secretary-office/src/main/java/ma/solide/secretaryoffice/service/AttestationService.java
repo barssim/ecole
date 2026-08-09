@@ -40,6 +40,12 @@ public class AttestationService {
         return getAttestations(userId, search, null);
     }
 
+    /**
+     * Returns attestations for the current tenant, applying filters in priority order:
+     * userId+search &gt; userId &gt; search &gt; status &gt; all.
+     * When {@code userId} or {@code search} is set, the {@code status} parameter is intentionally
+     * ignored; callers must omit status when filtering by user or search text.
+     */
     public List<AttestationResponse> getAttestations(Integer userId, String search, String status) {
         String tenantId = TenantContext.getRequiredTenantId();
         List<Attestation> attestations;

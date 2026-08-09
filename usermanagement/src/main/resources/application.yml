@@ -35,7 +35,7 @@ management:
     health:
       show-details: always
 jwt:
-  secret: 239487234972394e98er023r934o9342oi4uew0923w8734928374
+  secret: ${JWT_SECRET}
   expiration: 3600000 # 1 hour in milliseconds (optional)
 
 customer-version:

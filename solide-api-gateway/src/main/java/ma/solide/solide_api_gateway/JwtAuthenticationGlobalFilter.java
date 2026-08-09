@@ -3,6 +3,7 @@ package ma.solide.solide_api_gateway;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -16,10 +17,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
- * Global filter that validates the JWT ****** on every non-public request.
+ * Global filter that validates the JWT credential on every non-public request.
  *
  * <p>Public paths (no token required):
  * <ul>
@@ -62,8 +65,10 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
         String token = authHeader.substring(BEARER_PREFIX.length());
         Claims claims;
         try {
-            claims = Jwts.parser()
-                    .setSigningKey(jwtSecret)
+            SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+            claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
                     .parseClaimsJws(token)
                     .getBody();
         } catch (JwtException | IllegalArgumentException e) {

@@ -2,19 +2,22 @@ package ma.solide.usermanagement.util;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.crypto.SecretKey;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JwtUtil {
-    @Value("${jwt.secret:kdJf9zf2xg8kPfgmNc4gWqTdR5veYnZ4Jwr6Hg4B3dVt9Lf83n}")
+    @Value("${jwt.secret}")
     private String secretKey;
 
     @Value("${jwt.expiration:3600000}")
@@ -25,12 +28,15 @@ public class JwtUtil {
         claims.put("tenant_id", tenantId);
         claims.put("roles", parseRoles(roleCsv));
 
+        SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-				.signWith(SignatureAlgorithm.HS256, secretKey).compact();
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 
     private List<String> parseRoles(String roleCsv) {
