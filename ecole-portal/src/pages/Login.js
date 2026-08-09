@@ -44,6 +44,22 @@ const resolveTenantFromLoginResponse = (token, user, topLevelTenantId) => {
 	return resolveTenantFromHost();
 };
 
+const resolveUserIdFromLoginResponse = (token, user) => {
+	const directUserId = Number(user?.id);
+	if (Number.isInteger(directUserId) && directUserId > 0) {
+		return directUserId;
+	}
+
+	const jwtPayload = decodeJwtPayload(token);
+	const candidate = jwtPayload?.userId ?? jwtPayload?.user_id ?? jwtPayload?.id ?? jwtPayload?.sub;
+	const jwtUserId = Number(candidate);
+	if (Number.isInteger(jwtUserId) && jwtUserId > 0) {
+		return jwtUserId;
+	}
+
+	return null;
+};
+
 
 const Login = ({language}) => {
 	let content;
@@ -127,8 +143,9 @@ if (language === "fr") {
 				localStorage.setItem("LoggedIn", username);
 			}
 
-			if (user && user.id) {
-				localStorage.setItem("userId", user.id);
+			const resolvedUserId = resolveUserIdFromLoginResponse(token, user);
+			if (resolvedUserId !== null) {
+				localStorage.setItem("userId", String(resolvedUserId));
 			}
 
 			// Store user roles - always store a valid JSON array

@@ -4,6 +4,7 @@ import en from '../locales/en.json';
 import ar from '../locales/ar.json';
 import { getTenantId } from '../tenant';
 import { hasAnyRole, normalizeRoles } from '../utils/roles';
+import { createApiUrlFor } from '../utils/apiClient';
 
 const ATTESTATION_TYPES = [
   { value: 'enrollment',   labelKey: 'attestation_typeEnrollment' },
@@ -41,28 +42,30 @@ const AttestationsPage = ({ language }) => {
   const canManageAttestations = hasAnyRole(normalizedRoles, ['secretary', 'admin', 'manager']);
   const canRequestAttestation = hasAnyRole(normalizedRoles, ['parent']);
 
-  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
+  const apiUrlFor = createApiUrlFor('http://localhost:8085');
   const rolesHeaderValue = normalizedRoles.join(',');
+  const parsedUserId = Number.parseInt(String(userId || ''), 10);
+  const resolvedUserId = Number.isInteger(parsedUserId) && parsedUserId > 0 ? parsedUserId : null;
 
   const buildHeaders = useCallback((includeJson = false) => {
     const headers = {
       'X-Tenant-Id': getTenantId(),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(rolesHeaderValue ? { 'X-User-Roles': rolesHeaderValue } : {}),
-      ...(userId ? { 'X-User-Id': String(userId) } : {}),
+      ...(resolvedUserId ? { 'X-User-Id': String(resolvedUserId) } : {}),
       ...(username ? { 'X-User-Name': username } : {}),
     };
     if (includeJson) {
       headers['Content-Type'] = 'application/json';
     }
     return headers;
-  }, [rolesHeaderValue, token, userId, username]);
+  }, [rolesHeaderValue, token, resolvedUserId, username]);
 
   const fetchAttestations = useCallback(async () => {
     try {
-      const query = !canManageAttestations && userId ? `?userId=${encodeURIComponent(userId)}` : '';
+      const query = !canManageAttestations && resolvedUserId ? `?userId=${encodeURIComponent(resolvedUserId)}` : '';
       const response = await fetch(
-        `${baseUrl}/api/attestations${query}`,
+        apiUrlFor(`/attestations${query}`),
         {
           headers: buildHeaders(),
         }
@@ -72,7 +75,7 @@ const AttestationsPage = ({ language }) => {
     } catch (error) {
       console.error('Failed to fetch attestations:', error);
     }
-  }, [baseUrl, buildHeaders, canManageAttestations, userId]);
+  }, [apiUrlFor, buildHeaders, canManageAttestations, resolvedUserId]);
 
   useEffect(() => {
     fetchAttestations();
@@ -83,13 +86,21 @@ const AttestationsPage = ({ language }) => {
     setRequesting(true);
     setRequestMessage(null);
     try {
+      if (!resolvedUserId) {
+        setRequestMessage({
+          type: 'error',
+          text: content.attestation_requestMissingUser || 'Unable to identify your account. Please log out and log in again.',
+        });
+        return;
+      }
+
       const response = await fetch(
-        `${baseUrl}/api/attestations/request`,
+        apiUrlFor('/attestations/request'),
         {
           method: 'POST',
           headers: buildHeaders(true),
           body: JSON.stringify({
-            userId: userId ? parseInt(userId) : null,
+            userId: resolvedUserId,
             studentName: username,
             type: requestType,
             reason: requestReason,
@@ -108,17 +119,24 @@ const AttestationsPage = ({ language }) => {
       } else if (response.status === 409) {
         setRequestMessage({ type: 'error', text: content.attestation_requestDuplicate });
       } else {
-        setRequestMessage({ type: 'error', text: content.attestation_requestError });
+        let backendMessage = '';
+        try {
+          const payload = await response.json();
+          backendMessage = payload?.message || payload?.error || '';
+        } catch {
+          // ignore JSON parse errors and use fallback
+        }
+        setRequestMessage({ type: 'error', text: backendMessage || content.attestation_requestError });
       }
-    } catch {
-      setRequestMessage({ type: 'error', text: content.attestation_requestError });
+    } catch (error) {
+      setRequestMessage({ type: 'error', text: error?.message || content.attestation_requestError });
     } finally {
       setRequesting(false);
     }
   };
 
   const handleView = (id) => {
-    fetch(`${baseUrl}/api/attestations/${id}/view`, { headers: buildHeaders() })
+    fetch(apiUrlFor(`/attestations/${id}/view`), { headers: buildHeaders() })
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.blob();
@@ -137,7 +155,7 @@ const AttestationsPage = ({ language }) => {
      setRequestMessage(null);
      try {
        const actionPath = endpoint ? `/${endpoint}` : '';
-       const response = await fetch(`${baseUrl}/api/attestations/${attestationId}${actionPath}`, {
+       const response = await fetch(apiUrlFor(`/attestations/${attestationId}${actionPath}`), {
          method,
          headers: method === 'DELETE' ? buildHeaders() : buildHeaders(true),
        });
@@ -168,7 +186,7 @@ const AttestationsPage = ({ language }) => {
    };
 
    const handleDownload = (id) => {
-        fetch(`${baseUrl}/api/attestations/${id}/download`, { headers: buildHeaders() })
+        fetch(apiUrlFor(`/attestations/${id}/download`), { headers: buildHeaders() })
           .then((response) => {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             return response.blob();

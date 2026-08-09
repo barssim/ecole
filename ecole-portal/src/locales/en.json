@@ -259,6 +259,7 @@
   "attestation_requestCancel": "Cancel",
   "attestation_requestSuccess": "Your request was submitted successfully!",
   "attestation_requestError": "Request failed. Please try again.",
+  "attestation_requestMissingUser": "Unable to identify your account. Please log out and log in again.",
   "attestation_requestForbidden": "Only parents are allowed to request an attestation.",
   "attestation_requestDuplicate": "A request of this type is already pending.",
   "attestation_manageMode": "Attestation management mode",

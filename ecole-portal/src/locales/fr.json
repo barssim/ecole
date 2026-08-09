@@ -262,6 +262,7 @@
 	"attestation_requestCancel": "Annuler",
 	"attestation_requestSuccess": "Votre demande a été envoyée avec succès!",
 	"attestation_requestError": "Échec de la demande. Veuillez réessayer.",
+	"attestation_requestMissingUser": "Impossible d'identifier votre compte. Veuillez vous déconnecter puis vous reconnecter.",
 	"attestation_requestForbidden": "Seuls les parents peuvent demander une attestation.",
 	"attestation_requestDuplicate": "Une demande de ce type est déjà en attente.",
 	"attestation_manageMode": "Mode gestion des attestations",
