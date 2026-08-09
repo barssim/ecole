@@ -69,7 +69,7 @@ class AttestationServiceTest {
         AttestationResponse response = attestationService.approve(10);
 
         assertThat(response.getStatus()).isEqualTo("approved");
-        assertThat(response.getIssuedBy()).isEqualTo("Traitée par secrétariat");
+        assertThat(response.getIssuedBy()).isEqualTo("Traitée par Secrétariat");
         verify(attestationRepository).save(attestation);
     }
 
@@ -179,5 +179,32 @@ class AttestationServiceTest {
         attestationService.delete(13);
 
         verify(attestationRepository).delete(attestation);
+    }
+
+    @Test
+    void updateStatusShouldIncludeSecretaryNameWhenProvided() {
+        Attestation attestation = Attestation.builder()
+                .id(14)
+                .userId(5)
+                .studentName("Ali")
+                .className("3e A")
+                .title("Attestation")
+                .type("enrollment")
+                .date(LocalDate.now())
+                .status("pending")
+                .issuedBy("En attente")
+                .validFrom(LocalDate.now())
+                .validUntil(LocalDate.now().plusYears(1))
+                .reference("REF-5")
+                .build();
+
+        when(attestationRepository.findByIdAndTenantId(14, TENANT)).thenReturn(Optional.of(attestation));
+        when(attestationRepository.save(any(Attestation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AttestationResponse response = attestationService.updateStatus(14, "approved", "Mme Rahmani");
+
+        assertThat(response.getStatus()).isEqualTo("approved");
+        assertThat(response.getIssuedBy()).isEqualTo("Traitée par Mme Rahmani");
+        verify(attestationRepository).save(attestation);
     }
 }

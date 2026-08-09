@@ -49,12 +49,14 @@ const AttestationsPage = ({ language }) => {
       'X-Tenant-Id': getTenantId(),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(rolesHeaderValue ? { 'X-User-Roles': rolesHeaderValue } : {}),
+      ...(userId ? { 'X-User-Id': String(userId) } : {}),
+      ...(username ? { 'X-User-Name': username } : {}),
     };
     if (includeJson) {
       headers['Content-Type'] = 'application/json';
     }
     return headers;
-  }, [rolesHeaderValue, token]);
+  }, [rolesHeaderValue, token, userId, username]);
 
   const fetchAttestations = useCallback(async () => {
     try {

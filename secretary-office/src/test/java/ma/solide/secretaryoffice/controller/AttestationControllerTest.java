@@ -35,7 +35,7 @@ class AttestationControllerTest {
     void requestAttestationShouldRejectAdminRole() {
         AttestationRequestDTO dto = new AttestationRequestDTO();
 
-        assertThatThrownBy(() -> attestationController.requestAttestation(dto, "student,admin"))
+        assertThatThrownBy(() -> attestationController.requestAttestation(dto, "student,admin", null))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
@@ -47,7 +47,7 @@ class AttestationControllerTest {
         AttestationResponse response = AttestationResponse.builder().id(1).status("pending").build();
         when(attestationService.requestAttestation(dto)).thenReturn(response);
 
-        AttestationResponse result = attestationController.requestAttestation(dto, "parent");
+        AttestationResponse result = attestationController.requestAttestation(dto, "parent", null);
 
         assertThat(result.getId()).isEqualTo(1);
         verify(attestationService).requestAttestation(dto);
@@ -57,7 +57,7 @@ class AttestationControllerTest {
     void requestAttestationShouldRejectStudentRole() {
         AttestationRequestDTO dto = new AttestationRequestDTO();
 
-        assertThatThrownBy(() -> attestationController.requestAttestation(dto, "student"))
+        assertThatThrownBy(() -> attestationController.requestAttestation(dto, "student", null))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
@@ -68,7 +68,7 @@ class AttestationControllerTest {
         AttestationStatusUpdateDTO dto = new AttestationStatusUpdateDTO();
         dto.setStatus("approved");
 
-        assertThatThrownBy(() -> attestationController.updateStatus(1, dto, "student"))
+        assertThatThrownBy(() -> attestationController.updateStatus(1, dto, "student", "student-user"))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
@@ -76,15 +76,30 @@ class AttestationControllerTest {
 
     @Test
     void getAttestationsShouldRequireUserIdForParent() {
-        assertThatThrownBy(() -> attestationController.getAttestations(null, null, "parent"))
+        assertThatThrownBy(() -> attestationController.getAttestations(null, null, "parent", null))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
+    void getAttestationsShouldRejectParentWhenQueryUserIdDoesNotMatchHeaderUserId() {
+        assertThatThrownBy(() -> attestationController.getAttestations(9, null, "parent", "5"))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void getAttestationsShouldUseHeaderUserIdForParent() {
+        attestationController.getAttestations(null, null, "parent", "5");
+
+        verify(attestationService).getAttestations(5, null);
+    }
+
+    @Test
     void getAttestationsShouldAllowSecretaryWithoutUserId() {
-        attestationController.getAttestations(null, null, "secretary");
+        attestationController.getAttestations(null, null, "secretary", null);
 
         verify(attestationService).getAttestations(null, null);
     }
@@ -92,23 +107,23 @@ class AttestationControllerTest {
     @Test
     void approveShouldAllowSecretary() {
         AttestationResponse response = AttestationResponse.builder().id(1).status("approved").build();
-        when(attestationService.approve(1)).thenReturn(response);
+        when(attestationService.approve(1, "sec-1")).thenReturn(response);
 
-        AttestationResponse result = attestationController.approve(1, "secretary").getBody();
+        AttestationResponse result = attestationController.approve(1, "secretary", "sec-1").getBody();
 
         assertThat(result.getStatus()).isEqualTo("approved");
-        verify(attestationService).approve(1);
+        verify(attestationService).approve(1, "sec-1");
     }
 
     @Test
     void cancelShouldAllowSecretary() {
         AttestationResponse response = AttestationResponse.builder().id(1).status("rejected").build();
-        when(attestationService.cancel(1)).thenReturn(response);
+        when(attestationService.cancel(1, "sec-2")).thenReturn(response);
 
-        AttestationResponse result = attestationController.cancel(1, "role_secretary").getBody();
+        AttestationResponse result = attestationController.cancel(1, "role_secretary", "sec-2").getBody();
 
         assertThat(result.getStatus()).isEqualTo("rejected");
-        verify(attestationService).cancel(1);
+        verify(attestationService).cancel(1, "sec-2");
     }
 
     @Test

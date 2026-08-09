@@ -1,4 +1,3 @@
-
 package ma.solide.secretaryoffice.controller;
 
 import java.io.ByteArrayInputStream;
@@ -46,7 +45,8 @@ public class AttestationController {
     public ResponseEntity<List<AttestationResponse>> getAttestations(
             @RequestParam(required = false) Integer userId,
             @RequestParam(required = false) String search,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader) {
         if (hasManagementRole(userRolesHeader)) {
             return ResponseEntity.ok(attestationService.getAttestations(userId, search));
         }
@@ -54,11 +54,17 @@ public class AttestationController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Seuls les parents et le secrétariat peuvent consulter les attestations");
         }
-        if (userId == null) {
+        Integer authenticatedUserId = parseUserId(userIdHeader);
+        Integer effectiveUserId = authenticatedUserId != null ? authenticatedUserId : userId;
+        if (authenticatedUserId != null && userId != null && !authenticatedUserId.equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Un parent ne peut consulter que ses propres attestations");
+        }
+        if (effectiveUserId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Le paramètre userId est requis pour consulter les attestations parent");
         }
-        return ResponseEntity.ok(attestationService.getAttestations(userId, search));
+        return ResponseEntity.ok(attestationService.getAttestations(effectiveUserId, search));
     }
 
     @GetMapping("/{id}")
@@ -80,7 +86,8 @@ public class AttestationController {
     @ResponseStatus(HttpStatus.CREATED)
     public AttestationResponse requestAttestation(
             @RequestBody AttestationRequestDTO dto,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader) {
         if (hasManagementRole(userRolesHeader)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Le secrétariat et l'administration ne peuvent pas demander une attestation");
@@ -89,32 +96,43 @@ public class AttestationController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Seuls les parents peuvent demander une attestation");
         }
+        Integer authenticatedUserId = parseUserId(userIdHeader);
+        if (authenticatedUserId != null) {
+            if (dto.getUserId() != null && !authenticatedUserId.equals(dto.getUserId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Un parent ne peut demander une attestation que pour son propre compte");
+            }
+            dto.setUserId(authenticatedUserId);
+        }
         return attestationService.requestAttestation(dto);
     }
 
     @PatchMapping("/{id}/approve")
     public ResponseEntity<AttestationResponse> approve(
             @PathVariable Integer id,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader,
+            @RequestHeader(value = "X-User-Name", required = false) String userNameHeader) {
         requireManagementRole(userRolesHeader);
-        return ResponseEntity.ok(attestationService.approve(id));
+        return ResponseEntity.ok(attestationService.approve(id, userNameHeader));
     }
 
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<AttestationResponse> cancel(
             @PathVariable Integer id,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader,
+            @RequestHeader(value = "X-User-Name", required = false) String userNameHeader) {
         requireManagementRole(userRolesHeader);
-        return ResponseEntity.ok(attestationService.cancel(id));
+        return ResponseEntity.ok(attestationService.cancel(id, userNameHeader));
     }
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<AttestationResponse> updateStatus(
             @PathVariable Integer id,
             @RequestBody AttestationStatusUpdateDTO dto,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader,
+            @RequestHeader(value = "X-User-Name", required = false) String userNameHeader) {
         requireManagementRole(userRolesHeader);
-        return ResponseEntity.ok(attestationService.updateStatus(id, dto.getStatus()));
+        return ResponseEntity.ok(attestationService.updateStatus(id, dto.getStatus(), userNameHeader));
     }
 
     @DeleteMapping("/{id}")
@@ -168,5 +186,16 @@ public class AttestationController {
                 .headers(headers)
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(new InputStreamResource(pdf));
+    }
+
+    private Integer parseUserId(String userIdHeader) {
+        if (userIdHeader == null || userIdHeader.isBlank()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(userIdHeader.trim());
+        } catch (NumberFormatException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "X-User-Id invalide");
+        }
     }
 }

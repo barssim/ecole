@@ -129,6 +129,10 @@ public class AttestationService {
     }
 
     public AttestationResponse updateStatus(Integer id, String status) {
+        return updateStatus(id, status, null);
+    }
+
+    public AttestationResponse updateStatus(Integer id, String status, String processedBy) {
         if (!StringUtils.hasText(status)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le statut est requis");
         }
@@ -139,15 +143,23 @@ public class AttestationService {
                     "Statut invalide. Valeurs acceptées : " + MANAGED_STATUSES);
         }
 
-        return transitionTo(id, normalizedStatus);
+        return transitionTo(id, normalizedStatus, processedBy);
     }
 
     public AttestationResponse approve(Integer id) {
-        return transitionTo(id, "approved");
+        return approve(id, null);
+    }
+
+    public AttestationResponse approve(Integer id, String processedBy) {
+        return transitionTo(id, "approved", processedBy);
     }
 
     public AttestationResponse cancel(Integer id) {
-        return transitionTo(id, "rejected");
+        return cancel(id, null);
+    }
+
+    public AttestationResponse cancel(Integer id, String processedBy) {
+        return transitionTo(id, "rejected", processedBy);
     }
 
     public void delete(Integer id) {
@@ -155,7 +167,7 @@ public class AttestationService {
         attestationRepository.delete(attestation);
     }
 
-    private AttestationResponse transitionTo(Integer id, String targetStatus) {
+    private AttestationResponse transitionTo(Integer id, String targetStatus, String processedBy) {
         Attestation attestation = findEntity(id);
         if (!"pending".equalsIgnoreCase(attestation.getStatus())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -163,7 +175,8 @@ public class AttestationService {
         }
 
         attestation.setStatus(targetStatus);
-        attestation.setIssuedBy("Traitée par secrétariat");
+        String actor = StringUtils.hasText(processedBy) ? processedBy.trim() : "Secrétariat";
+        attestation.setIssuedBy("Traitée par " + actor);
         return toResponse(attestationRepository.save(attestation));
     }
 }
