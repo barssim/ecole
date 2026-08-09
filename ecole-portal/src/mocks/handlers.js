@@ -123,6 +123,85 @@ const examsByTenant = {
   ],
 };
 
+const attestationsByTenant = {
+  gardinia: [
+    {
+      id: 1,
+      userId: 5,
+      studentName: 'Assil',
+      className: '3e A',
+      title: "Attestation de scolarité",
+      type: 'enrollment',
+      date: '2024-09-01',
+      status: 'approved',
+      documentUrl: '/documents/attestation-scolarite-5-2024.pdf',
+      viewUrl: '/api/attestations/1/view',
+      issuedBy: "Directeur de l'école",
+      validFrom: '2024-09-01',
+      validUntil: '2025-08-31',
+      reference: 'ATT-2024-001-5',
+    },
+    {
+      id: 2,
+      userId: 5,
+      studentName: 'Assil',
+      className: '3e A',
+      title: 'Attestation de présence',
+      type: 'attendance',
+      date: '2025-01-15',
+      status: 'approved',
+      documentUrl: '/documents/attestation-presence-5-2025.pdf',
+      viewUrl: '/api/attestations/2/view',
+      issuedBy: 'Coordinatrice pédagogique',
+      validFrom: '2025-01-01',
+      validUntil: '2025-12-31',
+      reference: 'ATT-2025-002-5',
+    },
+    {
+      id: 3,
+      userId: 5,
+      studentName: 'Assil',
+      className: '3e A',
+      title: "Attestation d'inscription",
+      type: 'registration',
+      date: '2025-03-22',
+      status: 'pending',
+      documentUrl: null,
+      viewUrl: null,
+      issuedBy: 'En attente de validation',
+      validFrom: '2025-03-22',
+      validUntil: '2026-03-22',
+      reference: 'ATT-2025-003-5',
+    },
+    {
+      id: 4,
+      userId: 6,
+      studentName: 'Barae',
+      className: '3e B',
+      title: "Attestation de scolarité",
+      type: 'enrollment',
+      date: '2024-09-01',
+      status: 'approved',
+      documentUrl: '/documents/attestation-scolarite-6-2024.pdf',
+      viewUrl: '/api/attestations/4/view',
+      issuedBy: "Directeur de l'école",
+      validFrom: '2024-09-01',
+      validUntil: '2025-08-31',
+      reference: 'ATT-2024-001-6',
+    },
+  ],
+};
+
+const getAttestationStore = (tenantId) => {
+  if (!attestationsByTenant[tenantId]) {
+    attestationsByTenant[tenantId] = [];
+  }
+  return attestationsByTenant[tenantId];
+};
+
+const getNextAttestationId = (tenantId) =>
+  getAttestationStore(tenantId).reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1;
+
 export const handlers = [
   // 💳 Handler for a payment notice
   http.get(`${BASE_URL}/api/paymentNotice`, () => {
@@ -400,113 +479,27 @@ http.get(`${BASE_URL}/api/studentschedule`, ({ request }) => {
 }),
 
  // 🧪 Handler for attestations
-    http.get(`${BASE_URL}/api/attestations`, () => {
-      return HttpResponse.json([
-      { id: 1, title: "Attestation de scolarité", date: "2024-09-01" },
-         { id: 2, title: "Attestation de présence", date: "2025-01-15" },
-         { id: 3, title: "Attestation d’inscription", date: "2025-03-22" }
-       ]);
-    }),
+   http.get(`${BASE_URL}/api/attestations`, ({ request }) => {
+     const tenantId = getTenantId(request);
+     const requestedUserId = request.url.searchParams.get('userId');
+     const search = (request.url.searchParams.get('search') || '').toLowerCase();
+     let attestations = [...getAttestationStore(tenantId)];
+
+     if (requestedUserId) {
+       attestations = attestations.filter((item) => String(item.userId) === requestedUserId);
+     }
+
+     if (search) {
+       attestations = attestations.filter((item) => String(item.title || '').toLowerCase().includes(search));
+     }
+
+     return HttpResponse.json(attestations);
+   }),
 
     // 🎓 Handler for production attestations (detailed, user-specific)
-    http.get(`${BASE_URL}/api/attestationsproduction`, () => {
-      const userId = localStorage.getItem("userId");
-
-      const productionAttestations = {
-        "5": [
-          {
-            id: 1,
-            title: "Attestation de scolarité",
-            type: "enrollment",
-            date: "2024-09-01",
-            status: "approved",
-            documentUrl: "/documents/attestation-scolarite-5-2024.pdf",
-            issuedBy: "Directeur de l'école",
-            validFrom: "2024-09-01",
-            validUntil: "2025-08-31",
-            reference: "ATT-2024-001-5"
-          },
-          {
-            id: 2,
-            title: "Attestation de présence",
-            type: "attendance",
-            date: "2025-01-15",
-            status: "approved",
-            documentUrl: "/documents/attestation-presence-5-2025.pdf",
-            issuedBy: "Coordinatrice pédagogique",
-            validFrom: "2025-01-01",
-            validUntil: "2025-12-31",
-            reference: "ATT-2025-002-5"
-          },
-          {
-            id: 3,
-            title: "Attestation d'inscription",
-            type: "registration",
-            date: "2025-03-22",
-            status: "pending",
-            documentUrl: null,
-            issuedBy: "Secrétariat",
-            validFrom: "2025-03-22",
-            validUntil: "2026-03-22",
-            reference: "ATT-2025-003-5"
-          },
-          {
-            id: 4,
-            title: "Attestation de bonne conduite",
-            type: "conduct",
-            date: "2025-07-10",
-            status: "approved",
-            documentUrl: "/documents/attestation-conduite-5-2025.pdf",
-            issuedBy: "Directeur de l'école",
-            validFrom: "2025-07-10",
-            validUntil: "2026-07-10",
-            reference: "ATT-2025-004-5"
-          }
-        ],
-        "6": [
-          {
-            id: 5,
-            title: "Attestation de scolarité",
-            type: "enrollment",
-            date: "2024-09-01",
-            status: "approved",
-            documentUrl: "/documents/attestation-scolarite-6-2024.pdf",
-            issuedBy: "Directeur de l'école",
-            validFrom: "2024-09-01",
-            validUntil: "2025-08-31",
-            reference: "ATT-2024-001-6"
-          },
-          {
-            id: 6,
-            title: "Attestation de résultats académiques",
-            type: "academic",
-            date: "2025-06-15",
-            status: "approved",
-            documentUrl: "/documents/attestation-resultats-6-2025.pdf",
-            issuedBy: "Chef du département académique",
-            validFrom: "2025-06-15",
-            validUntil: "2025-12-31",
-            reference: "ATT-2025-005-6"
-          }
-        ],
-        "7": [
-          {
-            id: 7,
-            title: "Attestation de scolarité",
-            type: "enrollment",
-            date: "2024-09-01",
-            status: "approved",
-            documentUrl: "/documents/attestation-scolarite-7-2024.pdf",
-            issuedBy: "Directeur de l'école",
-            validFrom: "2024-09-01",
-            validUntil: "2025-08-31",
-            reference: "ATT-2024-001-7"
-          }
-        ]
-      };
-
-      const attestations = productionAttestations[userId] || [];
-      return HttpResponse.json(attestations);
+    http.get(`${BASE_URL}/api/attestationsproduction`, ({ request }) => {
+      const tenantId = getTenantId(request);
+      return HttpResponse.json(getAttestationStore(tenantId));
     }),
 
     // 📋 Handler for student attestation request (POST)
@@ -530,11 +523,12 @@ http.get(`${BASE_URL}/api/studentschedule`, ({ request }) => {
         return new HttpResponse("Type invalide", { status: 400 });
       }
 
+      const tenantId = getTenantId(request);
       const today = new Date().toISOString().split('T')[0];
-      const mockId = Math.floor(Math.random() * 90000) + 10000;
+      const mockId = getNextAttestationId(tenantId);
       const reference = `REQ-${today.replace(/-/g,'')}${userId}-${type.substring(0,3).toUpperCase()}`;
 
-      return HttpResponse.json({
+      const created = {
         id: mockId,
         userId: userId,
         studentName: studentName || `Étudiant ${userId}`,
@@ -549,7 +543,44 @@ http.get(`${BASE_URL}/api/studentschedule`, ({ request }) => {
         validFrom: today,
         validUntil: null,
         reference: reference,
-      }, { status: 201 });
+      };
+
+      getAttestationStore(tenantId).unshift(created);
+
+      return HttpResponse.json(created, { status: 201 });
+    }),
+
+    http.patch(`${BASE_URL}/api/attestations/:id/approve`, ({ request, params }) => {
+      const tenantId = getTenantId(request);
+      const attestation = getAttestationStore(tenantId).find((item) => item.id === Number(params.id));
+      if (!attestation) {
+        return new HttpResponse(null, { status: 404 });
+      }
+      attestation.status = 'approved';
+      attestation.issuedBy = 'Traitée par secrétariat';
+      return HttpResponse.json(attestation);
+    }),
+
+    http.patch(`${BASE_URL}/api/attestations/:id/cancel`, ({ request, params }) => {
+      const tenantId = getTenantId(request);
+      const attestation = getAttestationStore(tenantId).find((item) => item.id === Number(params.id));
+      if (!attestation) {
+        return new HttpResponse(null, { status: 404 });
+      }
+      attestation.status = 'rejected';
+      attestation.issuedBy = 'Traitée par secrétariat';
+      return HttpResponse.json(attestation);
+    }),
+
+    http.delete(`${BASE_URL}/api/attestations/:id`, ({ request, params }) => {
+      const tenantId = getTenantId(request);
+      const store = getAttestationStore(tenantId);
+      const index = store.findIndex((item) => item.id === Number(params.id));
+      if (index === -1) {
+        return new HttpResponse(null, { status: 404 });
+      }
+      store.splice(index, 1);
+      return new HttpResponse(null, { status: 204 });
     }),
 
     // 🔐 Handler for login authentication with roles

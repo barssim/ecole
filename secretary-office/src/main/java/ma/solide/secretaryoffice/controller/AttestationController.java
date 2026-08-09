@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,7 +45,19 @@ public class AttestationController {
     @GetMapping
     public ResponseEntity<List<AttestationResponse>> getAttestations(
             @RequestParam(required = false) Integer userId,
-            @RequestParam(required = false) String search) {
+            @RequestParam(required = false) String search,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+        if (hasManagementRole(userRolesHeader)) {
+            return ResponseEntity.ok(attestationService.getAttestations(userId, search));
+        }
+        if (!hasRole(userRolesHeader, "parent")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Seuls les parents et le secrétariat peuvent consulter les attestations");
+        }
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Le paramètre userId est requis pour consulter les attestations parent");
+        }
         return ResponseEntity.ok(attestationService.getAttestations(userId, search));
     }
 
@@ -68,9 +81,9 @@ public class AttestationController {
     public AttestationResponse requestAttestation(
             @RequestBody AttestationRequestDTO dto,
             @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
-        if (isAdminOrManager(userRolesHeader)) {
+        if (hasManagementRole(userRolesHeader)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Les administrateurs et managers ne peuvent pas demander une attestation");
+                    "Le secrétariat et l'administration ne peuvent pas demander une attestation");
         }
         if (!hasRole(userRolesHeader, "parent")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
@@ -79,20 +92,51 @@ public class AttestationController {
         return attestationService.requestAttestation(dto);
     }
 
+    @PatchMapping("/{id}/approve")
+    public ResponseEntity<AttestationResponse> approve(
+            @PathVariable Integer id,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+        requireManagementRole(userRolesHeader);
+        return ResponseEntity.ok(attestationService.approve(id));
+    }
+
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<AttestationResponse> cancel(
+            @PathVariable Integer id,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+        requireManagementRole(userRolesHeader);
+        return ResponseEntity.ok(attestationService.cancel(id));
+    }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<AttestationResponse> updateStatus(
             @PathVariable Integer id,
             @RequestBody AttestationStatusUpdateDTO dto,
             @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
-        if (!isAdminOrManager(userRolesHeader)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Seuls les administrateurs et managers peuvent gérer les attestations");
-        }
+        requireManagementRole(userRolesHeader);
         return ResponseEntity.ok(attestationService.updateStatus(id, dto.getStatus()));
     }
 
-    private boolean isAdminOrManager(String rolesHeader) {
-        return hasRole(rolesHeader, "admin") || hasRole(rolesHeader, "manager");
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(
+            @PathVariable Integer id,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
+        requireManagementRole(userRolesHeader);
+        attestationService.delete(id);
+    }
+
+    private void requireManagementRole(String rolesHeader) {
+        if (!hasManagementRole(rolesHeader)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Seuls le secrétariat et l'administration peuvent gérer les attestations");
+        }
+    }
+
+    private boolean hasManagementRole(String rolesHeader) {
+        return hasRole(rolesHeader, "secretary")
+                || hasRole(rolesHeader, "admin")
+                || hasRole(rolesHeader, "manager");
     }
 
     private boolean hasRole(String rolesHeader, String expectedRole) {

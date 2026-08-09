@@ -38,7 +38,7 @@ const AttestationsPage = ({ language }) => {
   const token     = sessionStorage.getItem('jwt_token');
   const userRoles = JSON.parse(localStorage.getItem('user_roles') || '[]');
   const normalizedRoles = normalizeRoles(userRoles);
-  const canManageAttestations = hasAnyRole(normalizedRoles, ['admin', 'manager']);
+  const canManageAttestations = hasAnyRole(normalizedRoles, ['secretary', 'admin', 'manager']);
   const canRequestAttestation = hasAnyRole(normalizedRoles, ['parent']);
 
   const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
@@ -131,27 +131,38 @@ const AttestationsPage = ({ language }) => {
       });
   };
 
-   const handleStatusUpdate = async (attestationId, status) => {
+   const handleManagementAction = async (attestationId, endpoint, method = 'PATCH') => {
      setRequestMessage(null);
      try {
-       const response = await fetch(`${baseUrl}/api/attestations/${attestationId}/status`, {
-         method: 'PATCH',
-          headers: buildHeaders(true),
-         body: JSON.stringify({ status }),
+       const actionPath = endpoint ? `/${endpoint}` : '';
+       const response = await fetch(`${baseUrl}/api/attestations/${attestationId}${actionPath}`, {
+         method,
+         headers: method === 'DELETE' ? buildHeaders() : buildHeaders(true),
        });
 
        if (!response.ok) {
          throw new Error(`HTTP ${response.status}`);
        }
 
-       const updated = await response.json();
-       setAttestations((current) =>
-         current.map((item) => (item.id === updated.id ? updated : item))
-       );
+       if (method === 'DELETE') {
+         setAttestations((current) => current.filter((item) => item.id !== attestationId));
+       } else {
+         const updated = await response.json();
+         setAttestations((current) =>
+           current.map((item) => (item.id === updated.id ? updated : item))
+         );
+       }
        setRequestMessage({ type: 'success', text: content.attestation_manageSuccess });
      } catch {
        setRequestMessage({ type: 'error', text: content.attestation_manageError });
      }
+   };
+
+   const handleDelete = (attestationId) => {
+     if (!window.confirm(content.attestation_deleteConfirm)) {
+       return;
+     }
+     handleManagementAction(attestationId, '', 'DELETE');
    };
 
    const handleDownload = (id) => {
@@ -176,7 +187,7 @@ const AttestationsPage = ({ language }) => {
    };
 
   const filtered = attestations.filter((a) =>
-    a.title.toLowerCase().includes(searchTerm.toLowerCase())
+    (a.title || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -312,19 +323,28 @@ const AttestationsPage = ({ language }) => {
                         <>
                           <button
                             type="button"
-                            onClick={() => handleStatusUpdate(attestation.id, 'approved')}
+                            onClick={() => handleManagementAction(attestation.id, 'approve')}
                             className="bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700 text-sm"
                           >
                             {content.attestation_approveButton}
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleStatusUpdate(attestation.id, 'rejected')}
+                            onClick={() => handleManagementAction(attestation.id, 'cancel')}
                             className="bg-rose-600 text-white px-3 py-1 rounded hover:bg-rose-700 text-sm"
                           >
-                            {content.attestation_rejectButton}
+                            {content.attestation_cancelButton}
                           </button>
                         </>
+                      )}
+                      {canManageAttestations && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(attestation.id)}
+                          className="bg-slate-700 text-white px-3 py-1 rounded hover:bg-slate-800 text-sm"
+                        >
+                          {content.attestation_deleteButton}
+                        </button>
                       )}
                       <button
                         type="button"

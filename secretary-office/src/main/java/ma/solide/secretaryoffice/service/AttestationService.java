@@ -20,7 +20,7 @@ import ma.solide.secretaryoffice.tenant.TenantContext;
 @Service
 public class AttestationService {
 
-    private static final Set<String> MANAGED_STATUSES = Set.of("pending", "approved", "rejected");
+    private static final Set<String> MANAGED_STATUSES = Set.of("approved", "rejected");
 
     private static final Map<String, String> TYPE_TITLES = Map.of(
         "enrollment",    "Attestation de scolarité",
@@ -139,10 +139,31 @@ public class AttestationService {
                     "Statut invalide. Valeurs acceptées : " + MANAGED_STATUSES);
         }
 
+        return transitionTo(id, normalizedStatus);
+    }
+
+    public AttestationResponse approve(Integer id) {
+        return transitionTo(id, "approved");
+    }
+
+    public AttestationResponse cancel(Integer id) {
+        return transitionTo(id, "rejected");
+    }
+
+    public void delete(Integer id) {
         Attestation attestation = findEntity(id);
-        attestation.setStatus(normalizedStatus);
-        attestation.setIssuedBy("Traitée par administration");
+        attestationRepository.delete(attestation);
+    }
+
+    private AttestationResponse transitionTo(Integer id, String targetStatus) {
+        Attestation attestation = findEntity(id);
+        if (!"pending".equalsIgnoreCase(attestation.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Seules les demandes en attente peuvent être traitées");
+        }
+
+        attestation.setStatus(targetStatus);
+        attestation.setIssuedBy("Traitée par secrétariat");
         return toResponse(attestationRepository.save(attestation));
     }
 }
-
