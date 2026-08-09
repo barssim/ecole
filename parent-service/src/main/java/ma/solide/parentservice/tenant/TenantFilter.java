@@ -17,6 +17,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class TenantFilter extends OncePerRequestFilter {
 
     private static final String TENANT_HEADER = "X-Tenant-Id";
+    private static final String[] EXCLUDED_PATH_PREFIXES = {
+            "/actuator",
+            "/health",
+            "/info",
+            "/error"
+    };
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -24,6 +30,14 @@ public class TenantFilter extends OncePerRequestFilter {
         if (HttpMethod.OPTIONS.matches(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
+        }
+
+        String requestUri = request.getRequestURI();
+        for (String excludedPrefix : EXCLUDED_PATH_PREFIXES) {
+            if (requestUri != null && requestUri.startsWith(excludedPrefix)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
         }
 
         String tenantId = request.getHeader(TENANT_HEADER);
