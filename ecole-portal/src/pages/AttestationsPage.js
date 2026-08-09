@@ -40,7 +40,7 @@ const AttestationsPage = ({ language }) => {
   const userRoles = JSON.parse(localStorage.getItem('user_roles') || '[]');
   const normalizedRoles = normalizeRoles(userRoles);
   const canManageAttestations = hasAnyRole(normalizedRoles, ['secretary', 'admin', 'manager']);
-  const canRequestAttestation = hasAnyRole(normalizedRoles, ['parent']);
+  const canRequestAttestation = hasAnyRole(normalizedRoles, ['parent']) && !canManageAttestations;
 
   const apiUrlFor = createApiUrlFor('http://localhost:8085');
   const rolesHeaderValue = normalizedRoles.join(',');
