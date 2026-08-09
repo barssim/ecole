@@ -40,10 +40,10 @@ jwt:
 
 customer-version:
   max-users:
-    trial: 10
-    bronze: 3
-    silver: 4
-    gold: 5
+    trial: 100
+    bronze: 100
+    silver: 500
+    gold: 1000
   default-by-tenant:
     gardinia: trial
     qods: bronze
