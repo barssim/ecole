@@ -52,5 +52,22 @@ public class AttestationRequestService {
                 .build();
         return repository.save(record);
     }
+
+    public AttestationRequestRecord getById(Long id) {
+        String tenantId = TenantContext.getRequiredTenantId();
+        return repository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Attestation request not found: " + id));
+    }
+
+    public void cancel(Long id) {
+        AttestationRequestRecord record = getById(id);
+        if (!"pending".equals(record.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Only pending requests can be cancelled (current status: " + record.getStatus() + ")");
+        }
+        record.setStatus("cancelled");
+        repository.save(record);
+    }
 }
 

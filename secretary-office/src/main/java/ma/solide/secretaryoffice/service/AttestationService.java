@@ -37,9 +37,14 @@ public class AttestationService {
     }
 
     public List<AttestationResponse> getAttestations(Integer userId, String search) {
+        return getAttestations(userId, search, null);
+    }
+
+    public List<AttestationResponse> getAttestations(Integer userId, String search, String status) {
         String tenantId = TenantContext.getRequiredTenantId();
         List<Attestation> attestations;
         boolean hasSearch = StringUtils.hasText(search);
+        boolean hasStatus = StringUtils.hasText(status);
 
         if (userId != null && hasSearch) {
             attestations = attestationRepository.findByTenantIdAndUserIdAndTitleContainingIgnoreCaseOrderByDateDesc(tenantId, userId, search.trim());
@@ -47,6 +52,8 @@ public class AttestationService {
             attestations = attestationRepository.findByTenantIdAndUserIdOrderByDateDesc(tenantId, userId);
         } else if (hasSearch) {
             attestations = attestationRepository.findByTenantIdAndTitleContainingIgnoreCaseOrderByDateDesc(tenantId, search.trim());
+        } else if (hasStatus) {
+            attestations = attestationRepository.findByTenantIdAndStatusOrderByDateDesc(tenantId, status.trim().toLowerCase());
         } else {
             attestations = attestationRepository.findAllByTenantIdOrderByDateDesc(tenantId);
         }

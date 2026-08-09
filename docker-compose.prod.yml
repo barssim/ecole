@@ -9,6 +9,11 @@ services:
     networks:
       - ecole
     restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   mysql-fin:
     image: mysql:8
@@ -19,6 +24,11 @@ services:
     networks:
       - ecole
     restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   mysql-teacher:
     image: mysql:8
@@ -28,6 +38,11 @@ services:
       MYSQL_DATABASE: teacherDB
     networks:
       - ecole
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   mysql-student:
     image: mysql:8
@@ -37,6 +52,11 @@ services:
       MYSQL_DATABASE: studentDB
     networks:
       - ecole
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   mysql-parent:
     image: mysql:8
@@ -46,6 +66,11 @@ services:
       MYSQL_DATABASE: parentDB
     networks:
       - ecole
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   mysql-secretary-office:
     image: mysql:8
@@ -65,11 +90,26 @@ services:
       retries: 10
       start_period: 20s
 
+  mysql-school-activity:
+    image: mysql:8
+    container_name: mysql-school-activity
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: schoolActivityDB
+    networks:
+      - ecole
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   usermanagement:
     image: barssim/usermanagement:latest
     container_name: usermanagement
     depends_on:
-      - mysql-user
+      mysql-user:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-user:3306/userDB
       SPRING_DATASOURCE_USERNAME: root
@@ -85,11 +125,13 @@ services:
     image: barssim/finance-manager:latest
     container_name: finance-manager
     depends_on:
-      - mysql-fin
+      mysql-fin:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-fin:3306/finDB
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
     volumes:
       - /opt/ecole/config/finance-manager/application.yml:/app/config/application.yml:ro
@@ -109,6 +151,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-secretary-office:3306/secretaryOfficeDB
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-dev-pass}
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
     volumes:
       - /opt/ecole/config/secretary-office/application.yml:/app/config/application.yml:ro
@@ -120,11 +163,15 @@ services:
     image: barssim/teacher-service:latest
     container_name: teacher-service
     depends_on:
-      - mysql-teacher
+      mysql-teacher:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-teacher:3306/teacherDB
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      TEACHER_UPLOADS_DIR: /data/teacher-uploads
+    volumes:
+      - teacher-uploads:/data/teacher-uploads
     networks:
       - ecole
 
@@ -132,7 +179,8 @@ services:
     image: barssim/student-service:latest
     container_name: student-service
     depends_on:
-      - mysql-student
+      mysql-student:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-student:3306/studentDB
       SPRING_DATASOURCE_USERNAME: root
@@ -144,9 +192,23 @@ services:
     image: barssim/parent-service:latest
     container_name: parent-service
     depends_on:
-      - mysql-parent
+      mysql-parent:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-parent:3306/parentDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - ecole
+
+  school-activity:
+    image: barssim/school-activity:latest
+    container_name: school-activity
+    depends_on:
+      mysql-school-activity:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-school-activity:3306/schoolActivityDB
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
     networks:
@@ -175,8 +237,10 @@ services:
       - teacher-service
       - student-service
       - parent-service
+      - school-activity
       - eureka-server
     environment:
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_CONFIG_ADDITIONAL_LOCATION: file:/app/config/
     volumes:
       - /opt/ecole/config/api-gateway/application.yml:/app/config/application.yml:ro
@@ -199,3 +263,6 @@ services:
 
 networks:
   ecole:
+
+volumes:
+  teacher-uploads:

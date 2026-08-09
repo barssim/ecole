@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -77,6 +78,24 @@ class AttestationServiceTest {
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void getAttestationsByStatusShouldFilterCorrectly() {
+        Attestation pending = Attestation.builder()
+                .id(20).userId(1).studentName("Nadia").className("3e B").title("Attestation de scolarité")
+                .type("enrollment").date(LocalDate.now()).status("pending")
+                .issuedBy("En attente").validFrom(LocalDate.now()).validUntil(LocalDate.now().plusYears(1))
+                .reference("REF-PEND").tenantId(TENANT).build();
+
+        when(attestationRepository.findByTenantIdAndStatusOrderByDateDesc(TENANT, "pending"))
+                .thenReturn(List.of(pending));
+
+        List<AttestationResponse> results = attestationService.getAttestations(null, null, "pending");
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getStatus()).isEqualTo("pending");
+        verify(attestationRepository).findByTenantIdAndStatusOrderByDateDesc(TENANT, "pending");
     }
 }
 

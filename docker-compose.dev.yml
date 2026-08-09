@@ -88,6 +88,20 @@ services:
       timeout: 5s
       retries: 10
 
+  mysql-school-activity:
+    image: mysql:8
+    container_name: mysql-school-activity
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: schoolActivityDB
+    networks:
+      - ecole
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   usermanagement:
     build:
       context: ./usermanagement
@@ -113,6 +127,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-fin:3306/finDB
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
     networks:
       - ecole
 
@@ -127,6 +142,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-secretary-office:3306/secretaryOfficeDB
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
     networks:
       - ecole
 
@@ -158,6 +174,20 @@ services:
     networks:
       - ecole
 
+  school-activity:
+    build:
+      context: ./school-activity
+      dockerfile: Dockerfile
+    depends_on:
+      mysql-school-activity:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-school-activity:3306/schoolActivityDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - ecole
+
   eureka-server:
     build:
       context: ./eureka-server
@@ -177,7 +207,10 @@ services:
       - secretary-office
       - student-service
       - parent-service
+      - school-activity
       - eureka-server
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
     networks:
       - ecole
 
