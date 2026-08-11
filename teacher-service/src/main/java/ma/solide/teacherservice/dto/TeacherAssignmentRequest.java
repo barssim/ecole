@@ -6,6 +6,7 @@ import lombok.Data;
 public class TeacherAssignmentRequest {
 
     private String teacherId;
+    private String teacherName;
     private String classId;
     private String className;
     private String title;
@@ -15,4 +16,3 @@ public class TeacherAssignmentRequest {
     private String dueDate;
     private String createdBy;
 }
-

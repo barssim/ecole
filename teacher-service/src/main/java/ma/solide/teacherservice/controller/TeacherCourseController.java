@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,8 +27,11 @@ public class TeacherCourseController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TeacherCourse>> list(@RequestParam(required = false, name = "teacher") String teacherId) {
-        return ResponseEntity.ok(teacherCourseService.listCourses(teacherId));
+    public ResponseEntity<List<TeacherCourse>> list(
+            @RequestParam(required = false, name = "teacher") String teacherId,
+            @RequestParam(required = false) String teacherName,
+            @RequestParam(required = false) String classId) {
+        return ResponseEntity.ok(teacherCourseService.listCourses(teacherId, teacherName, classId));
     }
 
     @PostMapping
@@ -35,10 +39,17 @@ public class TeacherCourseController {
         return ResponseEntity.ok(teacherCourseService.createCourse(request));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<TeacherCourse> update(@PathVariable Long id, @RequestBody TeacherCourseRequest request) {
+        return ResponseEntity.ok(teacherCourseService.updateCourse(id, request));
+    }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        teacherCourseService.deleteCourse(id);
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @RequestParam(required = false, name = "teacher") String teacherId,
+            @RequestParam(required = false) String teacherName) {
+        teacherCourseService.deleteCourse(id, teacherId, teacherName);
         return ResponseEntity.noContent().build();
     }
 }
-

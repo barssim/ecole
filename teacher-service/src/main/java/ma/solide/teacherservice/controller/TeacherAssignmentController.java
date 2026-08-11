@@ -29,9 +29,10 @@ public class TeacherAssignmentController {
     @GetMapping
     public ResponseEntity<List<TeacherAssignment>> list(
             @RequestParam(required = false) String teacherId,
-            @RequestParam(required = false) String classId
+            @RequestParam(required = false) String classId,
+            @RequestParam(required = false) String teacherName
     ) {
-        return ResponseEntity.ok(service.list(teacherId, classId));
+        return ResponseEntity.ok(service.list(teacherId, classId, teacherName));
     }
 
     @PostMapping
@@ -45,9 +46,11 @@ public class TeacherAssignmentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        service.delete(id);
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @RequestParam(required = false) String teacherId,
+            @RequestParam(required = false) String teacherName) {
+        service.delete(id, teacherId, teacherName);
         return ResponseEntity.noContent().build();
     }
 }
-

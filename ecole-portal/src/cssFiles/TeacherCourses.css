@@ -132,6 +132,7 @@
 }
 
 .tc-form-group input,
+.tc-form-group select,
 .tc-form-group textarea {
   width: 100%;
   padding: 9px 12px;
@@ -143,6 +144,7 @@
 }
 
 .tc-form-group input:focus,
+.tc-form-group select:focus,
 .tc-form-group textarea:focus {
   outline: none;
   border-color: var(--tenant-primary, #007bff);
@@ -268,4 +270,3 @@
     align-items: flex-start;
   }
 }
-
