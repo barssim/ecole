@@ -451,8 +451,9 @@ export const handlers = [
     // 🧪 Handlers for teacher courses (class-scoped CRUD)
     http.get(`${BASE_URL}/api/teachercourses`, ({ request }) => {
       const tenantId = getTenantId(request);
-      const teacherId = request.url.searchParams.get('teacher');
-      const classId = request.url.searchParams.get('classId');
+      const searchParams = new URL(request.url).searchParams;
+      const teacherId = searchParams.get('teacher');
+      const classId = searchParams.get('classId');
       const courses = getTeacherCourseStore(tenantId).filter((course) => {
         if (teacherId && String(course.teacherId) !== String(teacherId)) return false;
         if (classId && String(course.classId) !== String(classId)) return false;
@@ -505,7 +506,7 @@ export const handlers = [
 
     http.delete(`${BASE_URL}/api/teachercourses/:id`, ({ request, params }) => {
       const tenantId = getTenantId(request);
-      const teacherId = request.url.searchParams.get('teacher');
+      const teacherId = new URL(request.url).searchParams.get('teacher');
       const courseId = Number(params.id);
       const store = getTeacherCourseStore(tenantId);
       const course = store.find((item) => Number(item.id) === courseId);

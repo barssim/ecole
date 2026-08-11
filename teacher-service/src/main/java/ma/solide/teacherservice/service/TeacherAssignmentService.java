@@ -32,6 +32,9 @@ public class TeacherAssignmentService {
         boolean hasClass = StringUtils.hasText(classId);
 
         if (hasClass) {
+            if (!StringUtils.hasText(teacherName)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "teacherName is required");
+            }
             validateTeacherAssignment(classId, teacherName);
         }
 
@@ -105,6 +108,9 @@ public class TeacherAssignmentService {
         }
         if (StringUtils.hasText(teacherId) && !entity.getTeacherId().equals(teacherId.trim())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can delete only your own assignments");
+        }
+        if (!StringUtils.hasText(teacherName)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "teacherName is required");
         }
         validateTeacherAssignment(entity.getClassId(), teacherName);
         repository.delete(entity);

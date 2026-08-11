@@ -97,6 +97,14 @@ class TeacherAssignmentServiceTest {
     }
 
     @Test
+    void listShouldRejectMissingTeacherNameWhenClassFilterIsProvided() {
+        assertThatThrownBy(() -> service.list("8", "2", " "))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(error -> ((ResponseStatusException) error).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
     void updateShouldPersistUpdatedAssignment() {
         TeacherAssignment existing = TeacherAssignment.builder()
                 .id(1L)
@@ -146,6 +154,27 @@ class TeacherAssignmentServiceTest {
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(error -> ((ResponseStatusException) error).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void deleteShouldRejectMissingTeacherName() {
+        TeacherAssignment existing = TeacherAssignment.builder()
+                .id(1L)
+                .tenantId(TENANT)
+                .teacherId("8")
+                .classId("2")
+                .title("Ex 1")
+                .dueDate(LocalDate.now())
+                .createdBy("teacher.one")
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(repository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> service.delete(1L, "8", " "))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(error -> ((ResponseStatusException) error).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     private TeacherAssignmentRequest validRequest() {

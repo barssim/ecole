@@ -33,6 +33,9 @@ public class TeacherCourseService {
         boolean hasClass = StringUtils.hasText(classId);
 
         if (hasClass) {
+            if (!StringUtils.hasText(teacherName)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "teacherName is required");
+            }
             validateTeacherAssignment(classId, teacherName);
         }
 
@@ -128,6 +131,9 @@ public class TeacherCourseService {
         }
         if (StringUtils.hasText(teacherId) && !course.getTeacherId().equals(teacherId.trim())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can delete only your own courses");
+        }
+        if (!StringUtils.hasText(teacherName)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "teacherName is required");
         }
         validateTeacherAssignment(course.getClassId(), teacherName);
 

@@ -82,6 +82,14 @@ class TeacherCourseServiceTest {
     }
 
     @Test
+    void listShouldRejectMissingTeacherNameWhenClassFilterIsProvided() {
+        assertThatThrownBy(() -> service.listCourses("8", " ", "2"))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(error -> ((ResponseStatusException) error).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
     void createShouldRejectUnauthorizedClass() {
         TeacherCourseRequest request = validRequest();
         request.setTeacherName("teacher.two");
@@ -140,6 +148,25 @@ class TeacherCourseServiceTest {
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(error -> ((ResponseStatusException) error).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void deleteShouldRejectMissingTeacherName() {
+        TeacherCourse existing = TeacherCourse.builder()
+                .id(1L)
+                .tenantId(TENANT)
+                .teacherId("8")
+                .classId("2")
+                .name("Math")
+                .uploadedAt(LocalDateTime.now())
+                .build();
+
+        when(teacherCourseRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> service.deleteCourse(1L, "8", " "))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(error -> ((ResponseStatusException) error).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     private TeacherCourseRequest validRequest() {
