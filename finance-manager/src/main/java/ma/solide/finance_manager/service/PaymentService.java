@@ -16,9 +16,11 @@ import java.util.stream.Collectors;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final PaymentEventPublisher paymentEventPublisher;
 
-    public PaymentService(PaymentRepository paymentRepository) {
+    public PaymentService(PaymentRepository paymentRepository, PaymentEventPublisher paymentEventPublisher) {
         this.paymentRepository = paymentRepository;
+        this.paymentEventPublisher = paymentEventPublisher;
     }
 
     /**
@@ -78,6 +80,7 @@ public class PaymentService {
         payment.setNotes(paymentDTO.getNotes());
 
         Payment saved = paymentRepository.save(payment);
+        paymentEventPublisher.publishPaymentReceived(saved);
         return toDTO(saved);
     }
 

@@ -1,0 +1,46 @@
+server:
+  port: 8095
+  address: 0.0.0.0
+  forward-headers-strategy: framework
+
+spring:
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    consumer:
+      group-id: notification-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.use.type.headers: false
+        spring.json.trusted.packages: ma.solide.notification_service.event
+        spring.json.value.default.type: ma.solide.notification_service.event.PaymentReceivedEvent
+  application:
+    name: notification-service
+  main:
+    web-application-type: servlet
+
+notification:
+  email:
+    from: ${NOTIFICATION_EMAIL_FROM:${MAIL_USERNAME}}
+    to: ${NOTIFICATION_EMAIL_TO:parent@example.com}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
