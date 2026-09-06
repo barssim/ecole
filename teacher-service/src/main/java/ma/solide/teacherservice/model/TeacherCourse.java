@@ -43,6 +43,12 @@ public class TeacherCourse {
     @Column(name = "teacher_id", nullable = false)
     private String teacherId;
 
+    @Column(name = "class_id", nullable = false)
+    private String classId;
+
+    @Column(name = "class_name")
+    private String className;
+
     @Column(name = "uploaded_at", nullable = false)
     private LocalDateTime uploadedAt;
 
@@ -51,4 +57,3 @@ public class TeacherCourse {
     @JsonManagedReference
     private List<TeacherCourseFile> files = new ArrayList<>();
 }
-

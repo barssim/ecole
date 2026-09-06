@@ -11,6 +11,8 @@ public class TeacherCourseRequest {
     private String name;
     private String description;
     private String teacherId;
+    private String teacherName;
+    private String classId;
+    private String className;
     private List<TeacherCourseFileRequest> files = new ArrayList<>();
 }
-

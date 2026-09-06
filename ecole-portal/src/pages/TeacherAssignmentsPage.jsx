@@ -125,13 +125,16 @@ const TeacherAssignmentsPage = ({ language }) => {
   }, [currentUserName, isTeacherOnly]);
 
   const fetchAssignments = async () => {
-    if (!currentUserId) {
+    if (!currentUserId || !selectedClassId || !currentUserName) {
       setAssignments([]);
       return;
     }
     try {
-      const query = new URLSearchParams({ teacherId: currentUserId });
-      if (selectedClassId) query.set('classId', selectedClassId);
+      const query = new URLSearchParams({
+        teacherId: currentUserId,
+        classId: selectedClassId,
+        teacherName: currentUserName,
+      });
       const response = await fetch(apiUrlFor(`/teacher/assignments?${query.toString()}`), {
         headers: buildHeaders(),
       });
@@ -145,7 +148,7 @@ const TeacherAssignmentsPage = ({ language }) => {
 
   useEffect(() => {
     fetchAssignments();
-  }, [currentUserId, selectedClassId]);
+  }, [currentUserId, currentUserName, selectedClassId]);
 
   const selectedAssignment = useMemo(
     () => assignments.find((assignment) => String(assignment.id) === String(editingId)) || null,
@@ -198,6 +201,7 @@ const TeacherAssignmentsPage = ({ language }) => {
       const uploadedAttachment = await uploadAttachment(newAttachmentFile);
       const payload = {
         teacherId: currentUserId,
+        teacherName: currentUserName,
         classId: String(selectedClassId),
         className,
         title: newAssignment.title.trim(),
@@ -264,6 +268,7 @@ const TeacherAssignmentsPage = ({ language }) => {
 
       const payload = {
         teacherId: currentUserId,
+        teacherName: currentUserName,
         classId: String(selectedAssignment.classId || selectedClassId),
         className: selectedAssignment.className || '',
         title: editValues.title.trim(),
@@ -301,7 +306,11 @@ const TeacherAssignmentsPage = ({ language }) => {
     }
 
     try {
-      const response = await fetch(apiUrlFor(`/teacher/assignments/${selectedAssignment.id}`), {
+      const query = new URLSearchParams({
+        teacherId: currentUserId,
+        teacherName: currentUserName,
+      });
+      const response = await fetch(apiUrlFor(`/teacher/assignments/${selectedAssignment.id}?${query.toString()}`), {
         method: 'DELETE',
         headers: buildHeaders(),
       });
@@ -610,4 +619,3 @@ const th = { padding: '8px 12px', textAlign: 'left', fontWeight: 600 };
 const td = { padding: '8px 12px' };
 
 export default TeacherAssignmentsPage;
-

@@ -13,11 +13,9 @@ const buildHeaders = (isJson = true) => {
   return {
     ...(isJson ? { "Content-Type": "application/json" } : {}),
     "X-Tenant-Id": getTenantId(),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(token ? { Authorization: `****** } : {}),
   };
 };
-
-const getLocalUploadsKey = (userId) => `teachercourses_uploaded_${userId || "anonymous"}`;
 
 const isPdfFile = (file) => {
   if (!file) return false;
@@ -25,104 +23,202 @@ const isPdfFile = (file) => {
   return String(file.name || "").toLowerCase().endsWith(".pdf");
 };
 
-const safeReadLocalUploads = (userId) => {
-  try {
-    const raw = localStorage.getItem(getLocalUploadsKey(userId));
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
 const TeacherCourses = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
-  const userId = localStorage.getItem("userId");
+  const userId = localStorage.getItem("userId") || "";
+  const teacherName = (
+    localStorage.getItem("LoggedIn") ||
+    localStorage.getItem("userName") ||
+    localStorage.getItem("username") ||
+    ""
+  ).trim().toLowerCase();
   const fileInputRef = useRef(null);
 
-  const [backendCourses, setBackendCourses] = useState([]);
-  const [localUploads, setLocalUploads] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [classes, setClasses] = useState([]);
+  const [classesLoading, setClassesLoading] = useState(true);
+  const [selectedClassId, setSelectedClassId] = useState("");
+
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   const [courseTitle, setCourseTitle] = useState("");
+  const [courseDescription, setCourseDescription] = useState("");
   const [courseFile, setCourseFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [deletingCourseId, setDeletingCourseId] = useState(null);
 
-  const persistLocalUploads = (items) => {
-    if (!userId) return;
-    try {
-      localStorage.setItem(getLocalUploadsKey(userId), JSON.stringify(items));
-    } catch {
-      // ignore storage errors
-    }
-  };
+  const [editingId, setEditingId] = useState("");
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editAttachmentName, setEditAttachmentName] = useState("");
+  const [editAttachmentUrl, setEditAttachmentUrl] = useState("");
+  const [editFile, setEditFile] = useState(null);
+  const [removeExistingAttachment, setRemoveExistingAttachment] = useState(false);
+  const [editFileInputKey, setEditFileInputKey] = useState(0);
+
+  const [deletingCourseId, setDeletingCourseId] = useState(null);
 
   const flashSuccess = (msg) => {
     setSuccess(msg);
     window.setTimeout(() => setSuccess(""), 3000);
   };
 
+  const selectedClassName = useMemo(
+    () => classes.find((item) => String(item.id) === String(selectedClassId))?.name || "",
+    [classes, selectedClassId]
+  );
+
+  const selectedCourse = useMemo(
+    () => courses.find((course) => String(course.id) === String(editingId)) || null,
+    [courses, editingId]
+  );
+
   useEffect(() => {
-    const fetchCourses = async () => {
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
+    if (!selectedCourse) {
+      setEditTitle("");
+      setEditDescription("");
+      setEditAttachmentName("");
+      setEditAttachmentUrl("");
+      setEditFile(null);
+      setRemoveExistingAttachment(false);
+      setEditFileInputKey((value) => value + 1);
+      return;
+    }
 
-      setLoading(true);
-      setError("");
+    setEditTitle(selectedCourse.name || "");
+    setEditDescription(selectedCourse.description || "");
+    const firstFile = Array.isArray(selectedCourse.files) ? selectedCourse.files[0] : null;
+    setEditAttachmentName(firstFile?.filename || "");
+    setEditAttachmentUrl(firstFile?.url || "");
+    setEditFile(null);
+    setRemoveExistingAttachment(false);
+    setEditFileInputKey((value) => value + 1);
+  }, [selectedCourse]);
 
-      try {
-        const res = await fetch(`${API_BASE}/api/teachercourses?teacher=${userId}`, {
-          headers: buildHeaders(false),
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        setBackendCourses(Array.isArray(data) ? data : []);
-      } catch {
-        setError("Impossible de charger les cours. Veuillez réessayer.");
-        setBackendCourses([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchClasses = async () => {
+    setClassesLoading(true);
+    if (!teacherName) {
+      setClasses([]);
+      setSelectedClassId("");
+      setClassesLoading(false);
+      return;
+    }
 
-    const local = safeReadLocalUploads(userId);
-    setLocalUploads(local);
-    fetchCourses();
-  }, [userId]);
-
-  const mergedCourses = useMemo(() => {
-    const combined = [...localUploads, ...backendCourses];
-    const seen = new Set();
-
-    return combined
-      .filter((course) => {
-        const key = String(course.id ?? course.localId ?? course.name ?? course.fileName ?? "");
-        if (!key || seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      })
-      .sort((a, b) => {
-        const aDate = new Date(a.uploadedAt || a.createdAt || 0).getTime();
-        const bDate = new Date(b.uploadedAt || b.createdAt || 0).getTime();
-        if (aDate !== bDate) return bDate - aDate;
-        return String(a.name || a.fileName || "").localeCompare(String(b.name || b.fileName || ""));
+    try {
+      const query = `?teacherName=${encodeURIComponent(teacherName)}`;
+      const response = await fetch(`${API_BASE}/api/teacher/classes${query}`, {
+        headers: buildHeaders(false),
       });
-  }, [backendCourses, localUploads]);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      const nextClasses = Array.isArray(data) ? data : [];
+      setClasses(nextClasses);
+      if (nextClasses.length === 0) {
+        setSelectedClassId("");
+      }
+    } catch {
+      setClasses([]);
+      setSelectedClassId("");
+    } finally {
+      setClassesLoading(false);
+    }
+  };
+
+  const fetchCourses = async () => {
+    if (!userId || !teacherName || !selectedClassId) {
+      setCourses([]);
+      setEditingId("");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const query = new URLSearchParams({
+        teacher: userId,
+        teacherName,
+        classId: selectedClassId,
+      });
+      const res = await fetch(`${API_BASE}/api/teachercourses?${query.toString()}`, {
+        headers: buildHeaders(false),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const nextCourses = Array.isArray(data) ? data : [];
+      setCourses(nextCourses);
+      if (nextCourses.every((course) => String(course.id) !== String(editingId))) {
+        setEditingId("");
+      }
+    } catch {
+      setError(content.course_error || "Erreur lors du chargement des cours.");
+      setCourses([]);
+      setEditingId("");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchClasses();
+  }, [teacherName]);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [userId, teacherName, selectedClassId]);
+
+  const uploadCourseFile = async (file, fallbackName) => {
+    if (!file) {
+      return null;
+    }
+    if (!isPdfFile(file)) {
+      throw new Error("Seuls les fichiers PDF sont autorisés.");
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("filename", fallbackName || file.name);
+
+    const token = sessionStorage.getItem("jwt_token");
+    const uploadRes = await fetch(`${API_BASE}/api/upload`, {
+      method: "POST",
+      headers: {
+        "X-Tenant-Id": getTenantId(),
+        ...(token ? { Authorization: `****** } : {}),
+      },
+      body: formData,
+    });
+
+    if (!uploadRes.ok) {
+      throw new Error(`HTTP ${uploadRes.status}`);
+    }
+
+    return uploadRes.json();
+  };
+
+  const buildCoursePayload = ({ name, description, fileMeta }) => ({
+    name,
+    description,
+    teacherId: userId,
+    teacherName,
+    classId: String(selectedClassId),
+    className: selectedClassName,
+    files: fileMeta?.url && fileMeta?.filename ? [fileMeta] : [],
+  });
 
   const handleUploadCourse = async (e) => {
     e.preventDefault();
-    if (!courseFile) {
-      setError("Veuillez choisir un fichier de cours.");
+    if (!selectedClassId) {
+      setError("Veuillez sélectionner une classe.");
       return;
     }
-    if (!isPdfFile(courseFile)) {
-      setError("Seuls les fichiers PDF sont autorises.");
+    if (!courseTitle.trim()) {
+      setError("Le titre du cours est obligatoire.");
+      return;
+    }
+    if (!courseFile) {
+      setError("Veuillez choisir un fichier de cours.");
       return;
     }
 
@@ -130,112 +226,102 @@ const TeacherCourses = ({ language }) => {
     setError("");
 
     try {
-      const formData = new FormData();
-      formData.append("file", courseFile);
-      formData.append("filename", courseTitle.trim() || courseFile.name);
-
-      const token = sessionStorage.getItem("jwt_token");
-      const uploadRes = await fetch(`${API_BASE}/api/upload`, {
-        method: "POST",
-        headers: {
-          "X-Tenant-Id": getTenantId(),
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: formData,
+      const uploadedFile = await uploadCourseFile(courseFile, courseTitle.trim() || courseFile.name);
+      const payload = buildCoursePayload({
+        name: courseTitle.trim(),
+        description: courseDescription.trim(),
+        fileMeta: uploadedFile,
       });
 
-      if (!uploadRes.ok) {
-        throw new Error(`HTTP ${uploadRes.status}`);
-      }
+      const saveRes = await fetch(`${API_BASE}/api/teachercourses`, {
+        method: "POST",
+        headers: buildHeaders(true),
+        body: JSON.stringify(payload),
+      });
+      if (!saveRes.ok) throw new Error(`HTTP ${saveRes.status}`);
 
-      const uploadedFile = await uploadRes.json();
-      const finalCourseName = courseTitle.trim() || uploadedFile.filename || courseFile.name;
-      const payload = {
-        name: finalCourseName,
-        description: `Uploaded course file: ${uploadedFile.filename || courseFile.name}`,
-        teacherId: userId,
-        files: [uploadedFile],
-      };
-
-      let savedCourse = null;
-      try {
-        const saveRes = await fetch(`${API_BASE}/api/teachercourses`, {
-          method: "POST",
-          headers: buildHeaders(true),
-          body: JSON.stringify(payload),
-        });
-        if (saveRes.ok) {
-          savedCourse = await saveRes.json();
-        }
-      } catch {
-        // If the backend doesn't support persisting uploaded course metadata,
-        // we keep a local copy so the uploaded course remains visible in this view.
-      }
-
-      if (savedCourse) {
-        setBackendCourses((prev) => [
-          {
-            ...savedCourse,
-            uploadedFile,
-            uploadedAt: savedCourse.uploadedAt || new Date().toISOString(),
-          },
-          ...prev,
-        ]);
-        flashSuccess(content.course_success || "Action réussie !");
-      } else {
-        const localCourse = {
-          id: `local-${Date.now()}`,
-          localOnly: true,
-          name: finalCourseName,
-          description: `Uploaded course file: ${uploadedFile.filename || courseFile.name}`,
-          teacherId: userId,
-          uploadedFile,
-          uploadedAt: new Date().toISOString(),
-        };
-        setLocalUploads((prev) => {
-          const next = [localCourse, ...prev];
-          persistLocalUploads(next);
-          return next;
-        });
-        flashSuccess(content.course_success || "Action réussie !");
-      }
-
+      await fetchCourses();
       setCourseTitle("");
+      setCourseDescription("");
       setCourseFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch {
-        setError(content.course_error || "Erreur lors de l'envoi du fichier de cours.");
+      flashSuccess(content.course_success || "Cours ajouté avec succès.");
+    } catch (err) {
+      setError(err.message || content.course_error || "Erreur lors de l'envoi du cours.");
     } finally {
       setUploading(false);
     }
   };
 
-  const handleDeleteCourse = async (course) => {
-    const courseId = course.id;
-    if (!window.confirm("Supprimer ce cours ?")) return;
+  const handleUpdateCourse = async (event) => {
+    event.preventDefault();
+    if (!selectedCourse) {
+      setError("Sélectionnez un cours à modifier.");
+      return;
+    }
+    if (!editTitle.trim()) {
+      setError("Le titre du cours est obligatoire.");
+      return;
+    }
 
-    setDeletingCourseId(courseId);
     setError("");
 
     try {
-      if (course.localOnly || String(courseId).startsWith("local-")) {
-        setLocalUploads((prev) => {
-          const next = prev.filter((c) => c.id !== courseId);
-          persistLocalUploads(next);
-          return next;
-        });
-        flashSuccess("Cours supprimé.");
-        return;
+      let fileMeta = null;
+      if (editFile) {
+        fileMeta = await uploadCourseFile(editFile, editTitle.trim() || editFile.name);
+      } else if (!removeExistingAttachment && editAttachmentUrl) {
+        fileMeta = {
+          filename: editAttachmentName || "course.pdf",
+          url: editAttachmentUrl,
+        };
       }
 
-      const res = await fetch(`${API_BASE}/api/teachercourses/${courseId}`, {
+      const payload = buildCoursePayload({
+        name: editTitle.trim(),
+        description: editDescription.trim(),
+        fileMeta,
+      });
+
+      const response = await fetch(`${API_BASE}/api/teachercourses/${selectedCourse.id}`, {
+        method: "PUT",
+        headers: buildHeaders(true),
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      await fetchCourses();
+      setEditFile(null);
+      setRemoveExistingAttachment(false);
+      setEditFileInputKey((value) => value + 1);
+      flashSuccess("Cours modifié avec succès.");
+    } catch (err) {
+      setError(err.message || "Erreur lors de la modification du cours.");
+    }
+  };
+
+  const handleDeleteCourse = async (course) => {
+    if (!window.confirm("Supprimer ce cours ?")) return;
+
+    setDeletingCourseId(course.id);
+    setError("");
+
+    try {
+      const query = new URLSearchParams({
+        teacher: userId,
+        teacherName,
+      });
+      const res = await fetch(`${API_BASE}/api/teachercourses/${course.id}?${query.toString()}`, {
         method: "DELETE",
         headers: buildHeaders(false),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      setBackendCourses((prev) => prev.filter((c) => String(c.id) !== String(courseId)));
+      await fetchCourses();
+      if (String(editingId) === String(course.id)) {
+        setEditingId("");
+      }
       flashSuccess("Cours supprimé.");
     } catch {
       setError("Erreur lors de la suppression.");
@@ -245,12 +331,7 @@ const TeacherCourses = ({ language }) => {
   };
 
   const renderFiles = (course) => {
-    const files = Array.isArray(course.files) && course.files.length > 0
-      ? course.files
-      : course.uploadedFile
-        ? [course.uploadedFile]
-        : [];
-
+    const files = Array.isArray(course.files) ? course.files : [];
     if (files.length === 0) {
       return null;
     }
@@ -273,24 +354,77 @@ const TeacherCourses = ({ language }) => {
     <div className="tc-container">
       <div className="tc-header">
         <h2 className="tc-title">📚 Mes cours</h2>
-        <div style={{ color: "#6b7280", fontSize: 14 }}>
-          {mergedCourses.length} {mergedCourses.length > 1 ? "cours" : "cours"}
-        </div>
+        <div style={{ color: "#6b7280", fontSize: 14 }}>{courses.length} cours</div>
       </div>
 
       {error && <div className="tc-alert tc-alert-error">{error}</div>}
       {success && <div className="tc-alert tc-alert-success">{success}</div>}
 
-      {loading ? (
-        <p className="tc-loading">Chargement des cours...</p>
-      ) : mergedCourses.length === 0 ? (
+      <form className="tc-add-form" onSubmit={handleUploadCourse}>
+        <h3>{content.course_upload_title || "➕ Ajouter un cours"}</h3>
+        <div className="tc-form-group">
+          <label>Classe *</label>
+          <select value={selectedClassId} onChange={(e) => setSelectedClassId(e.target.value)} disabled={classesLoading} required>
+            <option value="">Sélectionner une classe</option>
+            {classes.map((cls) => (
+              <option key={cls.id} value={cls.id}>
+                {cls.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="tc-form-group">
+          <label>Titre du cours *</label>
+          <input
+            type="text"
+            value={courseTitle}
+            onChange={(e) => setCourseTitle(e.target.value)}
+            disabled={!selectedClassId || uploading}
+            placeholder="Ex: Mathématiques - Chapitre 1"
+            required
+          />
+        </div>
+        <div className="tc-form-group">
+          <label>Description</label>
+          <textarea
+            value={courseDescription}
+            onChange={(e) => setCourseDescription(e.target.value)}
+            disabled={!selectedClassId || uploading}
+            placeholder="Description du cours"
+          />
+        </div>
+        <div className="tc-form-group">
+          <label>Fichier du cours (PDF) *</label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            onChange={(e) => setCourseFile(e.target.files?.[0] || null)}
+            disabled={!selectedClassId || uploading}
+            required
+          />
+        </div>
+        <div className="tc-form-actions">
+          <button type="submit" className="tc-btn tc-btn-success" disabled={uploading || !selectedClassId}>
+            {uploading ? (content.course_uploading || "Envoi...") : (content.course_upload_action || "📤 Ajouter le cours")}
+          </button>
+        </div>
+      </form>
+
+      {!selectedClassId ? (
         <div className="tc-empty">
-          <p>📭 Aucun cours téléversé.</p>
-          <p>Ajoutez votre premier fichier de cours ci-dessus.</p>
+          <p>Choisissez une classe pour afficher vos cours.</p>
+        </div>
+      ) : loading ? (
+        <p className="tc-loading">Chargement des cours...</p>
+      ) : courses.length === 0 ? (
+        <div className="tc-empty">
+          <p>📭 Aucun cours pour cette classe.</p>
+          <p>Ajoutez votre premier cours ci-dessus.</p>
         </div>
       ) : (
         <div className="tc-course-list">
-          {mergedCourses.map((course) => (
+          {courses.map((course) => (
             <div className="tc-course-card" key={course.id}>
               <div className="tc-course-card-header">
                 <div>
@@ -298,9 +432,7 @@ const TeacherCourses = ({ language }) => {
                   {course.description && <p className="tc-course-desc">{course.description}</p>}
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
                     <span style={{ background: "#e0f2fe", color: "#075985", borderRadius: 999, padding: "2px 10px", fontSize: 12, fontWeight: 600 }}>
-                      {course.localOnly || String(course.id).startsWith("local-")
-                        ? (content.course_uploaded_badge || "Téléchargé")
-                        : (content.course_synced_badge || "Synchronisé")}
+                      {course.className || selectedClassName || "Classe"}
                     </span>
                     {course.uploadedAt && (
                       <span style={{ background: "#f3f4f6", color: "#374151", borderRadius: 999, padding: "2px 10px", fontSize: 12 }}>
@@ -310,6 +442,9 @@ const TeacherCourses = ({ language }) => {
                   </div>
                 </div>
                 <div className="tc-course-actions">
+                  <button className="tc-btn tc-btn-primary" onClick={() => setEditingId(String(course.id))}>
+                    ✏️ Modifier
+                  </button>
                   <button
                     className="tc-btn tc-btn-danger"
                     onClick={() => handleDeleteCourse(course)}
@@ -319,45 +454,71 @@ const TeacherCourses = ({ language }) => {
                   </button>
                 </div>
               </div>
-
               {renderFiles(course)}
             </div>
           ))}
         </div>
       )}
 
-      <form className="tc-add-form" onSubmit={handleUploadCourse}>
-        <h3>{content.course_upload_title || "➕ Envoyer un fichier de cours"}</h3>
-        <div className="tc-form-group">
-          <label>Titre du cours</label>
-          <input
-            type="text"
-            value={courseTitle}
-            onChange={(e) => setCourseTitle(e.target.value)}
-            placeholder="Ex: Mathématiques - Chapitre 1"
-          />
-        </div>
-        <div className="tc-form-group">
-          <label>Fichier du cours *</label>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/pdf,.pdf"
-            onChange={(e) => setCourseFile(e.target.files?.[0] || null)}
-            required
-          />
-        </div>
-        <p style={{ marginTop: -4, marginBottom: 0, color: "#6b7280", fontSize: 13 }}>
-          {content.course_uploaded_hint || "Le fichier téléchargé apparaîtra immédiatement dans la liste ci-dessous."}
-        </p>
-        <div className="tc-form-actions">
-          <button type="submit" className="tc-btn tc-btn-success" disabled={uploading}>
-            {uploading
-              ? (content.course_uploading || "Envoi...")
-              : (content.course_upload_action || "📤 Envoyer le cours")}
-          </button>
-        </div>
-      </form>
+      {courses.length > 0 && (
+        <form className="tc-add-form" onSubmit={handleUpdateCourse}>
+          <h3>Modifier un cours</h3>
+          <div className="tc-form-group">
+            <label>Cours</label>
+            <select value={editingId} onChange={(e) => setEditingId(e.target.value)}>
+              <option value="">Sélectionner un cours</option>
+              {courses.map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {selectedCourse && (
+            <>
+              <div className="tc-form-group">
+                <label>Titre du cours *</label>
+                <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
+              </div>
+              <div className="tc-form-group">
+                <label>Description</label>
+                <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+              </div>
+              <div className="tc-form-group">
+                <label>Nouveau fichier (PDF)</label>
+                <input
+                  key={editFileInputKey}
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={(e) => setEditFile(e.target.files?.[0] || null)}
+                />
+              </div>
+              {editAttachmentUrl && !removeExistingAttachment && (
+                <div className="tc-form-group">
+                  <label>Fichier actuel</label>
+                  <div>
+                    <a href={editAttachmentUrl} target="_blank" rel="noopener noreferrer">
+                      {editAttachmentName || "Fichier du cours"}
+                    </a>
+                  </div>
+                  <button
+                    type="button"
+                    className="tc-btn tc-btn-ghost"
+                    style={{ marginTop: 8 }}
+                    onClick={() => setRemoveExistingAttachment(true)}
+                  >
+                    Retirer le fichier actuel
+                  </button>
+                </div>
+              )}
+              <div className="tc-form-actions">
+                <button type="submit" className="tc-btn tc-btn-primary">Enregistrer</button>
+              </div>
+            </>
+          )}
+        </form>
+      )}
     </div>
   );
 };

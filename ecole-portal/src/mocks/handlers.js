@@ -202,6 +202,43 @@ const getAttestationStore = (tenantId) => {
 const getNextAttestationId = (tenantId) =>
   getAttestationStore(tenantId).reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1;
 
+const teacherCoursesByTenant = {
+  gardinia: [
+    {
+      id: 1,
+      tenantId: 'gardinia',
+      teacherId: '8',
+      classId: '1',
+      className: '3e A',
+      name: "l'Algèbre",
+      description: 'Les nombres rationels',
+      uploadedAt: '2026-01-05T08:30:00Z',
+      files: [{ filename: 'algebre.pdf', url: '/files/algebre.pdf' }],
+    },
+    {
+      id: 2,
+      tenantId: 'gardinia',
+      teacherId: '9',
+      classId: '3',
+      className: 'Terminale C',
+      name: 'La Géométrie',
+      description: 'Le calcul des surfaces',
+      uploadedAt: '2026-01-08T10:00:00Z',
+      files: [{ filename: 'geometrie.pdf', url: '/files/geometrie.pdf' }],
+    },
+  ],
+};
+
+const getTeacherCourseStore = (tenantId) => {
+  if (!teacherCoursesByTenant[tenantId]) {
+    teacherCoursesByTenant[tenantId] = [];
+  }
+  return teacherCoursesByTenant[tenantId];
+};
+
+const getNextTeacherCourseId = (tenantId) =>
+  getTeacherCourseStore(tenantId).reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1;
+
 export const handlers = [
   // 💳 Handler for a payment notice
   http.get(`${BASE_URL}/api/paymentNotice`, () => {
@@ -411,40 +448,77 @@ export const handlers = [
       return new HttpResponse(null, { status: 204 });
     }),
 
-    // 🧪 Handler for teacher courses
-    http.get(`${BASE_URL}/api/teachercourses`, () => {
-    const userId = localStorage.getItem("userId");
-    const teachercourses = {
-    "8": [
-      {
-        "name": "l'Algèbre",
-        "language": "Les nombres rationels",
-        "schedule": "Lundi - 08:00"
-      },
-      {
-        "name": "La Geométrie",
-        "language": "le calcul des surfaces",
-        "schedule": "Mercredi - 10:30"
+    // 🧪 Handlers for teacher courses (class-scoped CRUD)
+    http.get(`${BASE_URL}/api/teachercourses`, ({ request }) => {
+      const tenantId = getTenantId(request);
+      const searchParams = new URL(request.url).searchParams;
+      const teacherId = searchParams.get('teacher');
+      const classId = searchParams.get('classId');
+      const courses = getTeacherCourseStore(tenantId).filter((course) => {
+        if (teacherId && String(course.teacherId) !== String(teacherId)) return false;
+        if (classId && String(course.classId) !== String(classId)) return false;
+        return true;
+      });
+      return HttpResponse.json(courses);
+    }),
+
+    http.post(`${BASE_URL}/api/teachercourses`, async ({ request }) => {
+      const tenantId = getTenantId(request);
+      const payload = await request.json();
+      if (!payload?.teacherId || !payload?.teacherName || !payload?.classId || !payload?.name) {
+        return HttpResponse.json({ message: 'Missing required fields' }, { status: 400 });
       }
-    ],
-    "9": [
-          {
-            "name": "Grammaire",
-            "language": "l'adjectiv qualificatif ",
-            "schedule": "Lundi - 08:00"
-          },
-          {
-            "name": "la conjugaison",
-            "language": "le passé simple",
-            "schedule": "Mercredi - 10:30"
-          }
-        ]
-     };
+      const created = {
+        id: getNextTeacherCourseId(tenantId),
+        tenantId,
+        teacherId: String(payload.teacherId),
+        classId: String(payload.classId),
+        className: payload.className || '',
+        name: payload.name,
+        description: payload.description || '',
+        uploadedAt: new Date().toISOString(),
+        files: Array.isArray(payload.files) ? payload.files : [],
+      };
+      getTeacherCourseStore(tenantId).unshift(created);
+      return HttpResponse.json(created);
+    }),
 
-     const course = teachercourses[userId] || [];
+    http.put(`${BASE_URL}/api/teachercourses/:id`, async ({ request, params }) => {
+      const tenantId = getTenantId(request);
+      const payload = await request.json();
+      const courseId = Number(params.id);
+      const store = getTeacherCourseStore(tenantId);
+      const index = store.findIndex((item) => Number(item.id) === courseId);
+      if (index < 0) {
+        return HttpResponse.json({ message: 'Course not found' }, { status: 404 });
+      }
+      store[index] = {
+        ...store[index],
+        teacherId: String(payload.teacherId || store[index].teacherId),
+        classId: String(payload.classId || store[index].classId),
+        className: payload.className || store[index].className,
+        name: payload.name || store[index].name,
+        description: payload.description || '',
+        files: Array.isArray(payload.files) ? payload.files : [],
+      };
+      return HttpResponse.json(store[index]);
+    }),
 
-     return HttpResponse.json(course);
-   }),
+    http.delete(`${BASE_URL}/api/teachercourses/:id`, ({ request, params }) => {
+      const tenantId = getTenantId(request);
+      const teacherId = new URL(request.url).searchParams.get('teacher');
+      const courseId = Number(params.id);
+      const store = getTeacherCourseStore(tenantId);
+      const course = store.find((item) => Number(item.id) === courseId);
+      if (!course) {
+        return HttpResponse.json({ message: 'Course not found' }, { status: 404 });
+      }
+      if (teacherId && String(course.teacherId) !== String(teacherId)) {
+        return HttpResponse.json({ message: 'Forbidden' }, { status: 403 });
+      }
+      teacherCoursesByTenant[tenantId] = store.filter((item) => Number(item.id) !== courseId);
+      return new HttpResponse(null, { status: 204 });
+    }),
 
 
 // 🧪 Handler for schedule
