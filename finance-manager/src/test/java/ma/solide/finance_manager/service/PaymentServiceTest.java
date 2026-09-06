@@ -28,6 +28,9 @@ class PaymentServiceTest {
     @Mock
     private PaymentRepository paymentRepository;
 
+    @Mock
+    private PaymentEventPublisher paymentEventPublisher;
+
     @InjectMocks
     private PaymentService paymentService;
 
@@ -83,6 +86,7 @@ class PaymentServiceTest {
         assertEquals("John Doe", result.getStudentName());
         assertEquals(1500.0, result.getAmount());
         verify(paymentRepository, times(1)).save(any(Payment.class));
+        verify(paymentEventPublisher, times(1)).publishPaymentReceived(any(Payment.class));
     }
 
     @Test
@@ -129,4 +133,3 @@ class PaymentServiceTest {
         verify(paymentRepository, times(1)).delete(mockPayment);
     }
 }
-
