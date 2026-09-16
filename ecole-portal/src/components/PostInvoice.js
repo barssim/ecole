@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { getTenantId } from '../tenant';
+import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { hasAnyRole, normalizeRoles } from '../utils/roles';
 
 const PostInvoice = () => {
@@ -17,7 +18,8 @@ const PostInvoice = () => {
   const [emailAddress, setEmailAddress] = useState('');
   const [address, setAddress] = useState('');
 
-  const baseUrl = (process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:8085').replace(/\/$/, '');
+  const baseUrl = resolveApiBaseUrl('http://localhost:8085');
+  const useRelativeApi = process.env.REACT_APP_USE_RELATIVE_API === 'true';
   const token = sessionStorage.getItem('jwt_token');
   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
   const roleHeader = userRoles.join(',');
@@ -44,7 +46,8 @@ const PostInvoice = () => {
       setLoadingFactures(true);
       setError(null);
 
-      const response = await fetch(`${baseUrl}/api/factures`, {
+      const url = useRelativeApi ? '/api/factures' : `${baseUrl}/api/factures`;
+      const response = await fetch(url, {
         headers: buildHeaders(),
       });
 
@@ -79,8 +82,9 @@ const PostInvoice = () => {
 
     try {
       setError(null);
-       const response = await axios.post(
-         `${baseUrl}/api/facture/generate`,
+      const generateUrl = useRelativeApi ? '/api/facture/generate' : `${baseUrl}/api/facture/generate`;
+      const response = await axios.post(
+         generateUrl,
          {
            studentName,
            className,

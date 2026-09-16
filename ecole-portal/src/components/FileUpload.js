@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { getTenantId } from "../tenant";
+import { resolveApiBaseUrl } from "../utils/apiBaseUrl";
 
 const FileUpload = ({ filename, onUploadSuccess }) => {
   const [file, setFile] = useState(null);
@@ -26,7 +27,10 @@ const FileUpload = ({ filename, onUploadSuccess }) => {
     formData.append("filename", filename);
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_GATEWAY_URL}/api/upload`, {
+      const apiBase = resolveApiBaseUrl('http://localhost:8085');
+      const useRelativeApi = process.env.REACT_APP_USE_RELATIVE_API === 'true';
+      const url = useRelativeApi ? '/api/upload' : `${apiBase}/api/upload`;
+      const res = await fetch(url, {
         method: "POST",
         headers: {
           "X-Tenant-Id": getTenantId(),

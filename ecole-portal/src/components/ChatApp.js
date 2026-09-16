@@ -3,6 +3,7 @@ import axios from 'axios';
 import fr from "../locales/fr.json";
 import en from "../locales/en.json";
 import ar from "../locales/ar.json";
+import { resolveApiBaseUrl } from "../utils/apiBaseUrl";
 
 const AiChatBox = ({ language }) => {
    const content = language === "fr" ? fr : language === "en" ? en : ar;
@@ -11,7 +12,10 @@ const AiChatBox = ({ language }) => {
 
   const handleSubmit = async () => {
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_GATEWAY_URL}/api/ai/ask`, {
+      const apiBase = resolveApiBaseUrl('http://localhost:8085');
+      const useRelativeApi = process.env.REACT_APP_USE_RELATIVE_API === 'true';
+      const url = useRelativeApi ? '/api/ai/ask' : `${apiBase}/api/ai/ask`;
+      const res = await axios.post(url, {
         prompt: prompt,
       });
       setResponse(res.data);

@@ -1,4 +1,5 @@
 import { getTenantId } from "./tenant";
+import { resolveApiBaseUrl } from "./utils/apiBaseUrl";
 
 const customizationMap = {
   gardinia: () => require("./customizations/gardinia").default,
@@ -35,11 +36,12 @@ export const fetchTenantCustomization = async () => {
   const tenantId = getTenantId();
   const fallback = getFallbackCustomization(tenantId);
   const token = sessionStorage.getItem("jwt_token");
-  const rawBase = (process.env.REACT_APP_API_GATEWAY_URL || "http://localhost:8085").trim();
-  const baseUrl = (/^https?:\/\//i.test(rawBase) ? rawBase : `http://${rawBase}`).replace(/\/$/, "");
+  const baseUrl = resolveApiBaseUrl("http://localhost:8085");
+  const requestBase = baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+  const requestUrl = requestBase ? `${requestBase}/api/tenant-customization` : '/api/tenant-customization';
 
   try {
-    const response = await fetch(`${baseUrl}/api/tenant-customization`, {
+    const response = await fetch(requestUrl, {
       headers: {
         "Content-Type": "application/json",
         "X-Tenant-Id": tenantId,
@@ -59,4 +61,3 @@ export const fetchTenantCustomization = async () => {
 };
 
 export default getFallbackCustomization();
-
