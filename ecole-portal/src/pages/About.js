@@ -1,5 +1,4 @@
 import React from 'react';
-import ecole from '../ecoleLoader';
 
 const getLocalizedValue = (value, language, fallback = '') => {
   if (value && typeof value === 'object') {
@@ -32,11 +31,12 @@ const labels = {
   },
 };
 
-const About = ({ language = 'fr' }) => {
+const About = ({ language = 'fr', tenantCustomization }) => {
   const content = labels[language] || labels.fr;
-  const aboutTitle = getLocalizedValue(ecole.about?.title, language, getLocalizedValue(ecole.name, language, content.title));
-  const aboutDescription = getLocalizedValue(ecole.about?.description, language, '');
-  const address = getLocalizedValue(ecole.adresse, language, '');
+  const tenant = tenantCustomization || {};
+  const aboutTitle = getLocalizedValue(tenant.about?.title, language, getLocalizedValue(tenant.name, language, content.title));
+  const aboutDescription = getLocalizedValue(tenant.about?.description, language, '');
+  const address = getLocalizedValue(tenant.adresse, language, '');
 
 	return (
 	<div style={{ flex: 1, padding: '24px', maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
@@ -54,8 +54,8 @@ const About = ({ language = 'fr' }) => {
 	  >
 		<h2 style={{ color: 'var(--tenant-primary, #007bff)', marginTop: 0 }}>{content.contact}</h2>
 		<p><strong>{content.address}:</strong> {address}</p>
-		<p><strong>{content.phone}:</strong> {ecole.phone}</p>
-		<p><strong>{content.email}:</strong> {ecole.mail}</p>
+		<p><strong>{content.phone}:</strong> {tenant.phone}</p>
+		<p><strong>{content.email}:</strong> {tenant.mail}</p>
 	  </div>
 	 </div>
    );

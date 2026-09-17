@@ -2,14 +2,13 @@ import React from 'react';
 import fr from "../locales/header/fr.json";
 import ar from "../locales/header/ar.json";
 import en from "../locales/header/en.json";
-import ecole from '../ecoleLoader';
-
 
 import "../App.css";
 import { useNavigate } from "react-router-dom";
 
-const Header = ({ language, toggleLanguage }) => {
+const Header = ({ language, toggleLanguage, tenantCustomization }) => {
 	let content;
+  const tenant = tenantCustomization || {};
 
 if (language === "fr") {
   content = fr;
@@ -38,8 +37,8 @@ if (language === "fr") {
 			{/* Logo Section */}
 			<div className="header-logo">
 				<img
-					src={ecole.logo}
-					alt={ecole.name[language] || ecole.name["fr"]}
+					src={tenant.logo}
+					alt={tenant.name?.[language] || tenant.name?.["fr"] || "School"}
 					style={{
 						width: "70px",
 						height: "50px",

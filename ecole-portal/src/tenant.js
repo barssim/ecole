@@ -18,11 +18,17 @@ export const resolveTenantFromHost = (host = window.location.hostname) => {
 
 export const getTenantId = () => {
   const stored = normalizeTenantId(localStorage.getItem(TENANT_STORAGE_KEY));
+  const resolved = resolveTenantFromHost();
+
+  if (resolved && stored && stored !== resolved) {
+    localStorage.setItem(TENANT_STORAGE_KEY, resolved);
+    return resolved;
+  }
+
   if (stored && !isPlaceholderTenant(stored)) {
     return stored;
   }
 
-  const resolved = resolveTenantFromHost();
   if (!stored || isPlaceholderTenant(stored)) {
     localStorage.setItem(TENANT_STORAGE_KEY, resolved);
   }
@@ -45,4 +51,3 @@ export const setTenantId = (tenantId) => {
 export const clearTenantId = () => {
   localStorage.removeItem(TENANT_STORAGE_KEY);
 };
-

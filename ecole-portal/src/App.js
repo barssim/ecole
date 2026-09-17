@@ -15,7 +15,7 @@ import fr from "./locales/fr.json";
 import ar from "./locales/ar.json";
 import en from "./locales/en.json";
 import "./App.css";
-import ecole, { fetchTenantCustomization } from './ecoleLoader';
+import { fetchTenantCustomization, getFallbackCustomization } from './ecoleLoader';
 import SchoolInvoicePreview from './components/SchoolInvoicePreview';
 import Payments from './pages/Payments';
 import ExamProgram  from './pages/ExamProgram';
@@ -42,6 +42,7 @@ import TeacherNotesPage from './pages/TeacherNotesPage';
 import OutingPage from './pages/OutingPage';
 import TenantCustomizationPage from './pages/TenantCustomizationPage';
 import TeacherAssignmentsPage from './pages/TeacherAssignmentsPage';
+import { getTenantId } from './tenant';
 
 
 
@@ -75,9 +76,10 @@ const mixWithWhite = (color, ratio) => {
 };
 
 function App() {
+  const tenantId = getTenantId();
 	const [language, setLanguage] = useState("fr"); // Track current language
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-	const [tenantCustomization, setTenantCustomization] = useState(ecole);
+	const [tenantCustomization, setTenantCustomization] = useState(() => getFallbackCustomization(tenantId));
 	let content;
   const tenantPrimaryColor = normalizeHex(tenantCustomization.primaryColor) || "#007bff";
   const tenantAccentColor = normalizeHex(tenantCustomization.accentColor) || mixWithWhite(tenantPrimaryColor, 0.35);
@@ -113,6 +115,7 @@ useEffect(() => {
 
 useEffect(() => {
   let mounted = true;
+  setTenantCustomization(getFallbackCustomization(tenantId));
   fetchTenantCustomization().then((customization) => {
     if (mounted && customization) {
       setTenantCustomization(customization);
@@ -121,7 +124,7 @@ useEffect(() => {
   return () => {
     mounted = false;
   };
-}, []);
+}, [tenantId]);
 
 useEffect(() => {
   const handleResize = () => {
@@ -144,7 +147,7 @@ const AppContent = () => {
 
   return (
     <div style={tenantThemeStyle}>
-			<Header language={language} toggleLanguage={toggleLanguage}/>
+			<Header language={language} toggleLanguage={toggleLanguage} tenantCustomization={tenantCustomization}/>
       <div className="layout-controls">
         <button
           type="button"
@@ -208,7 +211,7 @@ const AppContent = () => {
                       <Route path="/services/bibliotheque/reglement" element={<Rules />} />
 				      <Route path="/login" element={<Login language={language} toggleLanguage={toggleLanguage} />} />
 				      <Route path="/logout" element={<Logout language={language} toggleLanguage={toggleLanguage} />} />
-				      <Route path="/about" element={<About language={language} toggleLanguage={toggleLanguage} />} />
+				      <Route path="/about" element={<About language={language} toggleLanguage={toggleLanguage} tenantCustomization={tenantCustomization} />} />
 				      <Route path="/inscription" element={<Inscription language={language} toggleLanguage={toggleLanguage} />} />
 				      <Route path="/contact" element={<Contact language={language} toggleLanguage={toggleLanguage} />} />
               <Route path="/profile" element={<ProfilePage language={language} />} />
