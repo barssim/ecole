@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import "../cssFiles/Login.css"; // Optional: Style the login form
 import axios from 'axios';
 import fr from "../locales/header/fr.json";
@@ -60,17 +60,16 @@ const resolveUserIdFromLoginResponse = (token, user) => {
 	return null;
 };
 
-
 const Login = ({language}) => {
 	let content;
 
-if (language === "fr") {
-  content = fr;
-} else if (language === "en") {
-  content = en;
-} else {
-  content = ar;
-};
+	if (language === "fr") {
+	  content = fr;
+	} else if (language === "en") {
+	  content = en;
+	} else {
+	  content = ar;
+	};
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
 	const [errorMessage, setErrorMessage] = useState('');
@@ -83,20 +82,13 @@ if (language === "fr") {
 
 		const userCredentials = { username, password };
 		const configuredBase = resolveApiBaseUrl('http://localhost:8085');
-		const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-		const localhostApiTarget = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBase);
-		const inferredRemoteBase = `${window.location.protocol}//${window.location.hostname}:8085`;
-		const effectiveBase = localhostApiTarget && !browserIsLocal ? inferredRemoteBase : configuredBase;
-		const apiBase = effectiveBase.endsWith('/api') ? effectiveBase : `${effectiveBase}/api`;
-		const useRelativeApi = process.env.REACT_APP_USE_RELATIVE_API === 'true';
-		const apiUrl = useRelativeApi ? '/api/auth/login' : `${apiBase}/auth/login`;
+		const useRelativeApi = String(process.env.REACT_APP_USE_RELATIVE_API || '').trim().toLowerCase() === 'true';
+		const apiUrl = useRelativeApi ? '/api/auth/login' : `${configuredBase}/api/auth/login`;
 		const tenantHint = resolveTenantFromHost();
 
-		// Log API details for debugging
 		console.log('Login attempt - API URL:', apiUrl);
 		console.log('Debug mode:', process.env.REACT_APP_DEBUG);
 
-		// Send POST request to the backend to authenticate the user
 		try {
 			const response = await axios.post(
 				apiUrl,
@@ -112,15 +104,12 @@ if (language === "fr") {
 
 			console.log('Login response:', response.data);
 
-			// Extract token and user from response - handle different response formats
 			let token, user;
 
 			if (response.data.token) {
-				// Format: { token: "...", user: {...} }
 				token = response.data.token;
 				user = response.data.user;
 			} else if (response.data.jwt || response.data.jwtToken) {
-				// Format: { jwt: "..." } or { jwtToken: "..." }
 				token = response.data.jwt || response.data.jwtToken;
 				user = { username: username };
 			} else {
@@ -131,12 +120,9 @@ if (language === "fr") {
 				throw new Error('No authentication token received from server');
 			}
 
-			// Store the JWT token in sessionStorage
 			sessionStorage.setItem('jwt_token', token);
-			// Store the login status in localStorage
 			localStorage.setItem("isLoggedIn", "true");
 
-			// Store user info if available
 			if (user && user.username) {
 				localStorage.setItem("LoggedIn", user.username);
 			} else {
@@ -148,14 +134,11 @@ if (language === "fr") {
 				localStorage.setItem("userId", String(resolvedUserId));
 			}
 
-			// Store user roles - always store a valid JSON array
 			const userRoles = (user && Array.isArray(user.roles)) ? user.roles : [];
 			localStorage.setItem("user_roles", JSON.stringify(userRoles));
 			setTenantId(resolveTenantFromLoginResponse(token, user, response.data?.tenantId));
 
 			console.log('Login successful! Stored roles:', userRoles);
-
-			// 🔄 Force full reload
 			window.location.href = "/";
 		} catch (error) {
 			console.error('Login error:', error);
@@ -173,7 +156,6 @@ if (language === "fr") {
 			} else if (error.code === 'ENOTFOUND' || error.code === 'ERR_INVALID_URL') {
 				errorMsg = 'Unable to connect to the server. Please check the API endpoint configuration.';
 			} else if (error.response) {
-				// Server responded with error status
 				if (error.response.status === 401) {
 					errorMsg = 'Invalid username or password. Please try again.';
 				} else if (error.response.status === 403) {
@@ -188,7 +170,6 @@ if (language === "fr") {
 			} else if (error.message === 'Network Error') {
 				errorMsg = `Network error. Unable to reach login endpoint (${apiUrl}).`;
 			} else if (error.message) {
-				// Use the actual error message if available
 				errorMsg = error.message;
 			}
 

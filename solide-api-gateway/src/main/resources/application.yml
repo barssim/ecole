@@ -1,4 +1,4 @@
-server:
+﻿server:
   port: 8085
   address: 0.0.0.0
 
@@ -62,7 +62,7 @@ spring:
         - id: usermanagement
           uri: "http://usermanagement:8091"
           predicates:
-            - Path=/api/auth/**,/api/users/**
+            - Path=/api/auth/**,/api/users/**,/api/tenant-customization
           filters:
             - StripPrefix=0
 
