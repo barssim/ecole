@@ -228,6 +228,6 @@ public class UserService {
 			fullName = lastName.isEmpty() ? "Student #" + user.getUserno() : lastName;
 		}
 
-		return new StudentSummaryDTO(user.getUserno(), fullName, lastName);
+		return new StudentSummaryDTO(user.getUserno(), fullName, lastName, user.getEmail());
 	}
 }

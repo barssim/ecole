@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS tb_tenant (
     tenant_id VARCHAR(64) PRIMARY KEY,
     tenant_name VARCHAR(128) NOT NULL,
+    tenant_email VARCHAR(255) NULL,
     CONSTRAINT uq_tb_tenant_name UNIQUE (tenant_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -26,8 +27,4 @@ CREATE TABLE IF NOT EXISTS tb_tenant_customization (
     CONSTRAINT fk_tb_tenant_customization_tenant FOREIGN KEY (tenant_id) REFERENCES tb_tenant (tenant_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Create indexes for better query performance
-CREATE INDEX idx_surname ON tb_user(surname);
-CREATE INDEX idx_email ON tb_user(email);
-CREATE INDEX idx_tenant_id ON tb_user(tenant_id);
 

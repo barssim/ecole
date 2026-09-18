@@ -4,6 +4,7 @@
 CREATE TABLE IF NOT EXISTS tb_tenant (
     tenant_id VARCHAR(64) PRIMARY KEY,
     tenant_name VARCHAR(128) NOT NULL,
+    tenant_email VARCHAR(255) NULL,
     CONSTRAINT uq_tb_tenant_name UNIQUE (tenant_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -41,10 +42,10 @@ DEALLOCATE PREPARE stmt;
 
 
 -- Ensure tenant master data exists
-INSERT IGNORE INTO tb_tenant (tenant_id, tenant_name) VALUES
-('gardinia', 'Gardinia'),
-('qods', 'Qods'),
-('amana', 'Amana');
+INSERT IGNORE INTO tb_tenant (tenant_id, tenant_name, tenant_email) VALUES
+('gardinia', 'Gardinia', 'noreply-gardinia@example.com'),
+('qods', 'Qods', 'noreply-qods@example.com'),
+('amana', 'Amana', 'noreply-amana@example.com');
 
 
 -- Add tenant_id to users only if missing
