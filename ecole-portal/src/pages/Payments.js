@@ -16,8 +16,11 @@ const Payments = ({ language }) => {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [generatingInvoiceId, setGeneratingInvoiceId] = useState(null);
+  const [studentOptions, setStudentOptions] = useState([]);
+  const [classOptions, setClassOptions] = useState([]);
   const [formData, setFormData] = useState({
     studentName: '',
+    studentEmail: '',
     className: '',
     amount: '',
     currency: 'MAD',
@@ -69,6 +72,8 @@ const Payments = ({ language }) => {
   const useRelativeApi = process.env.REACT_APP_USE_RELATIVE_API === 'true';
   const paymentsApiBase = useRelativeApi ? '/api/payments' : `${apiRoot}/payments`;
   const invoiceApiUrl = useRelativeApi ? '/api/facture/generate' : `${apiRoot}/facture/generate`;
+  const studentsApiUrl = useRelativeApi ? '/api/users/students' : `${apiRoot}/users/students`;
+  const classesApiUrl = useRelativeApi ? '/api/classes' : `${apiRoot}/classes`;
   const token = sessionStorage.getItem('jwt_token');
 
   const buildRoleHeader = () => {
@@ -92,6 +97,7 @@ const Payments = ({ language }) => {
   const resetForm = () => {
     setFormData({
       studentName: '',
+      studentEmail: '',
       className: '',
       amount: '',
       currency: 'MAD',
@@ -193,17 +199,69 @@ const Payments = ({ language }) => {
       NODE_ENV: process.env.NODE_ENV
     });
     fetchPayments();
+    fetchStudentOptions();
+    fetchClassOptions();
   }, []);
+
+  const fetchStudentOptions = async () => {
+    try {
+      const response = await axios.get(studentsApiUrl, { headers: getHeaders() });
+      const students = Array.isArray(response.data) ? response.data : [];
+      const mappedStudents = students
+        .map((student) => ({
+          name: student?.name || student?.username || '',
+          email: student?.email || ''
+        }))
+        .filter((student) => student.name);
+
+      const uniqueStudents = Array.from(new Map(
+        mappedStudents.map((student) => [student.name, student])
+      ).values());
+
+      setStudentOptions(uniqueStudents);
+    } catch (err) {
+      console.error('[Payments] Failed to load students:', err);
+      setStudentOptions([]);
+    }
+  };
+
+  const fetchClassOptions = async () => {
+    try {
+      const response = await axios.get(classesApiUrl, { headers: getHeaders() });
+      const classes = Array.isArray(response.data) ? response.data : [];
+      const names = Array.from(new Set(
+        classes
+          .map((cls) => cls?.name || cls?.className || '')
+          .filter(Boolean)
+      ));
+      setClassOptions(names);
+    } catch (err) {
+      console.error('[Payments] Failed to load classes:', err);
+      setClassOptions([]);
+    }
+  };
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const next = { ...prev, [name]: value };
+
+      if (name === 'studentName') {
+        const selectedStudent = studentOptions.find((student) =>
+          student.name === value || student.username === value || student.email === value
+        );
+        next.studentEmail = selectedStudent?.email || prev.studentEmail || '';
+      }
+
+      return next;
+    });
   };
 
   const handleEdit = (payment) => {
     setEditingId(payment.id);
     setFormData({
       studentName: payment.studentName || '',
+      studentEmail: payment.studentEmail || '',
       className: payment.className || '',
       amount: payment.amount ?? '',
       currency: payment.currency || 'MAD',
@@ -254,6 +312,7 @@ const Payments = ({ language }) => {
     const payload = {
       ...formData,
       studentName: formData.studentName.trim(),
+      studentEmail: (formData.studentEmail || '').trim(),
       className: formData.className.trim(),
       amount: amountValue,
       currency: formData.currency.trim() || 'MAD',
@@ -305,11 +364,36 @@ const Payments = ({ language }) => {
           </p>
         )}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
-          <input name="studentName" value={formData.studentName} onChange={handleInputChange} placeholder="Student name" />
-          <input name="className" value={formData.className} onChange={handleInputChange} placeholder="Class name" />
+          <select name="studentName" value={formData.studentName} onChange={handleInputChange} required>
+            <option value=""></option>
+            {studentOptions.map((student) => (
+              <option key={`${student.name}-${student.email || 'no-email'}`} value={student.name}>{student.name}</option>
+            ))}
+          </select>
+          <input
+            type="email"
+            name="studentEmail"
+            value={formData.studentEmail}
+            onChange={handleInputChange}
+            placeholder="Student email"
+            readOnly
+            style={{ backgroundColor: '#f8fafc' }}
+          />
+          <select name="className" value={formData.className} onChange={handleInputChange}>
+            <option value=""></option>
+            {classOptions.map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
           <input name="amount" type="number" min="0" step="0.01" value={formData.amount} onChange={handleInputChange} placeholder="Amount" />
           <input name="currency" value={formData.currency} onChange={handleInputChange} placeholder="Currency" />
-          <input name="method" value={formData.method} onChange={handleInputChange} placeholder="Method" />
+          <select name="method" value={formData.method} onChange={handleInputChange}>
+            <option value="cash">Cash</option>
+            <option value="card">Card</option>
+            <option value="bank_transfer">Bank transfer</option>
+            <option value="cheque">Cheque</option>
+            <option value="mobile_money">Mobile money</option>
+          </select>
           <input name="paymentDate" type="date" value={formData.paymentDate} onChange={handleInputChange} />
           <input name="reference" value={formData.reference} onChange={handleInputChange} placeholder="Reference" />
           <input name="notes" value={formData.notes} onChange={handleInputChange} placeholder="Notes" />

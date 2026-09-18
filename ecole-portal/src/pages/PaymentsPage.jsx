@@ -12,6 +12,8 @@ const PaymentsPage = ({ language }) => {
   const [paymentNotice, setPaymentNotice] = useState(null);
   const [allNotices, setAllNotices] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [studentOptions, setStudentOptions] = useState([]);
+  const [classOptions, setClassOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [noticeForm, setNoticeForm] = useState({
@@ -46,11 +48,59 @@ const PaymentsPage = ({ language }) => {
 
   useEffect(() => {
     fetchData();
+    fetchStudentOptions();
+    fetchClassOptions();
   }, [studentName]);
 
   useEffect(() => {
     setNoticeForm((current) => ({ ...current, studentName }));
   }, [studentName]);
+
+  const fetchStudentOptions = async () => {
+    try {
+      const response = await fetch(`${baseUrl}/api/users/students`, {
+        headers: buildHeaders(true),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with ${response.status} /api/users/students`);
+      }
+
+      const students = await response.json();
+      const names = Array.from(new Set(
+        (Array.isArray(students) ? students : [])
+          .map((student) => student?.name || student?.username || '')
+          .filter(Boolean)
+      ));
+      setStudentOptions(names);
+    } catch (err) {
+      console.error('Error fetching student list:', err);
+      setStudentOptions([]);
+    }
+  };
+
+  const fetchClassOptions = async () => {
+    try {
+      const response = await fetch(`${baseUrl}/api/classes`, {
+        headers: buildHeaders(true),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with ${response.status} /api/classes`);
+      }
+
+      const classes = await response.json();
+      const names = Array.from(new Set(
+        (Array.isArray(classes) ? classes : [])
+          .map((cls) => cls?.name || cls?.className || '')
+          .filter(Boolean)
+      ));
+      setClassOptions(names);
+    } catch (err) {
+      console.error('Error fetching class list:', err);
+      setClassOptions([]);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -272,19 +322,27 @@ const PaymentsPage = ({ language }) => {
         <section className="invoice-section">
           <h2>{content?.payment_noticeCreateTitle || 'Créer une facture'}</h2>
           <form onSubmit={handleCreateNotice} style={{ display: 'grid', gap: 10, maxWidth: 680 }}>
-            <input
+            <select
               name="studentName"
               value={noticeForm.studentName}
               onChange={handleNoticeInputChange}
-              placeholder={content?.payment_studentName || 'Élève'}
               required
-            />
-            <input
+            >
+              <option value="">{content?.payment_studentName || 'Élève'}</option>
+              {studentOptions.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+            <select
               name="className"
               value={noticeForm.className}
               onChange={handleNoticeInputChange}
-              placeholder={content?.payment_class || 'Classe'}
-            />
+            >
+              <option value="">{content?.payment_class || 'Classe'}</option>
+              {classOptions.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
             <input
               name="totalAmount"
               type="number"

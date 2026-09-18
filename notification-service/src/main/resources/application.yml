@@ -4,6 +4,11 @@ server:
   forward-headers-strategy: framework
 
 spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://mysql-user:3306/userDB}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   mail:
     host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:1025}

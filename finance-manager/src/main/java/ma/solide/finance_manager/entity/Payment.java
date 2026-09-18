@@ -17,6 +17,9 @@ public class Payment {
     @Column(nullable = false)
     private String studentName;
 
+    @Column
+    private String studentEmail;
+
     @Column(nullable = false)
     private String className;
 
@@ -72,6 +75,14 @@ public class Payment {
 
     public void setStudentName(String studentName) {
         this.studentName = studentName;
+    }
+
+    public String getStudentEmail() {
+        return studentEmail;
+    }
+
+    public void setStudentEmail(String studentEmail) {
+        this.studentEmail = studentEmail;
     }
 
     public String getClassName() {

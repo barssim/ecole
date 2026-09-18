@@ -98,10 +98,13 @@ services:
     depends_on:
       mysql-user:
         condition: service_healthy
+    ports:
+      - "5005:5005"
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-user:3306/userDB
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
     networks:
       - ecole
 
@@ -158,7 +161,14 @@ services:
         condition: service_started
       mailpit:
         condition: service_started
+      mysql-user:
+        condition: service_healthy
+    ports:
+      - "5006:5005"
     environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-user:3306/userDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
@@ -172,6 +182,7 @@ services:
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED: "false"
       NOTIFICATION_EMAIL_FROM: ${NOTIFICATION_EMAIL_FROM:-noreply@localhost}
       NOTIFICATION_EMAIL_TO: ${NOTIFICATION_EMAIL_TO:-parent@example.com}
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
     networks:
       - ecole
 

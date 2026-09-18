@@ -119,8 +119,14 @@ services:
     image: barssim/notification-service:latest
     container_name: notification-service
     depends_on:
-      - rabbitmq
+      mysql-user:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
     environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-user:3306/userDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-dev-pass}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}

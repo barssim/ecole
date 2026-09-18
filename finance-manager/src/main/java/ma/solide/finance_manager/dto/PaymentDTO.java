@@ -5,6 +5,7 @@ import java.time.LocalDate;
 public class PaymentDTO {
     private Integer id;
     private String studentName;
+    private String studentEmail;
     private String className;
     private Double amount;
     private String currency;
@@ -17,8 +18,14 @@ public class PaymentDTO {
 
     public PaymentDTO(Integer id, String studentName, String className, Double amount,
                      String currency, String method, LocalDate paymentDate) {
+        this(id, studentName, null, className, amount, currency, method, paymentDate);
+    }
+
+    public PaymentDTO(Integer id, String studentName, String studentEmail, String className, Double amount,
+                     String currency, String method, LocalDate paymentDate) {
         this.id = id;
         this.studentName = studentName;
+        this.studentEmail = studentEmail;
         this.className = className;
         this.amount = amount;
         this.currency = currency;
@@ -41,6 +48,14 @@ public class PaymentDTO {
 
     public void setStudentName(String studentName) {
         this.studentName = studentName;
+    }
+
+    public String getStudentEmail() {
+        return studentEmail;
+    }
+
+    public void setStudentEmail(String studentEmail) {
+        this.studentEmail = studentEmail;
     }
 
     public String getClassName() {

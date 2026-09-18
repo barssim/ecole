@@ -71,6 +71,7 @@ public class PaymentService {
         Payment payment = new Payment();
         payment.setTenantId(tenantId);
         payment.setStudentName(paymentDTO.getStudentName().trim());
+        payment.setStudentEmail(paymentDTO.getStudentEmail() != null ? paymentDTO.getStudentEmail().trim() : null);
         payment.setClassName(paymentDTO.getClassName() != null ? paymentDTO.getClassName() : "-");
         payment.setAmount(paymentDTO.getAmount());
         payment.setCurrency(paymentDTO.getCurrency() != null ? paymentDTO.getCurrency() : "MAD");
@@ -104,6 +105,9 @@ public class PaymentService {
 
         if (paymentDTO.getStudentName() != null && !paymentDTO.getStudentName().trim().isEmpty()) {
             payment.setStudentName(paymentDTO.getStudentName().trim());
+        }
+        if (paymentDTO.getStudentEmail() != null) {
+            payment.setStudentEmail(paymentDTO.getStudentEmail().trim().isEmpty() ? null : paymentDTO.getStudentEmail().trim());
         }
         if (paymentDTO.getClassName() != null) {
             payment.setClassName(paymentDTO.getClassName());
@@ -145,6 +149,7 @@ public class PaymentService {
         PaymentDTO dto = new PaymentDTO(
                 payment.getId(),
                 payment.getStudentName(),
+                payment.getStudentEmail(),
                 payment.getClassName(),
                 payment.getAmount(),
                 payment.getCurrency(),
