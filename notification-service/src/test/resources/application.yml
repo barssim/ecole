@@ -1,8 +1,5 @@
 spring:
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
-      - org.springframework.boot.autoconfigure.kafka.KafkaAnnotationDrivenConfiguration
-  kafka:
+  rabbitmq:
     listener:
-      auto-startup: false
+      simple:
+        auto-startup: false

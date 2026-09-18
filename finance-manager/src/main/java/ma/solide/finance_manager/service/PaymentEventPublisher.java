@@ -1,10 +1,10 @@
 package ma.solide.finance_manager.service;
 
+import ma.solide.finance_manager.config.RabbitMQConfig;
 import ma.solide.finance_manager.entity.Payment;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -14,12 +14,11 @@ import java.util.UUID;
 public class PaymentEventPublisher {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentEventPublisher.class);
-    private static final String TOPIC = "payment-received";
 
-    private final KafkaTemplate<String, PaymentReceivedEvent> kafkaTemplate;
+    private final RabbitTemplate rabbitTemplate;
 
-    public PaymentEventPublisher(KafkaTemplate<String, PaymentReceivedEvent> kafkaTemplate) {
-        this.kafkaTemplate = kafkaTemplate;
+    public PaymentEventPublisher(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     public void publishPaymentReceived(Payment payment) {
@@ -33,7 +32,7 @@ public class PaymentEventPublisher {
                 Instant.now()
         );
 
-        kafkaTemplate.send(new ProducerRecord<>(TOPIC, payment.getStudentName(), event));
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, RabbitMQConfig.ROUTING_KEY, event);
         log.info("Published payment received event for paymentId={}, student={}, amount={}",
                 payment.getId(), payment.getStudentName(), payment.getAmount());
     }

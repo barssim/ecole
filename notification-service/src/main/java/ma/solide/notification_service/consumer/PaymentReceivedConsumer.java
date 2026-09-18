@@ -1,11 +1,12 @@
 package ma.solide.notification_service.consumer;
 
 import ma.solide.notification_service.EmailNotificationService;
+import ma.solide.notification_service.config.RabbitMQConfig;
 import ma.solide.notification_service.event.PaymentReceivedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.context.annotation.Profile;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -20,7 +21,7 @@ public class PaymentReceivedConsumer {
         this.emailNotificationService = emailNotificationService;
     }
 
-    @KafkaListener(topics = "payment-received", groupId = "notification-service")
+    @RabbitListener(queues = RabbitMQConfig.QUEUE)
     public void consume(PaymentReceivedEvent event) {
         log.info("Received payment-received event: paymentId={}, studentName={}, amount={}, currency={}, paymentMethod={}",
                 event.paymentId(), event.studentName(), event.amount(), event.currency(), event.paymentMethod());

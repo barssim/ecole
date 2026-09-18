@@ -11,6 +11,11 @@ export const resolveTenantFromHost = (host = window.location.hostname) => {
     return DEFAULT_TENANT_ID;
   }
 
+  if (normalizedHost.endsWith('.localhost')) {
+    const candidate = normalizedHost.replace(/\.localhost$/, '');
+    return candidate && candidate !== 'www' ? candidate : DEFAULT_TENANT_ID;
+  }
+
   const parts = normalizedHost.split('.');
   const candidate = parts.length >= 3 ? parts[0] : DEFAULT_TENANT_ID;
   return candidate && candidate !== 'www' ? candidate : DEFAULT_TENANT_ID;
@@ -20,8 +25,14 @@ export const getTenantId = () => {
   const stored = normalizeTenantId(localStorage.getItem(TENANT_STORAGE_KEY));
   const resolved = resolveTenantFromHost();
 
-  if (resolved && stored && stored !== resolved) {
-    localStorage.setItem(TENANT_STORAGE_KEY, resolved);
+  if (resolved) {
+    if (stored !== resolved) {
+      localStorage.setItem(TENANT_STORAGE_KEY, resolved);
+      localStorage.removeItem('user_roles');
+      localStorage.removeItem('LoggedIn');
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('userId');
+    }
     return resolved;
   }
 
@@ -30,9 +41,9 @@ export const getTenantId = () => {
   }
 
   if (!stored || isPlaceholderTenant(stored)) {
-    localStorage.setItem(TENANT_STORAGE_KEY, resolved);
+    localStorage.setItem(TENANT_STORAGE_KEY, DEFAULT_TENANT_ID);
   }
-  return resolved;
+  return DEFAULT_TENANT_ID;
 };
 
 export const setTenantId = (tenantId) => {

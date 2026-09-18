@@ -14,7 +14,7 @@ const startApp = () => {
   );
 };
 
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === 'test') {
   import('./mocks/browser').then(({ worker }) => {
     worker.start().then(startApp);
   });
