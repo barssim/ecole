@@ -17,9 +17,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class TeacherAssignmentService {
 
     private final TeacherAssignmentRepository repository;
+    private final SecretaryOfficeClassService secretaryOfficeClassService;
 
-    public TeacherAssignmentService(TeacherAssignmentRepository repository) {
+    public TeacherAssignmentService(TeacherAssignmentRepository repository, SecretaryOfficeClassService secretaryOfficeClassService) {
         this.repository = repository;
+        this.secretaryOfficeClassService = secretaryOfficeClassService;
     }
 
     public List<TeacherAssignment> list(String teacherId, String classId) {
@@ -46,6 +48,7 @@ public class TeacherAssignmentService {
     public TeacherAssignment create(TeacherAssignmentRequest request) {
         String tenantId = TenantContext.getRequiredTenantId();
         validateRequest(request);
+        validateClassAssignment(request);
 
         TeacherAssignment entity = TeacherAssignment.builder()
                 .tenantId(tenantId)
@@ -67,6 +70,7 @@ public class TeacherAssignmentService {
     public TeacherAssignment update(Long id, TeacherAssignmentRequest request) {
         String tenantId = TenantContext.getRequiredTenantId();
         validateRequest(request);
+        validateClassAssignment(request);
 
         TeacherAssignment entity = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
@@ -108,6 +112,24 @@ public class TeacherAssignmentService {
         }
         if (!StringUtils.hasText(request.getDueDate())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "dueDate is required");
+        }
+    }
+
+    private void validateClassAssignment(TeacherAssignmentRequest request) {
+        String teacherName = request.getCreatedBy();
+        if (!StringUtils.hasText(teacherName)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "createdBy (teacher name) is required");
+        }
+
+        Integer classId;
+        try {
+            classId = Integer.valueOf(request.getClassId().trim());
+        } catch (NumberFormatException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "classId must be numeric");
+        }
+
+        if (secretaryOfficeClassService.getAssignedClass(classId, teacherName) == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not assigned to this class");
         }
     }
 }

@@ -34,6 +34,7 @@ import ParentMeetingPage from "./pages/ParentMeetingPage";
 import StudentSchedulePage from "./components/StudentSchedulePage";
 import TeacherCourses  from "./pages/TeacherCourses";
 import StudentCoursesPage from "./pages/StudentCoursesPage";
+import StudentAssignmentsPage from "./pages/StudentAssignmentsPage";
 import TeacherCourseDetails from "./pages/TeacherCourseDetails";
 import PartiesPage  from "./pages/PartiesPage";
 import MeetingPage  from "./pages/MeetingPage";
@@ -221,6 +222,7 @@ const AppContent = () => {
               <Route path="/parents/attestation_demand" element={<AttestationsPage language={language} />} />
 				      <Route path="/students/schedule" element={<StudentSchedulePage language={language} toggleLanguage={toggleLanguage} />} />
 				      <Route path="/students/courses" element={<StudentCoursesPage language={language} toggleLanguage={toggleLanguage} />} />
+				      <Route path="/students/devoirs" element={<StudentAssignmentsPage language={language} toggleLanguage={toggleLanguage} />} />
 				       <Route path="/parents/inscription" element={<InscriptionForm  isAuthorized={true} language={language} toggleLanguage={toggleLanguage} />} />
                    </Routes>
                  </div>

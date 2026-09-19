@@ -40,10 +40,10 @@ const [showActivites, setShowActivites] = useState(false);
               </li>
              <li>
                             <Link
-                              to="/students/exercices"
+                              to="/students/devoirs"
                               className="text-xs bg-green-100 text-green-800 px-3 py-1 rounded hover:bg-green-200 inline-block"
                             >
-                              {content.student_exercices || "Exercices"}
+                              {content.student_devoirs || "Devoirs"}
                             </Link>
                           </li>
    <li>

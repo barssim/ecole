@@ -69,6 +69,37 @@ const TeacherAssignmentsPage = ({ language }) => {
     return url;
   };
 
+  const [readingFile, setReadingFile] = useState('');
+
+  const handleReadAttachment = async (assignment) => {
+    if (!assignment?.attachmentUrl) return;
+
+    const fileWindow = window.open('', '_blank');
+    if (!fileWindow) {
+      setError(content.assignment_popupBlocked || 'Autorisez les fenêtres contextuelles pour lire le fichier.');
+      return;
+    }
+
+    setReadingFile(assignment.attachmentUrl);
+    try {
+      const url = assignment.attachmentUrl.startsWith('http')
+        ? assignment.attachmentUrl
+        : apiUrlFor(assignment.attachmentUrl.replace(/^\/api/, ''));
+      const response = await fetch(url, { headers: buildHeaders() });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      fileWindow.location.href = blobUrl;
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } catch {
+      fileWindow.close();
+      setError(content.assignment_readError || "Impossible d'ouvrir le fichier. Veuillez réessayer.");
+    } finally {
+      setReadingFile('');
+    }
+  };
+
   const uploadAttachment = async (file) => {
     if (!file) {
       return { attachmentName: null, attachmentUrl: null };
@@ -394,9 +425,17 @@ const TeacherAssignmentsPage = ({ language }) => {
                     <td style={td}>{assignment.className || '—'}</td>
                     <td style={td}>
                       {assignment.attachmentUrl ? (
-                        <a href={resolveAttachmentUrl(assignment.attachmentUrl)} target="_blank" rel="noreferrer">
-                          {assignment.attachmentName || (content.assignment_attachmentDownload || 'Uploaded file')}
-                        </a>
+                        <button
+                          type="button"
+                          className="signup-button"
+                          style={{ padding: '4px 10px', width: 'auto', fontSize: '0.85em' }}
+                          onClick={() => handleReadAttachment(assignment)}
+                          disabled={readingFile === assignment.attachmentUrl}
+                        >
+                          {readingFile === assignment.attachmentUrl
+                            ? (content.assignment_opening || 'Ouverture...')
+                            : (content.assignment_read || 'Lire')}
+                        </button>
                       ) : '—'}
                     </td>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>
