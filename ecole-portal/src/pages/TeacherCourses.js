@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getTenantId } from "../tenant";
 import { resolveApiBaseUrl } from "../utils/apiBaseUrl";
 import fr from "../locales/fr.json";
@@ -39,6 +40,7 @@ const safeReadLocalUploads = (userId) => {
 const TeacherCourses = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
   const userId = localStorage.getItem("userId");
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
   const [backendCourses, setBackendCourses] = useState([]);
@@ -48,6 +50,7 @@ const TeacherCourses = ({ language }) => {
   const [success, setSuccess] = useState("");
 
   const [courseTitle, setCourseTitle] = useState("");
+  const [courseDescription, setCourseDescription] = useState("");
   const [courseFile, setCourseFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [deletingCourseId, setDeletingCourseId] = useState(null);
@@ -117,12 +120,43 @@ const TeacherCourses = ({ language }) => {
 
   const handleUploadCourse = async (e) => {
     e.preventDefault();
-    if (!courseFile) {
-      setError("Veuillez choisir un fichier de cours.");
+    if (!courseTitle.trim()) {
+      setError("Veuillez saisir le nom du cours.");
       return;
     }
-    if (!isPdfFile(courseFile)) {
+    if (courseFile && !isPdfFile(courseFile)) {
       setError("Seuls les fichiers PDF sont autorises.");
+      return;
+    }
+
+    if (!courseFile) {
+      setUploading(true);
+      setError("");
+      const course = {
+        name: courseTitle.trim(),
+        description: courseDescription.trim() || null,
+        teacherId: userId,
+        files: [],
+      };
+
+      try {
+        const response = await fetch(`${API_BASE}/api/teachercourses`, {
+          method: "POST",
+          headers: buildHeaders(true),
+          body: JSON.stringify(course),
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const savedCourse = await response.json();
+        setBackendCourses((prev) => [savedCourse, ...prev]);
+        setCourseTitle("");
+        setCourseDescription("");
+        flashSuccess(content.course_success || "Cours créé avec succès !");
+        navigate(`/enseignant/cours/${savedCourse.id}`, { state: { course: savedCourse, created: true } });
+      } catch {
+        setError(content.course_error || "Erreur lors de la création du cours.");
+      } finally {
+        setUploading(false);
+      }
       return;
     }
 
@@ -152,7 +186,7 @@ const TeacherCourses = ({ language }) => {
       const finalCourseName = courseTitle.trim() || uploadedFile.filename || courseFile.name;
       const payload = {
         name: finalCourseName,
-        description: `Uploaded course file: ${uploadedFile.filename || courseFile.name}`,
+        description: courseDescription.trim() || `Uploaded course file: ${uploadedFile.filename || courseFile.name}`,
         teacherId: userId,
         files: [uploadedFile],
       };
@@ -182,6 +216,7 @@ const TeacherCourses = ({ language }) => {
           ...prev,
         ]);
         flashSuccess(content.course_success || "Action réussie !");
+        navigate(`/enseignant/cours/${savedCourse.id}`, { state: { course: savedCourse, created: true } });
       } else {
         const localCourse = {
           id: `local-${Date.now()}`,
@@ -201,6 +236,7 @@ const TeacherCourses = ({ language }) => {
       }
 
       setCourseTitle("");
+      setCourseDescription("");
       setCourseFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch {
@@ -286,7 +322,7 @@ const TeacherCourses = ({ language }) => {
       ) : mergedCourses.length === 0 ? (
         <div className="tc-empty">
           <p>📭 Aucun cours téléversé.</p>
-          <p>Ajoutez votre premier fichier de cours ci-dessus.</p>
+          <p>Créez votre premier cours ci-dessus.</p>
         </div>
       ) : (
         <div className="tc-course-list">
@@ -327,34 +363,46 @@ const TeacherCourses = ({ language }) => {
       )}
 
       <form className="tc-add-form" onSubmit={handleUploadCourse}>
-        <h3>{content.course_upload_title || "➕ Envoyer un fichier de cours"}</h3>
+        <h3>{content.course_create_title || "➕ Créer un cours"}</h3>
         <div className="tc-form-group">
-          <label>Titre du cours</label>
+          <label htmlFor="course-name">Nom du cours *</label>
           <input
+            id="course-name"
             type="text"
             value={courseTitle}
             onChange={(e) => setCourseTitle(e.target.value)}
             placeholder="Ex: Mathématiques - Chapitre 1"
+            required
           />
         </div>
         <div className="tc-form-group">
-          <label>Fichier du cours *</label>
+          <label htmlFor="course-description">Description</label>
+          <textarea
+            id="course-description"
+            value={courseDescription}
+            onChange={(e) => setCourseDescription(e.target.value)}
+            placeholder="Présentez brièvement le contenu du cours"
+            rows="4"
+          />
+        </div>
+        <div className="tc-form-group">
+          <label htmlFor="course-file">Support de cours (facultatif)</label>
           <input
+            id="course-file"
             ref={fileInputRef}
             type="file"
             accept="application/pdf,.pdf"
             onChange={(e) => setCourseFile(e.target.files?.[0] || null)}
-            required
           />
         </div>
         <p style={{ marginTop: -4, marginBottom: 0, color: "#6b7280", fontSize: 13 }}>
-          {content.course_uploaded_hint || "Le fichier téléchargé apparaîtra immédiatement dans la liste ci-dessous."}
+          {content.course_created_hint || "Le cours sera enregistré et pourra ensuite recevoir du contenu."}
         </p>
         <div className="tc-form-actions">
           <button type="submit" className="tc-btn tc-btn-success" disabled={uploading}>
             {uploading
-              ? (content.course_uploading || "Envoi...")
-              : (content.course_upload_action || "📤 Envoyer le cours")}
+              ? "Création..."
+              : "Créer le cours"}
           </button>
         </div>
       </form>

@@ -33,6 +33,7 @@ import SharedDocumentsPage from "./pages/SharedDocumentsPage";
 import ParentMeetingPage from "./pages/ParentMeetingPage";
 import StudentSchedulePage from "./components/StudentSchedulePage";
 import TeacherCourses  from "./pages/TeacherCourses";
+import TeacherCourseDetails from "./pages/TeacherCourseDetails";
 import PartiesPage  from "./pages/PartiesPage";
 import MeetingPage  from "./pages/MeetingPage";
 import PaymentsPage from './pages/PaymentsPage';
@@ -199,6 +200,7 @@ const AppContent = () => {
                       <Route path="/services/parties" element={<PartiesPage language={language} />} />
                       <Route path="/services/meetings" element={<MeetingPage language={language} />} />
                       <Route path="/enseignement/parent-meetings" element={<ParentMeetingPage language={language} toggleLanguage={toggleLanguage} />} />
+                       <Route path="/enseignant/cours/:id" element={<TeacherCourseDetails language={language} />} />
                        <Route path="/enseignant/cours" element={<TeacherCourses language={language} toggleLanguage={toggleLanguage} />} />
                       <Route path="/enseignant/attendance" element={<TeacherAttendancePage language={language} />} />
                       <Route path="/enseignant/absence" element={<TeacherAttendancePage language={language} />} />

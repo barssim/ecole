@@ -57,6 +57,8 @@ const classSchedulesByTenant = {
   },
 };
 
+const teacherCoursesByTenant = {};
+
 const dayOrder = {
   monday: 1,
   tuesday: 2,
@@ -412,8 +414,9 @@ export const handlers = [
     }),
 
     // 🧪 Handler for teacher courses
-    http.get(`${BASE_URL}/api/teachercourses`, () => {
+    http.get(`${BASE_URL}/api/teachercourses`, ({ request }) => {
     const userId = localStorage.getItem("userId");
+    const tenantId = getTenantId(request);
     const teachercourses = {
     "8": [
       {
@@ -441,9 +444,37 @@ export const handlers = [
         ]
      };
 
-     const course = teachercourses[userId] || [];
+     const course = [
+       ...(teacherCoursesByTenant[tenantId] || []).filter((item) => String(item.teacherId) === String(userId)),
+       ...(teachercourses[userId] || []),
+     ];
 
      return HttpResponse.json(course);
+   }),
+
+   http.post(`${BASE_URL}/api/teachercourses`, async ({ request }) => {
+     const tenantId = getTenantId(request);
+     const payload = await request.json();
+     if (!payload.name || !payload.teacherId) {
+       return HttpResponse.json({ message: 'name and teacherId are required' }, { status: 400 });
+     }
+     if (!teacherCoursesByTenant[tenantId]) teacherCoursesByTenant[tenantId] = [];
+     const course = {
+       ...payload,
+       id: Date.now(),
+       uploadedAt: new Date().toISOString(),
+       files: Array.isArray(payload.files) ? payload.files : [],
+     };
+     teacherCoursesByTenant[tenantId].unshift(course);
+     return HttpResponse.json(course, { status: 201 });
+   }),
+
+   http.delete(`${BASE_URL}/api/teachercourses/:id`, ({ params, request }) => {
+     const tenantId = getTenantId(request);
+     const courses = teacherCoursesByTenant[tenantId] || [];
+     const remaining = courses.filter((course) => String(course.id) !== String(params.id));
+     teacherCoursesByTenant[tenantId] = remaining;
+     return new HttpResponse(null, { status: remaining.length === courses.length ? 404 : 204 });
    }),
 
 
