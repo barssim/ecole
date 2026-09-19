@@ -9,6 +9,11 @@ public interface TeacherCourseRepository extends JpaRepository<TeacherCourse, Lo
 
     List<TeacherCourse> findAllByTenantIdAndTeacherIdOrderByUploadedAtDesc(String tenantId, String teacherId);
 
+    List<TeacherCourse> findAllByTenantIdAndClassIdOrderByUploadedAtDesc(String tenantId, String classId);
+
+    List<TeacherCourse> findAllByTenantIdAndTeacherIdAndClassIdOrderByUploadedAtDesc(
+            String tenantId, String teacherId, String classId);
+
     List<TeacherCourse> findAllByTenantIdOrderByUploadedAtDesc(String tenantId);
 }
 

@@ -1,4 +1,4 @@
-﻿package ma.solide.secretaryoffice.dto;
+package ma.solide.secretaryoffice.dto;
 
 import java.util.Map;
 

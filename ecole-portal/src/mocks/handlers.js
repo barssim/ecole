@@ -417,6 +417,8 @@ export const handlers = [
     http.get(`${BASE_URL}/api/teachercourses`, ({ request }) => {
     const userId = localStorage.getItem("userId");
     const tenantId = getTenantId(request);
+    const url = new URL(request.url);
+    const classId = url.searchParams.get("classId");
     const teachercourses = {
     "8": [
       {
@@ -444,12 +446,30 @@ export const handlers = [
         ]
      };
 
-     const course = [
+     let course = [
        ...(teacherCoursesByTenant[tenantId] || []).filter((item) => String(item.teacherId) === String(userId)),
        ...(teachercourses[userId] || []),
      ];
 
+     if (classId) {
+       course = (teacherCoursesByTenant[tenantId] || []).filter(
+         (item) => String(item.classId) === String(classId)
+       );
+     }
+
      return HttpResponse.json(course);
+   }),
+
+   http.get(`${BASE_URL}/api/teacher/classes`, ({ request }) => {
+     const tenantId = getTenantId(request);
+     const url = new URL(request.url);
+     const teacherName = (url.searchParams.get("teacherName") || "").trim().toLowerCase();
+     const classes = classesByTenant[tenantId] || classesByTenant.gardinia;
+     if (!teacherName) return HttpResponse.json(classes);
+     const assigned = classes.filter((schoolClass) =>
+       (schoolClass.teachers || []).some((teacher) => String(teacher).trim().toLowerCase() === teacherName)
+     );
+     return HttpResponse.json(assigned);
    }),
 
    http.post(`${BASE_URL}/api/teachercourses`, async ({ request }) => {

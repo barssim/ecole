@@ -30,6 +30,14 @@ const [showActivites, setShowActivites] = useState(false);
                   {content.student_schedule || "Schedule"}
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/students/courses"
+                  className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 inline-block"
+                >
+                  {content.student_courses || "Cours"}
+                </Link>
+              </li>
              <li>
                             <Link
                               to="/students/exercices"

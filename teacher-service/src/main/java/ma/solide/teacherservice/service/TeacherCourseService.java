@@ -23,9 +23,19 @@ public class TeacherCourseService {
         this.teacherCourseRepository = teacherCourseRepository;
     }
 
-    public List<TeacherCourse> listCourses(String teacherId) {
+    public List<TeacherCourse> listCourses(String teacherId, String classId) {
         String tenantId = TenantContext.getRequiredTenantId();
-        if (StringUtils.hasText(teacherId)) {
+        boolean hasTeacher = StringUtils.hasText(teacherId);
+        boolean hasClass = StringUtils.hasText(classId);
+
+        if (hasTeacher && hasClass) {
+            return teacherCourseRepository.findAllByTenantIdAndTeacherIdAndClassIdOrderByUploadedAtDesc(
+                    tenantId, teacherId.trim(), classId.trim());
+        }
+        if (hasClass) {
+            return teacherCourseRepository.findAllByTenantIdAndClassIdOrderByUploadedAtDesc(tenantId, classId.trim());
+        }
+        if (hasTeacher) {
             return teacherCourseRepository.findAllByTenantIdAndTeacherIdOrderByUploadedAtDesc(tenantId, teacherId.trim());
         }
         return teacherCourseRepository.findAllByTenantIdOrderByUploadedAtDesc(tenantId);
@@ -39,10 +49,15 @@ public class TeacherCourseService {
         if (!StringUtils.hasText(request.getName())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "name is required");
         }
+        if (!StringUtils.hasText(request.getClassId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "classId is required");
+        }
 
         TeacherCourse course = TeacherCourse.builder()
                 .tenantId(tenantId)
                 .teacherId(request.getTeacherId().trim())
+                .classId(request.getClassId().trim())
+                .className(StringUtils.hasText(request.getClassName()) ? request.getClassName().trim() : null)
                 .name(request.getName().trim())
                 .description(StringUtils.hasText(request.getDescription()) ? request.getDescription().trim() : null)
                 .uploadedAt(LocalDateTime.now())

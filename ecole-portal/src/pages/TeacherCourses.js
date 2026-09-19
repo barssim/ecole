@@ -43,6 +43,13 @@ const TeacherCourses = ({ language }) => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
+  const currentUserName = (
+    localStorage.getItem("LoggedIn")
+    || localStorage.getItem("userName")
+    || localStorage.getItem("username")
+    || ""
+  ).trim();
+
   const [backendCourses, setBackendCourses] = useState([]);
   const [localUploads, setLocalUploads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +62,9 @@ const TeacherCourses = ({ language }) => {
   const [uploading, setUploading] = useState(false);
   const [deletingCourseId, setDeletingCourseId] = useState(null);
   const [readingFile, setReadingFile] = useState("");
+  const [classes, setClasses] = useState([]);
+  const [classesLoading, setClassesLoading] = useState(true);
+  const [selectedClassId, setSelectedClassId] = useState("");
 
   const persistLocalUploads = (items) => {
     if (!userId) return;
@@ -69,6 +79,30 @@ const TeacherCourses = ({ language }) => {
     setSuccess(msg);
     window.setTimeout(() => setSuccess(""), 3000);
   };
+
+  useEffect(() => {
+    const fetchClasses = async () => {
+      setClassesLoading(true);
+      if (!currentUserName) {
+        setClasses([]);
+        setClassesLoading(false);
+        return;
+      }
+      try {
+        const query = `?teacherName=${encodeURIComponent(currentUserName)}`;
+        const res = await fetch(`${API_BASE}/api/teacher/classes${query}`, { headers: buildHeaders(false) });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setClasses(Array.isArray(data) ? data : []);
+      } catch {
+        setClasses([]);
+      } finally {
+        setClassesLoading(false);
+      }
+    };
+
+    fetchClasses();
+  }, [currentUserName]);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -125,10 +159,16 @@ const TeacherCourses = ({ language }) => {
       setError("Veuillez saisir le nom du cours.");
       return;
     }
+    if (!selectedClassId) {
+      setError("Veuillez sélectionner une classe.");
+      return;
+    }
     if (courseFile && !isPdfFile(courseFile)) {
       setError("Seuls les fichiers PDF sont autorises.");
       return;
     }
+
+    const selectedClassName = classes.find((cls) => String(cls.id) === String(selectedClassId))?.name || "";
 
     if (!courseFile) {
       setUploading(true);
@@ -137,6 +177,8 @@ const TeacherCourses = ({ language }) => {
         name: courseTitle.trim(),
         description: courseDescription.trim() || null,
         teacherId: userId,
+        classId: String(selectedClassId),
+        className: selectedClassName,
         files: [],
       };
 
@@ -151,6 +193,7 @@ const TeacherCourses = ({ language }) => {
         setBackendCourses((prev) => [savedCourse, ...prev]);
         setCourseTitle("");
         setCourseDescription("");
+        setSelectedClassId("");
         flashSuccess(content.course_success || "Cours créé avec succès !");
         navigate(`/enseignant/cours/${savedCourse.id}`, { state: { course: savedCourse, created: true } });
       } catch {
@@ -189,6 +232,8 @@ const TeacherCourses = ({ language }) => {
         name: finalCourseName,
         description: courseDescription.trim() || `Uploaded course file: ${uploadedFile.filename || courseFile.name}`,
         teacherId: userId,
+        classId: String(selectedClassId),
+        className: selectedClassName,
         files: [uploadedFile],
       };
 
@@ -239,6 +284,7 @@ const TeacherCourses = ({ language }) => {
       setCourseTitle("");
       setCourseDescription("");
       setCourseFile(null);
+      setSelectedClassId("");
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch {
         setError(content.course_error || "Erreur lors de l'envoi du fichier de cours.");
@@ -380,6 +426,11 @@ const TeacherCourses = ({ language }) => {
                         {new Date(course.uploadedAt).toLocaleString()}
                       </span>
                     )}
+                    {course.className && (
+                      <span style={{ background: "#ede9fe", color: "#5b21b6", borderRadius: 999, padding: "2px 10px", fontSize: 12, fontWeight: 600 }}>
+                        🏫 {course.className}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="tc-course-actions">
@@ -401,6 +452,29 @@ const TeacherCourses = ({ language }) => {
 
       <form className="tc-add-form" onSubmit={handleUploadCourse}>
         <h3>{content.course_create_title || "➕ Créer un cours"}</h3>
+        <div className="tc-form-group">
+          <label htmlFor="course-class">Classe *</label>
+          <select
+            id="course-class"
+            value={selectedClassId}
+            onChange={(e) => setSelectedClassId(e.target.value)}
+            required
+          >
+            <option value="">
+              {classesLoading ? "Chargement des classes..." : "Sélectionner une classe"}
+            </option>
+            {classes.map((cls) => (
+              <option key={cls.id} value={cls.id}>
+                {cls.name}
+              </option>
+            ))}
+          </select>
+          {!classesLoading && classes.length === 0 && (
+            <p style={{ marginTop: 4, marginBottom: 0, color: "#b91c1c", fontSize: 13 }}>
+              Aucune classe ne vous est assignée.
+            </p>
+          )}
+        </div>
         <div className="tc-form-group">
           <label htmlFor="course-name">Nom du cours *</label>
           <input
@@ -436,7 +510,7 @@ const TeacherCourses = ({ language }) => {
           {content.course_created_hint || "Le cours sera enregistré et pourra ensuite recevoir du contenu."}
         </p>
         <div className="tc-form-actions">
-          <button type="submit" className="tc-btn tc-btn-success" disabled={uploading}>
+          <button type="submit" className="tc-btn tc-btn-success" disabled={uploading || !selectedClassId}>
             {uploading
               ? "Création..."
               : "Créer le cours"}

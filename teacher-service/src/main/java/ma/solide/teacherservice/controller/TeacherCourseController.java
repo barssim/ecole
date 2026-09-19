@@ -26,8 +26,10 @@ public class TeacherCourseController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TeacherCourse>> list(@RequestParam(required = false, name = "teacher") String teacherId) {
-        return ResponseEntity.ok(teacherCourseService.listCourses(teacherId));
+    public ResponseEntity<List<TeacherCourse>> list(
+            @RequestParam(required = false, name = "teacher") String teacherId,
+            @RequestParam(required = false, name = "classId") String classId) {
+        return ResponseEntity.ok(teacherCourseService.listCourses(teacherId, classId));
     }
 
     @PostMapping

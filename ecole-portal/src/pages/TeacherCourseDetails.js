@@ -64,6 +64,9 @@ const TeacherCourseDetails = () => {
           <div className="tc-alert tc-alert-success">Cours créé avec succès.</div>
         )}
         <h2 className="tc-title">{course.name}</h2>
+        {course.className && (
+          <p className="tc-course-meta">🏫 Classe : <strong>{course.className}</strong></p>
+        )}
         {course.description && <p className="tc-course-desc">{course.description}</p>}
         <p className="tc-course-meta">
           Créé le {new Date(course.uploadedAt || course.createdAt).toLocaleString()}

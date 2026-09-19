@@ -31,6 +31,20 @@ const StudentSchedulePage = ({ language }) => {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
 
+  const normalizeKey = (value) => normalizeText(value).replace(/[^a-z0-9]/g, '');
+
+  // Class rosters store the student's full display name (e.g. "jannat Jennat"),
+  // while the logged-in identity is often just the username/surname (e.g. "Jennat").
+  // Match if either normalized form fully matches, or one is contained in the other.
+  const isStudentMatch = (storedName, loginName) => {
+    const stored = normalizeKey(storedName);
+    const login = normalizeKey(loginName);
+    if (!stored || !login) return false;
+    if (stored === login) return true;
+    if (login.length >= 3 && (stored.includes(login) || login.includes(stored))) return true;
+    return false;
+  };
+
   const buildHeaders = () => ({
     "X-Tenant-Id": getTenantId(),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -46,7 +60,7 @@ const StudentSchedulePage = ({ language }) => {
         const classesResponse = await fetch(apiUrlFor('/classes'), { headers });
         const classes = await readJsonResponse(classesResponse, content.schedule_noData || 'Unable to load schedule.');
         const studentClass = Array.isArray(classes)
-          ? classes.find((schoolClass) => (schoolClass.students || []).some((student) => normalizeText(student) === normalizeText(currentUserName)))
+          ? classes.find((schoolClass) => (schoolClass.students || []).some((student) => isStudentMatch(student, currentUserName)))
           : null;
 
         if (studentClass) {
