@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api")
@@ -39,5 +40,17 @@ public class UploadController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
     }
-}
 
+    @GetMapping("/uploads")
+    public ResponseEntity<?> downloadByKey(@RequestParam("key") String key) {
+        if (fileStorageService.usesS3()) {
+            return ResponseEntity.status(302)
+                    .location(URI.create(fileStorageService.presignedUrl(key)))
+                    .build();
+        }
+        Resource resource = fileStorageService.load(key);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
+    }
+}

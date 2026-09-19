@@ -31,6 +31,12 @@ teacher:
       max-days: ${TEACHER_ATTENDANCE_HISTORY_MAX_DAYS:365}
   uploads:
     directory: ${TEACHER_UPLOADS_DIR:/tmp/teacher-uploads}
+    s3:
+      bucket: ${AWS_S3_BUCKET:}
+      region: ${AWS_REGION:eu-west-1}
+      endpoint: ${AWS_S3_ENDPOINT:}
+      presign-endpoint: ${AWS_S3_PRESIGN_ENDPOINT:}
+      url-duration-minutes: ${AWS_S3_URL_DURATION_MINUTES:15}
 
 secretary-office:
   base-url: ${SECRETARY_OFFICE_BASE_URL:http://secretary-office:8095}
@@ -43,4 +49,3 @@ management:
   endpoint:
     health:
       show-details: always
-

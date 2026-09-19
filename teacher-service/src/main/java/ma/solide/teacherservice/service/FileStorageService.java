@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -14,13 +15,22 @@ import java.util.UUID;
 
 import ma.solide.teacherservice.tenant.TenantContext;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 @Service
 public class FileStorageService {
@@ -28,82 +38,138 @@ public class FileStorageService {
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     private final Path baseDir;
+    private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
+    private final String bucket;
+    private final long urlDurationMinutes;
 
-    public FileStorageService(@Value("${teacher.uploads.directory}") String baseDir) {
+    public FileStorageService(
+            @Value("${teacher.uploads.directory}") String baseDir,
+            @Value("${teacher.uploads.s3.bucket}") String bucket,
+            @Value("${teacher.uploads.s3.url-duration-minutes}") long urlDurationMinutes,
+            S3Client s3Client,
+            S3Presigner s3Presigner) {
         this.baseDir = Paths.get(baseDir).toAbsolutePath().normalize();
+        this.bucket = bucket.trim();
+        this.urlDurationMinutes = urlDurationMinutes;
+        this.s3Client = s3Client;
+        this.s3Presigner = s3Presigner;
+    }
+
+    public boolean usesS3() {
+        return StringUtils.hasText(bucket);
+    }
+
+    public String presignedUrl(String encodedKey) {
+        String key = java.net.URLDecoder.decode(encodedKey, StandardCharsets.UTF_8);
+        return signedUrl(requireTenantKey(TenantContext.getRequiredTenantId(), key));
+    }
+
+    private String requireTenantKey(String tenantId, String key) {
+        String prefix = "tenants/" + tenantId + "/courses/";
+        if (!key.startsWith(prefix) || key.contains("..") || key.contains("\\")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file key");
+        }
+        return key;
     }
 
     public Map<String, String> store(MultipartFile multipartFile, String customFilename) {
-        if (multipartFile == null || multipartFile.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "file is required");
-        }
-
-        if (!isPdfFile(multipartFile)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only PDF files are allowed");
-        }
+        validatePdf(multipartFile);
 
         String tenantId = TenantContext.getRequiredTenantId();
-        String originalName = StringUtils.hasText(customFilename)
-                ? customFilename.trim()
-                : multipartFile.getOriginalFilename();
-        if (!StringUtils.hasText(originalName)) {
-            originalName = "uploaded-file";
-        }
-
-        String safeOriginal = sanitizeFilename(originalName);
-        if (!safeOriginal.toLowerCase().endsWith(".pdf")) {
-            safeOriginal = safeOriginal + ".pdf";
-        }
-        String storedName = TS.format(LocalDateTime.now()) + "-" + UUID.randomUUID() + "-" + safeOriginal;
+        String safeOriginal = safePdfFilename(customFilename, multipartFile.getOriginalFilename());
+        String objectKey = "tenants/" + tenantId + "/courses/"
+                + TS.format(LocalDateTime.now()) + "-" + UUID.randomUUID() + "-" + safeOriginal;
 
         try {
+            if (StringUtils.hasText(bucket)) {
+                ensureBucket();
+                s3Client.putObject(
+                        PutObjectRequest.builder()
+                                .bucket(bucket)
+                                .key(objectKey)
+                                .contentType("application/pdf")
+                                .contentDisposition("inline; filename=\"" + safeOriginal + "\"")
+                                .build(),
+                        RequestBody.fromInputStream(multipartFile.getInputStream(), multipartFile.getSize()));
+                return Map.of("filename", safeOriginal, "url", "/api/uploads?key="
+                        + URLEncoder.encode(objectKey, StandardCharsets.UTF_8));
+            }
+
             Path tenantDir = baseDir.resolve(tenantId);
             Files.createDirectories(tenantDir);
-            Files.copy(multipartFile.getInputStream(), tenantDir.resolve(storedName), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(multipartFile.getInputStream(), tenantDir.resolve(objectKey.substring(objectKey.lastIndexOf('/') + 1)),
+                    StandardCopyOption.REPLACE_EXISTING);
+            return Map.of("filename", safeOriginal, "url", "/api/uploads/"
+                    + URLEncoder.encode(objectKey.substring(objectKey.lastIndexOf('/') + 1), StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not store file");
         }
-
-        String encoded = URLEncoder.encode(storedName, StandardCharsets.UTF_8);
-        return Map.of(
-                "filename", safeOriginal,
-                "url", "/api/uploads/" + encoded
-        );
     }
 
     public Resource load(String encodedFilename) {
         String tenantId = TenantContext.getRequiredTenantId();
         String filename = java.net.URLDecoder.decode(encodedFilename, StandardCharsets.UTF_8);
-
-        if (filename.contains("..")) {
+        if (filename.contains("..") || filename.contains("\\")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid filename");
+        }
+
+        if (StringUtils.hasText(bucket)) {
+            try {
+                byte[] bytes = s3Client.getObjectAsBytes(GetObjectRequest.builder()
+                        .bucket(bucket)
+                        .key(requireTenantKey(tenantId, filename))
+                        .build()).asByteArray();
+                return new ByteArrayResource(bytes);
+            } catch (NoSuchKeyException e) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
+            }
         }
 
         try {
             Path filePath = baseDir.resolve(tenantId).resolve(filename).normalize();
-            Resource resource = new UrlResource(filePath.toUri());
-            if (!resource.exists() || !resource.isReadable()) {
+            if (!filePath.startsWith(baseDir.resolve(tenantId)) || !Files.isReadable(filePath)) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
             }
-            return resource;
-        } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
+            return new org.springframework.core.io.FileSystemResource(filePath);
+        } catch (RuntimeException e) {
+            throw e;
         }
     }
 
-    private String sanitizeFilename(String input) {
-        return input.replaceAll("[^a-zA-Z0-9._-]", "_");
+    private String signedUrl(String objectKey) {
+        var request = GetObjectRequest.builder().bucket(bucket).key(objectKey).build();
+        var presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(urlDurationMinutes))
+                .getObjectRequest(request)
+                .build();
+        return s3Presigner.presignGetObject(presignRequest).url().toString();
     }
 
-    private boolean isPdfFile(MultipartFile multipartFile) {
-        String contentType = multipartFile.getContentType();
-        if (StringUtils.hasText(contentType)) {
-            return "application/pdf".equalsIgnoreCase(contentType.trim());
+    private void ensureBucket() {
+        try {
+            s3Client.headBucket(builder -> builder.bucket(bucket));
+        } catch (NoSuchBucketException e) {
+            s3Client.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
         }
+    }
 
-        String originalFilename = multipartFile.getOriginalFilename();
-        return StringUtils.hasText(originalFilename)
-                && originalFilename.trim().toLowerCase().endsWith(".pdf");
+    private void validatePdf(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "file is required");
+        }
+        String contentType = file.getContentType();
+        String filename = file.getOriginalFilename();
+        if (!"application/pdf".equalsIgnoreCase(String.valueOf(contentType))
+                && (filename == null || !filename.toLowerCase().endsWith(".pdf"))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only PDF files are allowed");
+        }
+    }
+
+    private String safePdfFilename(String customFilename, String originalFilename) {
+        String input = StringUtils.hasText(customFilename) ? customFilename.trim() : originalFilename;
+        String safe = (StringUtils.hasText(input) ? input : "uploaded-file")
+                .replaceAll("[^a-zA-Z0-9._-]", "_");
+        return safe.toLowerCase().endsWith(".pdf") ? safe : safe + ".pdf";
     }
 }
-
