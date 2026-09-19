@@ -50,22 +50,31 @@ if (language === "fr") {
 
    return (
        <footer className="footer">
-           <p> {tenant.name?.[language] || tenant.name?.["fr"] || "School"} </p>
-           <div>
-               <a href={content.facebook_link} target="_blank" rel="noopener noreferrer" style={{ marginRight: '10px' }}>Facebook</a>
-               <a href={content.twitter_link} target="_blank" rel="noopener noreferrer">Twitter</a>
+           <div className="footer-main">
+             <div className="footer-brand">
+               <span className="footer-mark">✦</span>
+               <div>
+                 <strong>{tenant.name?.[language] || tenant.name?.["fr"] || "School"}</strong>
+                 <p>{content.overTheTime}</p>
+               </div>
+             </div>
+             <address>
+               <span>{tenant.adresse?.[language] || ""}</span>
+               <span>{tenant.phone ? `Phone: ${tenant.phone}` : ""}</span>
+               <span>{tenant.mail ? `Email: ${tenant.mail}` : ""}</span>
+             </address>
+             <div className="footer-socials">
+               <span>Suivez-nous</span>
+               <div>
+                 <a href={content.facebook_link} target="_blank" rel="noopener noreferrer">Facebook</a>
+                 <a href={content.twitter_link} target="_blank" rel="noopener noreferrer">Twitter</a>
+               </div>
+             </div>
            </div>
-            <address>
-                 {tenant.adresse?.[language] || ""}
-                <br />
-                 Phone: {tenant.phone || ""}
-                <br />
-                 Email: {tenant.mail || ""}
-            </address>
-            <p className="legal-notice">{renderLegalNotice()}</p>
-            <p style={{ marginTop: "4px", fontSize: "0.85rem", opacity: 0.85 }}>
-              {`Version: ${appVersion}`}
-            </p>
+           <div className="footer-bottom">
+             <p className="legal-notice">{renderLegalNotice()}</p>
+             <p>{`Version: ${appVersion}`}</p>
+           </div>
             {trialIndicatorColor ? (
               <span
                 className="trial-indicator"

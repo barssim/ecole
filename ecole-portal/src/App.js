@@ -1,5 +1,5 @@
 // src/App.js
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import React, { useState } from "react";
 import { useEffect } from "react";
 import Header from './components/Header';
@@ -78,6 +78,59 @@ const mixWithWhite = (color, ratio) => {
   return `rgb(${mixed[0]}, ${mixed[1]}, ${mixed[2]})`;
 };
 
+const HomeLanding = ({ content, language, tenantCustomization }) => {
+  const navigate = useNavigate();
+  const schoolName = tenantCustomization.name?.[language] || tenantCustomization.name?.["fr"] || "School";
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+
+  return (
+    <main className="home-landing" dir={language === "ar" ? "rtl" : "ltr"}>
+      <section className="home-hero-card">
+        <div className="home-hero-copy">
+          <span className="home-eyebrow">ECole • PORTAIL DIGITAL</span>
+          <h1>{content.whatWeDo}<strong>{schoolName}</strong></h1>
+          <p>{content.whatYouFind}</p>
+          <div className="home-hero-actions">
+            <button className="home-primary-action" onClick={() => navigate(isLoggedIn ? "/profile" : "/login")}>
+              {isLoggedIn ? content.profile : content.connection}
+              <span aria-hidden="true">→</span>
+            </button>
+            <button className="home-secondary-action" onClick={() => navigate("/about")}>
+              {content.whoAreWe}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="home-stat-grid" aria-label="Portal highlights">
+        <article className="home-stat-card">
+          <span className="home-stat-icon">01</span>
+          <div><strong>{content.annonces}</strong><span>{content.messages}</span></div>
+        </article>
+        <article className="home-stat-card">
+          <span className="home-stat-icon">02</span>
+          <div><strong>{content.activités}</strong><span>{content.sorties}</span></div>
+        </article>
+        <article className="home-stat-card home-stat-card-accent">
+          <span className="home-stat-icon">03</span>
+          <div><strong>{content.services}</strong><span>{content.bibliotheque}</span></div>
+        </article>
+      </section>
+
+      <section className="home-bottom-row">
+        <div>
+          <span className="home-section-kicker">UN ESPACE, TOUTE L'ÉCOLE</span>
+          <h2>{content.whoAreWe}</h2>
+        </div>
+        <p>{content.welcomeon_site}</p>
+        <button className="home-link-action" onClick={() => navigate("/contact")}>
+          {content.contact} <span aria-hidden="true">↗</span>
+        </button>
+      </section>
+    </main>
+  );
+};
+
 function App() {
   const tenantId = getTenantId();
 	const [language, setLanguage] = useState("fr"); // Track current language
@@ -149,39 +202,46 @@ const AppContent = () => {
 
 
   return (
-    <div style={tenantThemeStyle}>
-			<Header language={language} toggleLanguage={toggleLanguage} tenantCustomization={tenantCustomization}/>
+    <div className="app-shell" style={tenantThemeStyle}>
+      <div className="app-header-shell">
+        <Header language={language} toggleLanguage={toggleLanguage} tenantCustomization={tenantCustomization}/>
+      </div>
       <div className="layout-controls">
         <button
           type="button"
           className="mobile-menu-toggle"
           onClick={() => setIsMenuOpen((prev) => !prev)}
+          aria-expanded={isMenuOpen}
         >
-          {isMenuOpen ? "Close menu" : "Open menu"}
+          <span className="menu-toggle-lines" aria-hidden="true">☰</span>
+          {isMenuOpen ? content.closeMenu || "Close menu" : content.openMenu || "Open menu"}
         </button>
       </div>
       <div className={`main-layout ${isRtl ? "layout-rtl" : "layout-ltr"}`}>
 				{/* Left Menu */}
-        <div className={`left-panel ${isMenuOpen ? "left-panel-open" : ""}`}>
+        <aside className={`left-panel ${isMenuOpen ? "left-panel-open" : ""}`}>
+          <div className="panel-heading">
+            <span className="panel-heading-mark">✦</span>
+            <span>{content.services}</span>
+          </div>
 					<Menu language={language} toggleLanguage={toggleLanguage} />
-				</div>
+				</aside>
         {isMenuOpen && <div className="layout-backdrop" onClick={() => setIsMenuOpen(false)} />}
 
 				{/* Right Content */}
-        <div className="center-content">
-
-
-                 <div className="hero-title" style={{ textAlign: "center" }}>
-                   <h1 style={{ color: "var(--tenant-primary, #007bff)" }}>{content.whatWeDo}{tenantCustomization.name?.[language] || tenantCustomization.name?.["fr"]}</h1>
-                   <h4 style={{ color: "var(--tenant-accent, #00bbff)" }}>{content.whatYouFind}</h4>
-                 </div>
-{isHomePage && (
-<div className="bounce-container">
-  <div className="bounce-content">
-    <img src={tenantCustomization.logo} width="300" />
-  </div>
-</div>
-)}
+        <main className="center-content">
+                 {isHomePage ? (
+                   <HomeLanding
+                     content={content}
+                     language={language}
+                     tenantCustomization={tenantCustomization}
+                   />
+                 ) : (
+                   <div className="hero-title" style={{ textAlign: "center" }}>
+                     <h1 style={{ color: "var(--tenant-primary, #007bff)" }}>{content.whatWeDo}{tenantCustomization.name?.[language] || tenantCustomization.name?.["fr"]}</h1>
+                     <h4 style={{ color: "var(--tenant-accent, #00bbff)" }}>{content.whatYouFind}</h4>
+                   </div>
+                 )}
                   <div className="routes-wrapper">
 
                     <Routes>
@@ -226,19 +286,20 @@ const AppContent = () => {
 				       <Route path="/parents/inscription" element={<InscriptionForm  isAuthorized={true} language={language} toggleLanguage={toggleLanguage} />} />
                    </Routes>
                  </div>
-</div>
+        </main>
 
-               <div
-                 className="right-panel"
-               >
-                 <img
-                    src={tenantCustomization.image}
-                   alt="ecole image"
-                   style={{ width: "100%", height: "auto" }}
-                 />
-</div>
+        <aside className="right-panel">
+          <div className="right-panel-art">
+            <img src={tenantCustomization.image} alt={tenantCustomization.name?.[language] || "School"} />
+          </div>
+          <div className="right-panel-content">
+            <span className="panel-heading-mark">✦</span>
+            <h2>{tenantCustomization.name?.[language] || tenantCustomization.name?.["fr"] || "School"}</h2>
+            <p>{content.overTheTime}</p>
+            <div className="portal-status"><span /> {content.overTheTime}</div>
+          </div>
+        </aside>
 			</div>
-			<br />
       <Footer language={language} tenantCustomization={tenantCustomization} />
     </div>
 	);

@@ -25,42 +25,25 @@ if (language === "fr") {
       const isAdminAuthorized = adminRoles.some(role => userRoles.includes(role));
 	return (
 		<header
-			style={{
-				display: "flex",
-				justifyContent: "space-between",
-				alignItems: "center",
-				padding: "10px 20px",
-				boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-				backgroundColor: "var(--tenant-soft, #80dfff)",
-			}}
+			className="site-header"
 		>
-			{/* Logo Section */}
 			<div className="header-logo">
 				<img
 					src={tenant.logo}
 					alt={tenant.name?.[language] || tenant.name?.["fr"] || "School"}
-					style={{
-						width: "70px",
-						height: "50px",
-						padding: "5px 10px",
-					}}
 				/>
+				<span className="header-brand-name">{tenant.name?.[language] || tenant.name?.["fr"] || "School"}</span>
 			</div>
 
-			{/* Navigation Links */}
-			<nav style={{ display: "flex", gap: "15px" }}>
+			<nav className="site-navigation">
 				<a href="/Home" className="linkStyle">{content.home}</a>
 				<a href="/about" className="linkStyle" dir={language === "ar" ? "rtl" : "ltr"}>{content.about}</a>
 				<a href="/contact" className="linkStyle">{content.contact}</a>
 			</nav>
 
-			{/* Action Buttons */}
 			<div className="header-actions">
-
 				{isLoggedIn && (
-					<span className="inactiveButton">
-						Welcome, {loggedIn} {/* Display welcome message styled as an inactive button */}
-					</span>
+					<span className="header-welcome">Bonjour, {loggedIn}</span>
 				)}
 				{isLoggedIn && (
 					<button className="buttonStyle header-action-btn" onClick={() => navigate("/profile")}>
