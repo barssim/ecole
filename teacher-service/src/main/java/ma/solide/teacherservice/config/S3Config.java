@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 @Configuration
@@ -17,7 +18,9 @@ public class S3Config {
     public S3Client s3Client(
             @Value("${teacher.uploads.s3.region}") String region,
             @Value("${teacher.uploads.s3.endpoint}") String endpoint) {
-        var builder = S3Client.builder().region(Region.of(region));
+        var builder = S3Client.builder()
+                .region(Region.of(region))
+                .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build());
         if (StringUtils.hasText(endpoint)) {
             builder.endpointOverride(URI.create(endpoint));
         }
@@ -28,7 +31,9 @@ public class S3Config {
     public S3Presigner s3Presigner(
             @Value("${teacher.uploads.s3.region}") String region,
             @Value("${teacher.uploads.s3.presign-endpoint}") String endpoint) {
-        var builder = S3Presigner.builder().region(Region.of(region));
+        var builder = S3Presigner.builder()
+                .region(Region.of(region))
+                .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build());
         if (StringUtils.hasText(endpoint)) {
             builder.endpointOverride(URI.create(endpoint));
         }

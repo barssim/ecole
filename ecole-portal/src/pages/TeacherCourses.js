@@ -54,6 +54,7 @@ const TeacherCourses = ({ language }) => {
   const [courseFile, setCourseFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [deletingCourseId, setDeletingCourseId] = useState(null);
+  const [readingFile, setReadingFile] = useState("");
 
   const persistLocalUploads = (items) => {
     if (!userId) return;
@@ -280,6 +281,36 @@ const TeacherCourses = ({ language }) => {
     }
   };
 
+  const handleReadFile = async (file) => {
+    if (!file?.url) return;
+
+    const fileWindow = window.open("", "_blank");
+    if (!fileWindow) {
+      setError("Autorisez les fenêtres contextuelles pour lire le PDF.");
+      return;
+    }
+
+    setReadingFile(file.url);
+    setError("");
+    try {
+      const response = await fetch(
+        file.url.startsWith("http") ? file.url : `${API_BASE}${file.url}`,
+        { headers: buildHeaders(false) }
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const pdfBlob = await response.blob();
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      fileWindow.location.href = pdfUrl;
+      window.setTimeout(() => URL.revokeObjectURL(pdfUrl), 60000);
+    } catch {
+      fileWindow.close();
+      setError("Impossible d'ouvrir le PDF. Veuillez réessayer.");
+    } finally {
+      setReadingFile("");
+    }
+  };
+
   const renderFiles = (course) => {
     const files = Array.isArray(course.files) && course.files.length > 0
       ? course.files
@@ -296,9 +327,15 @@ const TeacherCourses = ({ language }) => {
         {files.map((file, index) => (
           <li key={file.url || file.filename || index}>
             📄{" "}
-            <a href={file.url} target="_blank" rel="noopener noreferrer">
-              {file.filename || file.name || `Fichier ${index + 1}`}
-            </a>
+            <span>{file.filename || file.name || `Fichier ${index + 1}`}</span>{" "}
+            <button
+              type="button"
+              className="tc-btn tc-btn-primary tc-btn-read"
+              onClick={() => handleReadFile(file)}
+              disabled={readingFile === file.url}
+            >
+              {readingFile === file.url ? "Ouverture..." : "Lire"}
+            </button>
           </li>
         ))}
       </ul>

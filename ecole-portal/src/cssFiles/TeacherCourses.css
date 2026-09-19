@@ -251,6 +251,19 @@
   text-decoration: underline;
 }
 
+.tc-file-list .tc-btn-read {
+  display: inline-block;
+  padding: 4px 10px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.8rem;
+  vertical-align: middle;
+}
+
+.tc-file-list button.tc-btn-read {
+  border: 0;
+}
+
 /* Upload panel */
 .tc-upload-panel {
   display: flex;
