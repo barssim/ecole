@@ -309,7 +309,7 @@ const AttestationsPage = ({ language }) => {
       ) : (
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-            <thead style={{ background: '#dbeafe', color: '#1e3a8a' }}>
+            <thead style={{ background: 'rgb(219, 234, 254)', color: '#1e3a8a' }}>
               <tr>
                 <th style={th}>{content.attestation_title}</th>
                 <th style={th}>{content.date || 'Date'}</th>

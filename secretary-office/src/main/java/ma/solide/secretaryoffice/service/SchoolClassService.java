@@ -139,6 +139,11 @@ public class SchoolClassService {
                         .distinct()
                         .toList();
 
+        if (students.size() > MAX_STUDENTS_PER_CLASS) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Une classe ne peut pas dépasser " + MAX_STUDENTS_PER_CLASS + " élèves");
+        }
+
         SchoolClass schoolClass = SchoolClass.builder()
                 .tenantId(tenantId)
                 .name(className)
@@ -169,6 +174,8 @@ public class SchoolClassService {
         return toResponse(schoolClassRepository.save(schoolClass));
     }
 
+    private static final int MAX_STUDENTS_PER_CLASS = 15;
+
     public SchoolClassResponse addStudent(Integer classId, StudentRequestDTO dto) {
         String tenantId = TenantContext.getRequiredTenantId();
         if (dto == null || !StringUtils.hasText(dto.getName())) {
@@ -182,6 +189,10 @@ public class SchoolClassService {
         if (schoolClass.getStudents().stream().anyMatch(s -> s.equalsIgnoreCase(studentName))) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "L'élève '" + studentName + "' est déjà dans cette classe");
+        }
+        if (schoolClass.getStudents().size() >= MAX_STUDENTS_PER_CLASS) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Cette classe a atteint la limite de " + MAX_STUDENTS_PER_CLASS + " élèves");
         }
         schoolClass.getStudents().add(studentName);
         return toResponse(schoolClassRepository.save(schoolClass));

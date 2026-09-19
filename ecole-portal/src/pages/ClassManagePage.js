@@ -521,15 +521,21 @@ const ClassManagePage = ({ language }) => {
       <div className="bg-white rounded shadow p-4 border border-gray-200 space-y-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <h3 className="font-semibold text-gray-700">
-            👥 {content.students || 'Students'} ({cls.students.length})
+            👥 {content.students || 'Students'} ({cls.students.length} / 15)
           </h3>
           {!addingStudent && !studentsLoading && unassignedStudents.length > 0 && (
-            <button
-              onClick={() => { setAddingStudent(true); setSelectedStudentName(''); clearMessages(); }}
-              className="text-xs bg-indigo-100 text-indigo-800 px-3 py-1 rounded hover:bg-indigo-200"
-            >
-              {content.classes_addStudent || '+ Add Student'}
-            </button>
+            cls.students.length >= 15 ? (
+              <span className="text-xs bg-gray-100 text-gray-500 px-3 py-1 rounded font-semibold">
+                ✓ {content.classes_classFull || 'Classe complète (15/15)'}
+              </span>
+            ) : (
+              <button
+                onClick={() => { setAddingStudent(true); setSelectedStudentName(''); clearMessages(); }}
+                className="text-xs bg-indigo-100 text-indigo-800 px-3 py-1 rounded hover:bg-indigo-200"
+              >
+                {content.classes_addStudent || '+ Add Student'}
+              </button>
+            )
           )}
         </div>
 

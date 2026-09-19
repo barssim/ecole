@@ -41,13 +41,21 @@ public class SchoolClass {
     private String name;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "tb_class_student", joinColumns = @JoinColumn(name = "class_id"))
+    @CollectionTable(
+        name = "tb_class_student",
+        joinColumns = @JoinColumn(name = "class_id"),
+        uniqueConstraints = @UniqueConstraint(name = "uk_class_student", columnNames = {"class_id", "student_name"})
+    )
     @Column(name = "student_name")
     @Builder.Default
     private List<String> students = new ArrayList<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "tb_class_teacher", joinColumns = @JoinColumn(name = "class_id"))
+    @CollectionTable(
+        name = "tb_class_teacher",
+        joinColumns = @JoinColumn(name = "class_id"),
+        uniqueConstraints = @UniqueConstraint(name = "uk_class_teacher", columnNames = {"class_id", "teacher_name"})
+    )
     @Column(name = "teacher_name")
     @Builder.Default
     private List<String> teachers = new ArrayList<>();

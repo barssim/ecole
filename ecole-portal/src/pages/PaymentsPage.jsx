@@ -438,7 +438,7 @@ const PaymentsPage = ({ language }) => {
         {allNotices && allNotices.length > 0 ? (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-              <thead style={{ background: '#dbeafe', color: '#1e3a8a' }}>
+              <thead style={{ background: 'rgb(219, 234, 254)', color: '#1e3a8a' }}>
                 <tr>
                   <th style={th}>{content?.payment_reference || 'Facture'}</th>
                   <th style={th}>{content?.payment_studentName || 'Élève'}</th>
@@ -492,7 +492,7 @@ const PaymentsPage = ({ language }) => {
         {payments && payments.length > 0 ? (
           <div className="payment-table-wrapper">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-              <thead style={{ background: '#dbeafe', color: '#1e3a8a' }}>
+              <thead style={{ background: 'rgb(219, 234, 254)', color: '#1e3a8a' }}>
                 <tr>
                   <th style={th}>{content?.payment_date || 'Date'}</th>
                   <th style={th}>{content?.payment_studentName || 'Élève'}</th>

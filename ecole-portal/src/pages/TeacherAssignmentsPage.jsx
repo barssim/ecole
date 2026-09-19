@@ -385,7 +385,7 @@ const TeacherAssignmentsPage = ({ language }) => {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: '#dbeafe' }}>
+                <tr style={{ background: 'rgb(219, 234, 254)' }}>
                   <th style={th}>{content.assignment_title || 'Title'}</th>
                   <th style={th}>{content.assignment_description || 'Description'}</th>
                   <th style={th}>{content.assignment_dueDate || 'Due Date'}</th>

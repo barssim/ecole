@@ -357,7 +357,7 @@ const Payments = ({ language }) => {
         {content.payments_title || "Liste des paiements"}
       </h2>
 
-      <form onSubmit={handleSubmit} className="overflow-x-auto" style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #dbeafe' }}>
+      <form onSubmit={handleSubmit} className="overflow-x-auto" style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid rgb(219, 234, 254)' }}>
         {!canManagePayments && (
           <p style={{ color: '#b45309', marginBottom: '10px' }}>
             Only finance, admin, and manager roles can create or update payments.
@@ -430,7 +430,7 @@ const Payments = ({ language }) => {
       ) : payments.length > 0 ? (
         <div className="overflow-x-auto">
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-            <thead style={{ background: "#dbeafe", color: "#1e3a8a" }}>
+            <thead style={{ background: "rgb(219, 234, 254)", color: "#1e3a8a" }}>
               <tr>
                 <th style={th}>{content.date}</th>
                 <th style={th}>{content.student}</th>

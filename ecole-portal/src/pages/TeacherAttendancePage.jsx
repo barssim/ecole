@@ -195,7 +195,7 @@ const TeacherAttendancePage = ({ language }) => {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: '#dbeafe' }}>
+                <tr style={{ background: 'rgb(219, 234, 254)' }}>
                   <th style={th}>{content.payment_date || 'Date'}</th>
                   <th style={th}>{content.presence_status || 'Statut'}</th>
                   <th style={th}>{content.presence_scheduled || 'Heure prévue'}</th>

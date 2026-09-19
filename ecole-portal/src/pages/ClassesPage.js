@@ -243,7 +243,7 @@ const ClassesPage = ({ language }) => {
 
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-          <thead style={{ background: '#dbeafe', color: '#1e3a8a' }}>
+          <thead style={{ background: 'rgb(219, 234, 254)', color: '#1e3a8a' }}>
             <tr>
               <th style={th}>{content.classes_title}</th>
               <th style={th}>{content.students}</th>
@@ -253,6 +253,9 @@ const ClassesPage = ({ language }) => {
           </thead>
           <tbody>
             {visibleClasses.map((cls, index) => {
+              const MAX_STUDENTS_PER_CLASS = 15;
+              const studentCount = (cls.students || []).length;
+              const isClassFull = studentCount >= MAX_STUDENTS_PER_CLASS;
               const unassigned = allStudents.filter(
                 (s) => !(cls.students || []).some(
                   (added) => added.toLowerCase() === String(s.name || '').toLowerCase()
@@ -263,20 +266,53 @@ const ClassesPage = ({ language }) => {
                 <React.Fragment key={cls.id}>
                   <tr style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}>
                     <td style={td}><strong>{cls.name}</strong></td>
-                    <td style={td}>{(cls.students || []).length}</td>
-                    <td style={td}>{(cls.teachers || []).length}</td>
+                    <td style={td}>
+                      <div style={{ fontSize: 12, color: isClassFull ? '#b91c1c' : '#334155', marginBottom: 4, fontWeight: isClassFull ? 600 : 400 }}>
+                        {studentCount} / {MAX_STUDENTS_PER_CLASS} {content.students || 'élèves'}
+                        {isClassFull && ' — complet'}
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 360 }}>
+                        {(cls.students || []).map((s) => (
+                          <span key={s} style={{
+                            background: '#d1fae5', borderRadius: 999,
+                            padding: '2px 8px', fontSize: 11, color: '#065f46', whiteSpace: 'nowrap',
+                          }}>
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td style={td}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 220 }}>
+                        {(cls.teachers || []).length === 0 && (
+                          <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: 12 }}>
+                            {content.classes_noTeacher || 'Aucun enseignant'}
+                          </span>
+                        )}
+                        {(cls.teachers || []).map((t) => (
+                          <span key={t} style={{
+                            background: 'rgb(219, 234, 254)', borderRadius: 999,
+                            padding: '2px 8px', fontSize: 11, color: '#1e3a8a', whiteSpace: 'nowrap',
+                          }}>
+                            👨‍🏫 {t}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
                     {canManageClasses && (
                       <td style={{ ...td, whiteSpace: 'nowrap' }}>
                         <button
                           onClick={() => isAddingHere ? cancelAddStudent() : openAddStudent(cls.id)}
+                          disabled={!isAddingHere && isClassFull}
+                          title={!isAddingHere && isClassFull ? `Limite de ${MAX_STUDENTS_PER_CLASS} élèves atteinte` : undefined}
                           style={{
                             marginRight: 6, padding: '4px 10px', borderRadius: 4, fontSize: 12,
-                            background: isAddingHere ? '#fee2e2' : '#e0f2fe',
-                            color: isAddingHere ? '#b91c1c' : '#0369a1',
-                            border: 'none', cursor: 'pointer', fontWeight: 600,
+                            background: isAddingHere ? '#fee2e2' : (isClassFull ? '#e5e7eb' : '#e0f2fe'),
+                            color: isAddingHere ? '#b91c1c' : (isClassFull ? '#9ca3af' : '#0369a1'),
+                            border: 'none', cursor: (!isAddingHere && isClassFull) ? 'not-allowed' : 'pointer', fontWeight: 600,
                           }}
                         >
-                          {isAddingHere ? '✕ Annuler' : '+ Ajouter un élève'}
+                          {isAddingHere ? '✕ Annuler' : (isClassFull ? '✓ Classe complète' : '+ Ajouter un élève')}
                         </button>
                         <Link
                           to={`/administration/classes/${cls.id}`}

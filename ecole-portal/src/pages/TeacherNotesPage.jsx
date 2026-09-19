@@ -330,7 +330,7 @@ const TeacherNotesPage = ({ language }) => {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: '#dbeafe' }}>
+                <tr style={{ background: 'rgb(219, 234, 254)' }}>
                   <th style={th}>{content.notes_date || 'Date'}</th>
                   <th style={th}>{content.notes_class || 'Classe'}</th>
                   <th style={th}>{content.notes_studentName || 'Élève'}</th>
