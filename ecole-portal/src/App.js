@@ -35,6 +35,7 @@ import StudentSchedulePage from "./components/StudentSchedulePage";
 import TeacherCourses  from "./pages/TeacherCourses";
 import StudentCoursesPage from "./pages/StudentCoursesPage";
 import StudentAssignmentsPage from "./pages/StudentAssignmentsPage";
+import StudentGradesPage from "./pages/StudentGradesPage";
 import TeacherCourseDetails from "./pages/TeacherCourseDetails";
 import PartiesPage  from "./pages/PartiesPage";
 import MeetingPage  from "./pages/MeetingPage";
@@ -46,6 +47,7 @@ import OutingPage from './pages/OutingPage';
 import TenantCustomizationPage from './pages/TenantCustomizationPage';
 import TeacherAssignmentsPage from './pages/TeacherAssignmentsPage';
 import { getTenantId } from './tenant';
+import { createApiUrlFor, readJsonResponse } from './utils/apiClient';
 
 
 
@@ -82,6 +84,49 @@ const HomeLanding = ({ content, language, tenantCustomization }) => {
   const navigate = useNavigate();
   const schoolName = tenantCustomization.name?.[language] || tenantCustomization.name?.["fr"] || "School";
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const [feed, setFeed] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    const apiUrlFor = createApiUrlFor("http://localhost:8085");
+    const userRoles = JSON.parse(localStorage.getItem("user_roles") || "[]");
+    const userName = localStorage.getItem("LoggedIn") || "";
+    const headers = {
+      "X-Tenant-Id": getTenantId(),
+      "X-User-Roles": userRoles.join(","),
+      "X-User-Name": userName,
+    };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const keepUpcoming = (data) => (Array.isArray(data) ? data : [])
+      .filter((activity) => {
+        if (!activity.date) return true;
+        const activityDate = new Date(activity.date);
+        return !Number.isNaN(activityDate.getTime()) && activityDate >= today;
+      })
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    Promise.all([
+      fetch(apiUrlFor("/activities?type=sorties"), { headers })
+        .then((response) => readJsonResponse(response, "Impossible de charger les sorties."))
+        .catch(() => []),
+      fetch(apiUrlFor("/activities?type=fetes"), { headers })
+        .then((response) => readJsonResponse(response, "Impossible de charger les fêtes."))
+        .catch(() => []),
+      fetch(apiUrlFor("/activities?type=reunions"), { headers })
+        .then((response) => readJsonResponse(response, "Impossible de charger les réunions."))
+        .catch(() => []),
+    ]).then(([sorties, fetes, reunions]) => {
+      if (!mounted) return;
+      const combined = keepUpcoming([...(sorties || []), ...(fetes || []), ...(reunions || [])]);
+      setFeed(combined);
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <main className="home-landing" dir={language === "ar" ? "rtl" : "ltr"}>
@@ -90,30 +135,32 @@ const HomeLanding = ({ content, language, tenantCustomization }) => {
           <span className="home-eyebrow">ECole • PORTAIL DIGITAL</span>
           <h1>{content.whatWeDo}<strong>{schoolName}</strong></h1>
           <p>{content.whatYouFind}</p>
-          <div className="home-hero-actions">
-            <button className="home-primary-action" onClick={() => navigate(isLoggedIn ? "/profile" : "/login")}>
-              {isLoggedIn ? content.profile : content.connection}
-              <span aria-hidden="true">→</span>
-            </button>
-            <button className="home-secondary-action" onClick={() => navigate("/about")}>
-              {content.whoAreWe}
-            </button>
-          </div>
+          <h3>{content.ourGoal}</h3>
         </div>
       </section>
 
-      <section className="home-stat-grid" aria-label="Portal highlights">
-        <article className="home-stat-card">
+      <section className="home-stat-grid home-stat-grid-single" aria-label="Portal highlights">
+        <article className="home-stat-card home-stat-card-marquee">
           <span className="home-stat-icon">01</span>
-          <div><strong>{content.annonces}</strong><span>{content.messages}</span></div>
-        </article>
-        <article className="home-stat-card">
-          <span className="home-stat-icon">02</span>
-          <div><strong>{content.activités}</strong><span>{content.sorties}</span></div>
-        </article>
-        <article className="home-stat-card home-stat-card-accent">
-          <span className="home-stat-icon">03</span>
-          <div><strong>{content.services}</strong><span>{content.bibliotheque}</span></div>
+          <div>
+            <strong>{content.annonces_activites || "Annonces et Activités"}</strong>
+            {feed.length > 0 ? (
+              <div className="home-outings-marquee" aria-label={content.annonces_activites || "Annonces et Activités"}>
+                <div className="home-outings-track">
+                  {[...feed, ...feed].map((activity, index) => (
+                    <span className="home-outings-item" key={`${activity.id}-${activity.type}-${index}`}>
+                      {activity.type === "fetes" ? "🎉" : activity.type === "reunions" ? "📢" : "🚌"}{" "}
+                      {activity.title}
+                      {activity.destination ? ` — ${activity.destination}` : ""}
+                      {activity.date ? ` (${activity.date})` : ""}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <span>{content.annonces_fallback || content.messages}</span>
+            )}
+          </div>
         </article>
       </section>
 
@@ -283,6 +330,7 @@ const AppContent = () => {
 				      <Route path="/students/schedule" element={<StudentSchedulePage language={language} toggleLanguage={toggleLanguage} />} />
 				      <Route path="/students/courses" element={<StudentCoursesPage language={language} toggleLanguage={toggleLanguage} />} />
 				      <Route path="/students/devoirs" element={<StudentAssignmentsPage language={language} toggleLanguage={toggleLanguage} />} />
+				      <Route path="/students/grades" element={<StudentGradesPage language={language} />} />
 				       <Route path="/parents/inscription" element={<InscriptionForm  isAuthorized={true} language={language} toggleLanguage={toggleLanguage} />} />
                    </Routes>
                  </div>

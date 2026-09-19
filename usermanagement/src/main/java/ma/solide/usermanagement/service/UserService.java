@@ -48,9 +48,13 @@ public class UserService {
 		
 	}
 
-	public User findBySurname(String surname) {
+	public User findBySurnameAndPassword(String surname, String password) {
 		String tenantId = TenantContext.getRequiredTenantId();
-		return userRepository.findByTenantIdAndSurname(tenantId, surname).orElse(null);
+		// Several accounts may share the same surname (e.g. siblings), so we must
+		// disambiguate using surname + password rather than a singular surname lookup,
+		// which would blow up with an IncorrectResultSizeDataAccessException.
+		List<User> matches = userRepository.findAllByTenantIdAndSurnameAndPassword(tenantId, surname, password);
+		return matches.isEmpty() ? null : matches.get(0);
 	}
 
 	public List<User> findAllUsers() {

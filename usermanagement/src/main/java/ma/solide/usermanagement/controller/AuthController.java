@@ -31,7 +31,7 @@ public class AuthController {
     public ResponseEntity<Object> login(@RequestBody LoginRequest loginRequest) {
         // Mock authentication logic (replace with database/user service in production)
         if (userService.existsBySurnameAndPassword(loginRequest.getUsername(), loginRequest.getPassword())) {
-            User user = userService.findBySurname(loginRequest.getUsername());
+            User user = userService.findBySurnameAndPassword(loginRequest.getUsername(), loginRequest.getPassword());
             String token = jwtUtil.generateToken(loginRequest.getUsername(), user.getTenantId(), user.getRole());
             return ResponseEntity.ok(new AuthResponse(token, user));
         } else

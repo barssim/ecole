@@ -14,7 +14,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 	List<User> findByTenantId(String tenantId);
 	long countByTenantId(String tenantId);
 	boolean existsByTenantIdAndSurnameAndPassword(String tenantId, String username, String password);
-	Optional<User> findByTenantIdAndSurname(String tenantId, String surname);
+	List<User> findAllByTenantIdAndSurnameAndPassword(String tenantId, String username, String password);
 	Optional<User> findByTenantIdAndUserno(String tenantId, Integer id);
 
 }

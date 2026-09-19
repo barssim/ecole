@@ -267,37 +267,21 @@ const ClassesPage = ({ language }) => {
                   <tr style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}>
                     <td style={td}><strong>{cls.name}</strong></td>
                     <td style={td}>
-                      <div style={{ fontSize: 12, color: isClassFull ? '#b91c1c' : '#334155', marginBottom: 4, fontWeight: isClassFull ? 600 : 400 }}>
+                      <div style={{ fontSize: 13, color: isClassFull ? '#b91c1c' : '#334155', fontWeight: isClassFull ? 600 : 400 }}>
                         {studentCount} / {MAX_STUDENTS_PER_CLASS} {content.students || 'élèves'}
                         {isClassFull && ' — complet'}
                       </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 360 }}>
-                        {(cls.students || []).map((s) => (
-                          <span key={s} style={{
-                            background: '#d1fae5', borderRadius: 999,
-                            padding: '2px 8px', fontSize: 11, color: '#065f46', whiteSpace: 'nowrap',
-                          }}>
-                            {s}
-                          </span>
-                        ))}
-                      </div>
                     </td>
                     <td style={td}>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 220 }}>
-                        {(cls.teachers || []).length === 0 && (
-                          <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: 12 }}>
-                            {content.classes_noTeacher || 'Aucun enseignant'}
-                          </span>
-                        )}
-                        {(cls.teachers || []).map((t) => (
-                          <span key={t} style={{
-                            background: 'rgb(219, 234, 254)', borderRadius: 999,
-                            padding: '2px 8px', fontSize: 11, color: '#1e3a8a', whiteSpace: 'nowrap',
-                          }}>
-                            👨‍🏫 {t}
-                          </span>
-                        ))}
-                      </div>
+                      {(cls.teachers || []).length === 0 ? (
+                        <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: 12 }}>
+                          {content.classes_noTeacher || 'Aucun enseignant'}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 13, color: '#334155' }}>
+                          {(cls.teachers || []).length} {content.classes_teachers || 'enseignant(s)'}
+                        </span>
+                      )}
                     </td>
                     {canManageClasses && (
                       <td style={{ ...td, whiteSpace: 'nowrap' }}>
