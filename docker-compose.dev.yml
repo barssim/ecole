@@ -20,6 +20,58 @@ services:
       - HOST=0.0.0.0
       - PORT=3000
 
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    volumes:
+      - minio-data:/data
+    networks:
+      - ecole
+
+  mysql-teacher:
+    image: mysql:8
+    container_name: mysql-teacher
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: teacherDB
+    networks:
+      - ecole
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  teacher-service:
+    build:
+      context: ./teacher-service
+      dockerfile: Dockerfile
+    container_name: teacher-service
+    depends_on:
+      mysql-teacher:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-teacher:3306/teacherDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-ecole-course-files}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_S3_ENDPOINT: http://minio:9000
+      AWS_S3_PRESIGN_ENDPOINT: ${AWS_S3_PRESIGN_ENDPOINT:-http://localhost:9000}
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    networks:
+      - ecole
+
   mysql-user:
     image: mysql:8
     container_name: mysql-user
@@ -250,6 +302,7 @@ services:
       - usermanagement
       - finance-manager
       - secretary-office
+      - teacher-service
       - student-service
       - parent-service
       - eureka-server
@@ -258,3 +311,6 @@ services:
 
 networks:
   ecole:
+
+volumes:
+  minio-data:
