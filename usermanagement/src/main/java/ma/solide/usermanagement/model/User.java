@@ -28,7 +28,10 @@ public class User {
 
 	@Column(name = "tenant_id", nullable = false, length = 64)
 	String tenantId;
-	
+
+	@Column(length = 20)
+	String civilite;
+
 	String surname;
 	String firstname;
 	String email;

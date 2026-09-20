@@ -14,12 +14,6 @@ const ATTESTATION_TYPES = [
   { value: 'registration', labelKey: 'attestation_typeRegistration' },
 ];
 
-const STATUS_COLORS = {
-  approved: 'bg-green-100 text-green-700',
-  pending:  'bg-yellow-100 text-yellow-700',
-  rejected: 'bg-red-100 text-red-700',
-};
-
 const AttestationsPage = ({ language }) => {
   const content =
     language === 'fr' ? fr :
@@ -33,6 +27,7 @@ const AttestationsPage = ({ language }) => {
   const [requestReason, setRequestReason] = useState('');
   const [requesting, setRequesting] = useState(false);
   const [requestMessage, setRequestMessage] = useState(null); // { type: 'success'|'error', text }
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   const userId    = localStorage.getItem('userId');
   const username  = localStorage.getItem('LoggedIn') || '';
@@ -179,10 +174,8 @@ const AttestationsPage = ({ language }) => {
    };
 
    const handleDelete = (attestationId) => {
-     if (!window.confirm(content.attestation_deleteConfirm)) {
-       return;
-     }
      handleManagementAction(attestationId, '', 'DELETE');
+     setDeleteConfirmId(null);
    };
 
    const handleDownload = (id) => {
@@ -211,47 +204,42 @@ const AttestationsPage = ({ language }) => {
   );
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">{content.attestation_title}</h2>
+    <div className="attestation-page">
+      <div className="attestation-header">
+        <h2 className="attestation-title">{content.attestation_title}</h2>
         {canRequestAttestation ? (
           <button
             type="button"
             onClick={() => { setShowRequestForm(true); setRequestMessage(null); }}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
+            className="attestation-request-btn"
           >
             {content.attestation_requestButton}
           </button>
         ) : (
-          <span className="text-sm text-gray-600 italic">{content.attestation_manageMode}</span>
+          <span className="attestation-manage-badge">{content.attestation_manageMode}</span>
         )}
       </div>
 
       {/* Feedback message */}
       {requestMessage && (
-        <div className={`p-3 rounded text-sm font-medium ${
-          requestMessage.type === 'success'
-            ? 'bg-green-100 text-green-800 border border-green-300'
-            : 'bg-red-100 text-red-800 border border-red-300'
-        }`}>
+        <div className={`attestation-message ${requestMessage.type === 'success' ? 'success' : 'error'}`}>
           {requestMessage.text}
         </div>
       )}
 
       {/* Request form modal */}
       {showRequestForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4">
-            <h3 className="text-lg font-bold">{content.attestation_requestTitle}</h3>
-            <form onSubmit={handleRequest} className="space-y-4">
+        <div className="attestation-modal-overlay">
+          <div className="attestation-modal">
+            <h3>{content.attestation_requestTitle}</h3>
+            <form onSubmit={handleRequest} className="attestation-form">
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label>
                   {content.attestation_requestType}
                 </label>
                 <select
                   value={requestType}
                   onChange={(e) => setRequestType(e.target.value)}
-                  className="w-full border rounded px-3 py-2 text-sm"
                   required
                 >
                   {ATTESTATION_TYPES.map((t) => (
@@ -262,7 +250,7 @@ const AttestationsPage = ({ language }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label>
                   {content.attestation_requestReason}
                 </label>
                 <textarea
@@ -270,21 +258,20 @@ const AttestationsPage = ({ language }) => {
                   onChange={(e) => setRequestReason(e.target.value)}
                   placeholder={content.attestation_requestReasonPlaceholder}
                   rows={3}
-                  className="w-full border rounded px-3 py-2 text-sm resize-none"
                 />
               </div>
-              <div className="flex justify-end space-x-2">
+              <div className="attestation-modal-actions">
                 <button
                   type="button"
                   onClick={() => setShowRequestForm(false)}
-                  className="px-4 py-2 rounded border text-sm hover:bg-gray-100"
+                  className="attestation-btn-cancel"
                 >
                   {content.attestation_requestCancel}
                 </button>
                 <button
                   type="submit"
                   disabled={requesting}
-                  className="px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50"
+                  className="attestation-btn-submit"
                 >
                   {requesting ? '...' : content.attestation_requestSubmit}
                 </button>
@@ -300,35 +287,33 @@ const AttestationsPage = ({ language }) => {
         placeholder={content.attestation_searchPlaceholder}
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full px-4 py-2 border rounded shadow-sm"
+        className="attestation-search"
       />
 
       {/* Attestation list */}
       {filtered.length === 0 ? (
-        <p className="italic text-gray-500">{content.attestation_noResults}</p>
+        <p className="attestation-empty">{content.attestation_noResults}</p>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-            <thead style={{ background: 'rgb(219, 234, 254)', color: '#1e3a8a' }}>
+        <div className="attestation-table-wrap">
+          <table className="attestation-table">
+            <thead>
               <tr>
-                <th style={th}>{content.attestation_title}</th>
-                <th style={th}>{content.date || 'Date'}</th>
-                <th style={th}>{content.payment_reference || 'Référence'}</th>
-                <th style={th}>{content.presence_status || 'Statut'}</th>
-                <th style={th}>Actions</th>
+                <th>{content.attestation_title}</th>
+                <th>{content.date || 'Date'}</th>
+                <th>{content.payment_reference || 'Référence'}</th>
+                <th>{content.presence_status || 'Statut'}</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((attestation, index) => (
-                <tr key={attestation.id} style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}>
-                  <td style={td}><strong>{attestation.title}</strong></td>
-                  <td style={td}>{attestation.date}</td>
-                  <td style={td}>{attestation.reference ? `#${attestation.reference}` : '-'}</td>
-                  <td style={td}>
+              {filtered.map((attestation) => (
+                <tr key={attestation.id}>
+                  <td><strong>{attestation.title}</strong></td>
+                  <td>{attestation.date}</td>
+                  <td>{attestation.reference ? `#${attestation.reference}` : '-'}</td>
+                  <td>
                     {attestation.status && (
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                        STATUS_COLORS[attestation.status] || 'bg-gray-200 text-gray-600'
-                      }`}>
+                      <span className={`attestation-status-badge attestation-status-${attestation.status}`}>
                         {attestation.status === 'pending'
                           ? content.attestation_statusPending
                           : attestation.status === 'rejected'
@@ -337,50 +322,80 @@ const AttestationsPage = ({ language }) => {
                       </span>
                     )}
                   </td>
-                  <td style={td}>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <td>
+                    <div className="attestation-actions">
                       {canManageAttestations && attestation.status === 'pending' && (
                         <>
                           <button
                             type="button"
                             onClick={() => handleManagementAction(attestation.id, 'approve')}
-                            className="bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700 text-sm"
+                            className="activity-icon-btn"
+                            style={{ color: '#059669' }}
+                            title={content.attestation_approveButton}
                           >
-                            {content.attestation_approveButton}
+                            ✅
                           </button>
                           <button
                             type="button"
                             onClick={() => handleManagementAction(attestation.id, 'cancel')}
-                            className="bg-rose-600 text-white px-3 py-1 rounded hover:bg-rose-700 text-sm"
+                            className="activity-icon-btn"
+                            style={{ color: '#e11d48' }}
+                            title={content.attestation_cancelButton}
                           >
-                            {content.attestation_cancelButton}
+                            ✕
                           </button>
                         </>
                       )}
                       {canManageAttestations && (
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(attestation.id)}
-                          className="bg-slate-700 text-white px-3 py-1 rounded hover:bg-slate-800 text-sm"
-                        >
-                          {content.attestation_deleteButton}
-                        </button>
+                        deleteConfirmId === attestation.id ? (
+                          <>
+                            <button
+                              type="button"
+                              className="activity-icon-btn activity-icon-confirm"
+                              onClick={() => handleDelete(attestation.id)}
+                              title={content.exam_confirmDelete || 'Confirmer'}
+                            >
+                              ✔
+                            </button>
+                            <button
+                              type="button"
+                              className="activity-icon-btn activity-icon-cancel"
+                              onClick={() => setDeleteConfirmId(null)}
+                              title={content.activity_cancel_button || 'Annuler'}
+                            >
+                              ✕
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteConfirmId(attestation.id)}
+                            className="activity-icon-btn activity-icon-delete"
+                            title={content.attestation_deleteButton}
+                          >
+                            🗑
+                          </button>
+                        )
                       )}
                       <button
                         type="button"
                         disabled={attestation.status === 'pending'}
                         onClick={() => handleView(attestation.id)}
-                        className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="activity-icon-btn"
+                        style={{ color: '#1d4ed8', opacity: attestation.status === 'pending' ? 0.4 : 1, cursor: attestation.status === 'pending' ? 'not-allowed' : 'pointer' }}
+                        title={content.attestation_viewButton}
                       >
-                        {content.attestation_viewButton}
+                        👁️
                       </button>
                       <button
                         type="button"
                         disabled={attestation.status === 'pending'}
                         onClick={() => handleDownload(attestation.id)}
-                        className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="activity-icon-btn"
+                        style={{ color: '#16a34a', opacity: attestation.status === 'pending' ? 0.4 : 1, cursor: attestation.status === 'pending' ? 'not-allowed' : 'pointer' }}
+                        title={content.attestation_downloadButton}
                       >
-                        {content.attestation_downloadButton}
+                        ⬇️
                       </button>
                     </div>
                   </td>
@@ -393,8 +408,5 @@ const AttestationsPage = ({ language }) => {
     </div>
   );
 };
-
-const th = { padding: '8px 12px', textAlign: 'left', fontWeight: 600 };
-const td = { padding: '8px 12px' };
 
 export default AttestationsPage;

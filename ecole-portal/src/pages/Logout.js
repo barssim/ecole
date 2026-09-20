@@ -6,6 +6,8 @@ const Logout = () => {
     localStorage.removeItem("isLoggedIn");
     sessionStorage.removeItem("jwt_token");
     localStorage.removeItem("user_roles");
+    localStorage.removeItem("civilite");
+    localStorage.removeItem("firstname");
 
     // Optional: Show message briefly before redirect
     const timer = setTimeout(() => {

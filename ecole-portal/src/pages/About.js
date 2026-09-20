@@ -39,23 +39,24 @@ const About = ({ language = 'fr', tenantCustomization }) => {
   const address = getLocalizedValue(tenant.adresse, language, '');
 
 	return (
-	<div style={{ flex: 1, padding: '24px', maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
-	  <h1 style={{ color: 'var(--tenant-primary, #007bff)', marginBottom: '16px' }}>{aboutTitle}</h1>
-	  {aboutDescription && (
-		<p style={{ fontSize: '18px', lineHeight: 1.6, color: '#444', marginBottom: '24px' }}>{aboutDescription}</p>
-	  )}
-	  <div
-		style={{
-		  backgroundColor: 'var(--tenant-soft, #f3f9ff)',
-		  borderRadius: '12px',
-		  padding: '20px',
-		  textAlign: language === 'ar' ? 'right' : 'left',
-		}}
-	  >
-		<h2 style={{ color: 'var(--tenant-primary, #007bff)', marginTop: 0 }}>{content.contact}</h2>
-		<p><strong>{content.address}:</strong> {address}</p>
-		<p><strong>{content.phone}:</strong> {tenant.phone}</p>
-		<p><strong>{content.email}:</strong> {tenant.mail}</p>
+	<div className="about-page">
+	  <div className="about-card">
+		<h1 className="about-title">{aboutTitle}</h1>
+		{aboutDescription && (
+		  <p className="about-description">{aboutDescription}</p>
+		)}
+		<div className={`about-contact${language === 'ar' ? ' is-rtl' : ''}`}>
+		  <h2>{content.contact}</h2>
+		  {address && (
+			<p><span className="about-contact-icon">📍</span><strong>{content.address}:</strong> {address}</p>
+		  )}
+		  {tenant.phone && (
+			<p><span className="about-contact-icon">📞</span><strong>{content.phone}:</strong> {tenant.phone}</p>
+		  )}
+		  {tenant.mail && (
+			<p><span className="about-contact-icon">✉️</span><strong>{content.email}:</strong> {tenant.mail}</p>
+		  )}
+		</div>
 	  </div>
 	 </div>
    );

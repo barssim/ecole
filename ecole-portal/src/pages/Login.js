@@ -60,6 +60,42 @@ const resolveUserIdFromLoginResponse = (token, user) => {
 	return null;
 };
 
+const extractRolesFromJwtPayload = (jwtPayload) => {
+	if (!jwtPayload) {
+		return [];
+	}
+	const candidate = jwtPayload.roles ?? jwtPayload.role ?? jwtPayload.authorities ?? jwtPayload.scope;
+	if (Array.isArray(candidate)) {
+		return candidate.map((role) => String(role || "").trim()).filter(Boolean);
+	}
+	if (typeof candidate === "string") {
+		return candidate
+			.split(/[,\s]+/)
+			.map((role) => role.trim())
+			.filter(Boolean);
+	}
+	return [];
+};
+
+const resolveRolesFromLoginResponse = (token, user) => {
+	const userRoles = (user && Array.isArray(user.roles)) ? user.roles.map((role) => String(role || "").trim()).filter(Boolean) : [];
+	if (userRoles.length > 0) {
+		return userRoles;
+	}
+
+	const jwtPayload = decodeJwtPayload(token);
+	const jwtRoles = extractRolesFromJwtPayload(jwtPayload);
+	if (jwtRoles.length > 0) {
+		return jwtRoles;
+	}
+
+	if (user && user.role) {
+		return [String(user.role).trim()].filter(Boolean);
+	}
+
+	return [];
+};
+
 const Login = ({language}) => {
 	let content;
 
@@ -129,12 +165,24 @@ const Login = ({language}) => {
 				localStorage.setItem("LoggedIn", username);
 			}
 
+			if (user && user.civilite) {
+				localStorage.setItem("civilite", user.civilite);
+			} else {
+				localStorage.removeItem("civilite");
+			}
+
+			if (user && user.firstname) {
+				localStorage.setItem("firstname", user.firstname);
+			} else {
+				localStorage.removeItem("firstname");
+			}
+
 			const resolvedUserId = resolveUserIdFromLoginResponse(token, user);
 			if (resolvedUserId !== null) {
 				localStorage.setItem("userId", String(resolvedUserId));
 			}
 
-			const userRoles = (user && Array.isArray(user.roles)) ? user.roles : [];
+			const userRoles = resolveRolesFromLoginResponse(token, user);
 			localStorage.setItem("user_roles", JSON.stringify(userRoles));
 			setTenantId(resolveTenantFromLoginResponse(token, user, response.data?.tenantId));
 

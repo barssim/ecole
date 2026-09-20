@@ -67,49 +67,64 @@ const content = language === "fr" ? fr : language === "en" ? en : ar;
         </div>
       )}
       <h2>📝 {content.title}</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          name="studentName"
-          type="text"
-          placeholder={content.name}
-          value={formData.studentName}
-          onChange={handleChange}
-          required
-        />
-        <input
-          name="birthDate"
-          type="date"
-          placeholder={content.birth}
-          value={formData.birthDate}
-          onChange={handleChange}
-          required
-        />
-        <select
-          name="classLevel"
-          value={formData.classLevel}
-          onChange={handleChange}
-          required
-        >
-          <option value="">{content.class}</option>
-          <option value="CP">{content.cp}</option>
-          <option value="CE1">{content.ce1}</option>
-          <option value="CE2">{content.ce2}</option>
-        </select>
-        <input
-          name="guardianContact"
-          type="tel"
-          placeholder={content.contact}
-          value={formData.guardianContact}
-          onChange={handleChange}
-          required
-        />
-        <button
-          type="submit"
-          disabled={!isAuthorized}
-        >
-          {content.submit}
-        </button>
-      </form>
+      <div className="inscription-card">
+        <form className="inscription-form" onSubmit={handleSubmit}>
+          <label className="inscription-label">
+            {content.name}
+            <input
+              name="studentName"
+              type="text"
+              placeholder={content.name}
+              value={formData.studentName}
+              onChange={handleChange}
+              required
+            />
+          </label>
+          <label className="inscription-label">
+            {content.birth}
+            <input
+              name="birthDate"
+              type="date"
+              placeholder={content.birth}
+              value={formData.birthDate}
+              onChange={handleChange}
+              required
+            />
+          </label>
+          <label className="inscription-label">
+            {content.class}
+            <select
+              name="classLevel"
+              value={formData.classLevel}
+              onChange={handleChange}
+              required
+            >
+              <option value="">{content.class}</option>
+              <option value="CP">{content.cp}</option>
+              <option value="CE1">{content.ce1}</option>
+              <option value="CE2">{content.ce2}</option>
+            </select>
+          </label>
+          <label className="inscription-label">
+            {content.contact}
+            <input
+              name="guardianContact"
+              type="tel"
+              placeholder={content.contact}
+              value={formData.guardianContact}
+              onChange={handleChange}
+              required
+            />
+          </label>
+          <button
+            type="submit"
+            className="inscription-submit"
+            disabled={!isAuthorized}
+          >
+            {content.submit}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

@@ -6,12 +6,14 @@ import en from "../locales/header/en.json";
 const Contact = ({ language }) => {
   const content =
     language === "fr" ? fr : language === "en" ? en : ar;
+  const isArabic = language === "ar";
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     message: "",
   });
+  const [submitted, setSubmitted] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,89 +22,71 @@ const Contact = ({ language }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert(content.thankForContact);
+    setSubmitted(true);
     setFormData({ name: "", email: "", message: "" });
+    setTimeout(() => setSubmitted(false), 4000);
   };
 
   return (
-    <div style={containerStyle}>
-      <h2 style={headingStyle}>{content.contactUs}</h2>
-        <input
-          type="text"
-          name="name"
-          placeholder={content.name || "Dein Name"}
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
-        <br />
-        <input
-          type="email"
-          name="email"
-          placeholder={content.email || "Deine E-Mail"}
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-        <br />
-        <textarea
-          name="message"
-          placeholder={content.message || "Deine Nachricht"}
-          value={formData.message}
-          onChange={handleChange}
-          required
-          style={{ ...wideInputStyle, minHeight: "140px", resize: "vertical" }}
-        />
-        <br />
-        <button type="submit" style={buttonStyle}>
-          {content.submit}
-        </button>
+    <div className="contact-page" dir={isArabic ? "rtl" : "ltr"}>
+      <div className="contact-card">
+        <div className="contact-intro">
+          <span className="contact-eyebrow">{content.contact || "Contact"}</span>
+          <h2>{content.contactUs}</h2>
+          <p className="contact-subtitle">{content.companyAdresse}</p>
+        </div>
+
+        {submitted && (
+          <div className="contact-success">{content.thankForContact}</div>
+        )}
+
+        <form className="contact-form" onSubmit={handleSubmit}>
+          <div className="contact-field">
+            <label htmlFor="contact-name">{content.name || "Nom"}</label>
+            <input
+              id="contact-name"
+              type="text"
+              name="name"
+              placeholder={content.name || "Votre nom"}
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="contact-field">
+            <label htmlFor="contact-email">{content.email || "Email"}</label>
+            <input
+              id="contact-email"
+              type="email"
+              name="email"
+              placeholder={content.email || "Votre email"}
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="contact-field">
+            <label htmlFor="contact-message">{content.message || "Message"}</label>
+            <textarea
+              id="contact-message"
+              name="message"
+              placeholder={content.message || "Votre message"}
+              value={formData.message}
+              onChange={handleChange}
+              required
+              rows={6}
+            />
+          </div>
+
+          <button type="submit" className="contact-submit">
+            {content.submit}
+          </button>
+        </form>
+      </div>
     </div>
   );
-};
-
-const containerStyle = {
-  padding: "40px",
-  width: "fit-content",         // Shrinks or grows to fit content width
-  height: "auto",               // Grows vertically based on content
-  margin: "auto",               // Centers the container if used inside a flex or block layout
-  boxSizing: "border-box",      // Includes padding in total size
-};
-
-
-const headingStyle = {
-  textAlign: "center",
-  marginBottom: "30px",
-  fontSize: "28px",
-};
-
-const formStyle = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "20px",
-};
-
-const wideInputStyle = {
-  padding: "16px",
-  border: "2px solid #aaa",
-  borderRadius: "6px",
-  fontSize: "18px",
-  fontWeight: "500",
-  width: "100%",
-  boxSizing: "border-box",
-};
-
-const buttonStyle = {
-  padding: "16px",
-  backgroundColor: "var(--tenant-primary, #007bff)",
-  color: "white",
-  border: "none",
-  borderRadius: "6px",
-  fontSize: "18px",
-  fontWeight: "600",
-  cursor: "pointer",
-  width: "50%",
-  alignSelf: "center",
 };
 
 export default Contact;

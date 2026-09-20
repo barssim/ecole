@@ -90,6 +90,9 @@ const ProfilePage = ({ language = 'fr' }) => {
         adresse: updatedProfile.adresse || '',
       });
       localStorage.setItem('LoggedIn', updatedProfile.username || profileForm.username);
+      if (updatedProfile.civilite) {
+        localStorage.setItem('civilite', updatedProfile.civilite);
+      }
       setMessage(content.successfull_profile_update || 'Profil mis a jour avec succes.');
     } catch (err) {
       setError(err.message || 'Erreur lors de la mise a jour du profil');

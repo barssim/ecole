@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 
-const ServicesBlock = ({ isAuthorized, canSeeCoreServices = true, content }) => {
+const ServicesBlock = ({ isAuthorized, canSeeCoreServices = true, canManageAnnouncements = false, content }) => {
 const [showActivites, setShowActivites] = useState(false);
   return (
      <div className="bg-white p-4 shadow-md rounded-md">
@@ -51,6 +51,16 @@ const [showActivites, setShowActivites] = useState(false);
                   className="text-xs bg-purple-100 text-purple-800 px-3 py-1 rounded hover:bg-purple-200 inline-block"
                 >
                   {content.sport || "Sport"}
+                </Link>
+              </li>
+              )}
+              {canManageAnnouncements && (
+              <li>
+                <Link
+                  to="/services/announcements"
+                  className="text-xs bg-purple-100 text-purple-800 px-3 py-1 rounded hover:bg-purple-200 inline-block"
+                >
+                  {content.annonces || "Announcements"}
                 </Link>
               </li>
               )}

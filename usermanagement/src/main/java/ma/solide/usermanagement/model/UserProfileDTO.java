@@ -7,6 +7,7 @@ import java.util.List;
 public class UserProfileDTO {
     private Integer id;
     private String username;
+    private String civilite;
     private String firstname;
     private String email;
     private String adresse;
@@ -16,6 +17,7 @@ public class UserProfileDTO {
         UserProfileDTO dto = new UserProfileDTO();
         dto.setId(user.getUserno());
         dto.setUsername(user.getSurname());
+        dto.setCivilite(user.getCivilite());
         dto.setFirstname(user.getFirstname());
         dto.setEmail(user.getEmail());
         dto.setAdresse(user.getAdresse());
@@ -39,6 +41,14 @@ public class UserProfileDTO {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getCivilite() {
+        return civilite;
+    }
+
+    public void setCivilite(String civilite) {
+        this.civilite = civilite;
     }
 
     public String getFirstname() {

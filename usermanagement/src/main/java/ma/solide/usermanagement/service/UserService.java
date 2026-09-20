@@ -152,9 +152,12 @@ public class UserService {
 		userRepository.save(user);
 	}
 
-	public User updateUserByManager(Integer userNo, String surname, String firstname, String email, String adresse, String role) {
+	public User updateUserByManager(Integer userNo, String civilite, String surname, String firstname, String email, String adresse, String role) {
 		User user = getUserOrThrow(userNo);
 
+		if (civilite != null) {
+			user.setCivilite(civilite.trim());
+		}
 		if (surname != null && !surname.trim().isEmpty()) {
 			user.setSurname(surname.trim());
 		}

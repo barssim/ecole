@@ -67,6 +67,9 @@ services:
       - ecole
 
   usermanagement:
+    build:
+      context: ./usermanagement
+      dockerfile: Dockerfile
     image: barssim/usermanagement:latest
     container_name: usermanagement
     depends_on:

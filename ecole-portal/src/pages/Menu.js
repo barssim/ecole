@@ -26,8 +26,9 @@ const Menu = ({ language }) => {
   const isParentAuthorized = hasAnyRole(normalizedRoles, ["parent", "manager"]);
   const isFinanceAuthorized = hasAnyRole(normalizedRoles, ["finance", "manager"]);
 
-  const isServicesAuthorized = hasAnyRole(normalizedRoles, ["student", "teacher", "admin", "manager", "parent", "finance", "secretary"]);
+  const isServicesAuthorized = true;
   const canSeeCoreServices = hasAnyRole(normalizedRoles, ["student", "teacher", "admin", "manager", "finance", "secretary"]);
+  const canManageAnnouncements = hasAnyRole(normalizedRoles, ["admin", "manager", "secretary"]);
 
   const menuBlocks = [
     {
@@ -45,7 +46,7 @@ const Menu = ({ language }) => {
     { component: <TeacherBlock content={content}  isAuthorized={isTeacherAuthorized}/> , isAuthorized : isTeacherAuthorized},
     { component: <StudentBlock content={content} isAuthorized={isStudentAuthorized}/>,isAuthorized : isStudentAuthorized},
     { component: <ParentBlock content={content} isAuthorized={isParentAuthorized}/> , isAuthorized : isParentAuthorized},
-    { component: <ServicesBlock content={content} isAuthorized={isServicesAuthorized} canSeeCoreServices={canSeeCoreServices}/> , isAuthorized : isServicesAuthorized},
+    { component: <ServicesBlock content={content} isAuthorized={isServicesAuthorized} canSeeCoreServices={canSeeCoreServices} canManageAnnouncements={canManageAnnouncements}/> , isAuthorized : isServicesAuthorized},
     { component: <FinanceBlock content={content} isAuthorized={isFinanceAuthorized}/> , isAuthorized : isFinanceAuthorized},
   ];
 

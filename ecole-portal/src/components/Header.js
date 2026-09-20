@@ -20,6 +20,8 @@ if (language === "fr") {
 	const navigate = useNavigate();
 	const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
 	const loggedIn = localStorage.getItem("LoggedIn");
+	const civilite = localStorage.getItem("civilite");
+	const welcomeName = civilite ? `${civilite} ${loggedIn}` : loggedIn;
 	  const userRoles = JSON.parse(localStorage.getItem("user_roles") || "[]");
       const adminRoles = ["manager"];
       const isAdminAuthorized = adminRoles.some(role => userRoles.includes(role));
@@ -43,7 +45,7 @@ if (language === "fr") {
 
 			<div className="header-actions">
 				{isLoggedIn && (
-					<span className="header-welcome">Bonjour, {loggedIn}</span>
+					<span className="header-welcome">Bonjour, {welcomeName}</span>
 				)}
 				{isLoggedIn && (
 					<button className="buttonStyle header-action-btn" onClick={() => navigate("/profile")}>

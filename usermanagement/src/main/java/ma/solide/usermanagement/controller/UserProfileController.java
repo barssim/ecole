@@ -80,6 +80,7 @@ public class UserProfileController {
         ensureManagerRole(userRolesHeader);
         User updated = userService.updateUserByManager(
                 id,
+                request.getCivilite(),
                 request.getSurname(),
                 request.getFirstname(),
                 request.getEmail(),

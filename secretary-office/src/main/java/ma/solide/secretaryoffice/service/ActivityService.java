@@ -22,7 +22,10 @@ import ma.solide.secretaryoffice.tenant.TenantContext;
 @Service
 public class ActivityService {
 
-    private static final Set<String> ALLOWED_TYPES = Set.of("sorties", "fetes", "reunions");
+    private static final Set<String> ALLOWED_TYPES = Set.of("sorties", "fetes", "reunions", "announcements");
+    private static final Set<String> TYPES_WITHOUT_CLASS_DESTINATION = Set.of("announcements");
+    /** Types visible to every role regardless of class membership (e.g. school-wide announcements/parties). */
+    private static final Set<String> GLOBALLY_VISIBLE_TYPES = Set.of("announcements", "fetes");
 
     private final ActivityRepository activityRepository;
     private final SchoolClassRepository schoolClassRepository;
@@ -43,18 +46,33 @@ public class ActivityService {
             activities = normalizedType == null
                     ? activityRepository.findAllByTenantIdOrderByDateAscIdAsc(tenantId)
                     : activityRepository.findByTenantIdAndTypeOrderByDateAscIdAsc(tenantId, normalizedType);
+        } else if (normalizedType != null && GLOBALLY_VISIBLE_TYPES.contains(normalizedType)) {
+            // Announcements/Fêtes are not restricted to a class; visible to every authenticated user/role.
+            activities = activityRepository.findByTenantIdAndTypeOrderByDateAscIdAsc(tenantId, normalizedType);
         } else {
             if (!StringUtils.hasText(userNameHeader)) {
                 return List.of();
             }
             List<String> classNames = resolveUserClasses(tenantId, roles, userNameHeader.trim());
-            if (classNames.isEmpty()) {
-                return List.of();
-            }
 
-            activities = normalizedType == null
-                    ? activityRepository.findByTenantIdAndClassNameInOrderByDateAscIdAsc(tenantId, classNames)
-                    : activityRepository.findByTenantIdAndTypeAndClassNameInOrderByDateAscIdAsc(tenantId, normalizedType, classNames);
+            List<Activity> classActivities = classNames.isEmpty()
+                    ? List.of()
+                    : (normalizedType == null
+                        ? activityRepository.findByTenantIdAndClassNameInOrderByDateAscIdAsc(tenantId, classNames)
+                        : activityRepository.findByTenantIdAndTypeAndClassNameInOrderByDateAscIdAsc(tenantId, normalizedType, classNames));
+
+            if (normalizedType == null) {
+                // Also include globally-visible types (announcements/fêtes), which have no class restriction.
+                List<Activity> globalActivities = new java.util.ArrayList<>();
+                for (String globalType : GLOBALLY_VISIBLE_TYPES) {
+                    globalActivities.addAll(activityRepository.findByTenantIdAndTypeOrderByDateAscIdAsc(tenantId, globalType));
+                }
+                activities = new java.util.ArrayList<>(classActivities);
+                activities.addAll(globalActivities);
+                activities.sort(java.util.Comparator.comparing(Activity::getDate).thenComparing(Activity::getId));
+            } else {
+                activities = classActivities;
+            }
         }
 
         return activities.stream().map(this::toResponse).toList();
@@ -63,18 +81,20 @@ public class ActivityService {
     public ActivityResponseDTO createActivity(ActivityRequestDTO dto, String createdBy) {
         String tenantId = TenantContext.getRequiredTenantId();
         validate(dto);
+        String normalizedType = dto.getType().trim().toLowerCase();
 
-        if (!schoolClassRepository.existsByTenantIdAndNameIgnoreCase(tenantId, dto.getClassName().trim())) {
+        if (!TYPES_WITHOUT_CLASS_DESTINATION.contains(normalizedType)
+                && !schoolClassRepository.existsByTenantIdAndNameIgnoreCase(tenantId, dto.getClassName().trim())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Class not found");
         }
 
         Activity activity = Activity.builder()
                 .tenantId(tenantId)
-                .type(dto.getType().trim().toLowerCase())
+                .type(normalizedType)
                 .title(dto.getTitle().trim())
                 .date(dto.getDate())
-                .className(dto.getClassName().trim())
-                .destination(dto.getDestination().trim())
+                .className(StringUtils.hasText(dto.getClassName()) ? dto.getClassName().trim() : null)
+                .destination(StringUtils.hasText(dto.getDestination()) ? dto.getDestination().trim() : null)
                 .description(StringUtils.hasText(dto.getDescription()) ? dto.getDescription().trim() : null)
                 .createdBy(StringUtils.hasText(createdBy) ? createdBy.trim() : "secretary")
                 .build();
@@ -86,16 +106,18 @@ public class ActivityService {
         String tenantId = TenantContext.getRequiredTenantId();
         validate(dto);
         Activity activity = findById(tenantId, id);
+        String normalizedType = dto.getType().trim().toLowerCase();
 
-        if (!schoolClassRepository.existsByTenantIdAndNameIgnoreCase(tenantId, dto.getClassName().trim())) {
+        if (!TYPES_WITHOUT_CLASS_DESTINATION.contains(normalizedType)
+                && !schoolClassRepository.existsByTenantIdAndNameIgnoreCase(tenantId, dto.getClassName().trim())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Class not found");
         }
 
-        activity.setType(dto.getType().trim().toLowerCase());
+        activity.setType(normalizedType);
         activity.setTitle(dto.getTitle().trim());
         activity.setDate(dto.getDate());
-        activity.setClassName(dto.getClassName().trim());
-        activity.setDestination(dto.getDestination().trim());
+        activity.setClassName(StringUtils.hasText(dto.getClassName()) ? dto.getClassName().trim() : null);
+        activity.setDestination(StringUtils.hasText(dto.getDestination()) ? dto.getDestination().trim() : null);
         activity.setDescription(StringUtils.hasText(dto.getDescription()) ? dto.getDescription().trim() : null);
 
         return toResponse(activityRepository.save(activity));
@@ -130,18 +152,20 @@ public class ActivityService {
         if (!StringUtils.hasText(dto.getType())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type is required");
         }
-        normalizeType(dto.getType());
+        String normalizedType = normalizeType(dto.getType());
         if (!StringUtils.hasText(dto.getTitle())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "title is required");
         }
         if (dto.getDate() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "date is required");
         }
-        if (!StringUtils.hasText(dto.getClassName())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "className is required");
-        }
-        if (!StringUtils.hasText(dto.getDestination())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "destination is required");
+        if (!TYPES_WITHOUT_CLASS_DESTINATION.contains(normalizedType)) {
+            if (!StringUtils.hasText(dto.getClassName())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "className is required");
+            }
+            if (!StringUtils.hasText(dto.getDestination())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "destination is required");
+            }
         }
     }
 

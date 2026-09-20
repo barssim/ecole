@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS tb_user (
     userno INT AUTO_INCREMENT PRIMARY KEY,
     role VARCHAR(255) COMMENT 'Comma-separated list of roles (e.g., "parent,admin")',
     tenant_id VARCHAR(64) NOT NULL,
+    civilite VARCHAR(20) COMMENT 'Monsieur / Madame',
     surname VARCHAR(255) NOT NULL,
     firstname VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,

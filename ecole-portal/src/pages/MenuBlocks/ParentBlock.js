@@ -19,7 +19,7 @@ const [showActivites, setShowActivites] = useState(false);
                                         to="/parents/inscription"
                                         className="text-xs bg-pink-100 text-pink-800 px-3 py-1 rounded hover:bg-pink-200 inline-block"
                                       >
-                                        {content.inscription || "Inscription"}
+                                        {content.inscription || "Réinscription"}
                                       </Link>
                                     </li>
               <li>

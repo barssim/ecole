@@ -58,6 +58,7 @@ public class AuthController {
         }
 
         User user = User.builder()
+                .civilite(userDTO.getCivilite())
                 .surname(userDTO.getSurname())
                 .firstname(userDTO.getFirstname())
                 .email(userDTO.getEmail())
@@ -98,6 +99,7 @@ public class AuthController {
     public static class UserResponse {
         private final Integer id;
         private final String username;
+        private final String civilite;
         private final String firstname;
         private final String email;
         private final String tenantId;
@@ -106,6 +108,7 @@ public class AuthController {
         public UserResponse(User user) {
             this.id = user.getUserno();
             this.username = user.getSurname();
+            this.civilite = user.getCivilite();
             this.firstname = user.getFirstname();
             this.email = user.getEmail();
             this.tenantId = user.getTenantId();
@@ -121,6 +124,10 @@ public class AuthController {
 
         public String getUsername() {
             return username;
+        }
+
+        public String getCivilite() {
+            return civilite;
         }
 
         public String getFirstname() {

@@ -23,7 +23,7 @@ public class SchoolActivityService {
      */
     public static final Set<String> ALLOWED_TYPES = Set.of(
             "library", "cantine", "transport", "sport",
-            "outings", "parties", "meetings",
+            "outings", "parties", "meetings", "announcements",
             // legacy aliases
             "sorties", "fetes", "reunions"
     );
@@ -66,8 +66,8 @@ public class SchoolActivityService {
                 .type(normalizeType(dto.getType()))
                 .title(dto.getTitle().trim())
                 .date(dto.getDate())
-                .className(dto.getClassName().trim())
-                .destination(dto.getDestination().trim())
+                .className(StringUtils.hasText(dto.getClassName()) ? dto.getClassName().trim() : null)
+                .destination(StringUtils.hasText(dto.getDestination()) ? dto.getDestination().trim() : null)
                 .description(StringUtils.hasText(dto.getDescription()) ? dto.getDescription().trim() : null)
                 .createdBy(StringUtils.hasText(createdBy) ? createdBy.trim() : "system")
                 .build();
@@ -87,8 +87,8 @@ public class SchoolActivityService {
         activity.setType(normalizeType(dto.getType()));
         activity.setTitle(dto.getTitle().trim());
         activity.setDate(dto.getDate());
-        activity.setClassName(dto.getClassName().trim());
-        activity.setDestination(dto.getDestination().trim());
+        activity.setClassName(StringUtils.hasText(dto.getClassName()) ? dto.getClassName().trim() : null);
+        activity.setDestination(StringUtils.hasText(dto.getDestination()) ? dto.getDestination().trim() : null);
         activity.setDescription(StringUtils.hasText(dto.getDescription()) ? dto.getDescription().trim() : null);
         return toResponse(repository.save(activity));
     }
@@ -119,6 +119,9 @@ public class SchoolActivityService {
         return n;
     }
 
+    /** Activity types that don't need a class/destination (e.g. general announcements). */
+    private static final Set<String> TYPES_WITHOUT_CLASS_DESTINATION = Set.of("announcements");
+
     private void validate(ActivityRequestDTO dto) {
         if (dto == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body is required");
@@ -126,18 +129,20 @@ public class SchoolActivityService {
         if (!StringUtils.hasText(dto.getType())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type is required");
         }
-        normalizeType(dto.getType());
+        String normalizedType = normalizeType(dto.getType());
         if (!StringUtils.hasText(dto.getTitle())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "title is required");
         }
         if (dto.getDate() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "date is required");
         }
-        if (!StringUtils.hasText(dto.getClassName())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "className is required");
-        }
-        if (!StringUtils.hasText(dto.getDestination())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "destination is required");
+        if (!TYPES_WITHOUT_CLASS_DESTINATION.contains(normalizedType)) {
+            if (!StringUtils.hasText(dto.getClassName())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "className is required");
+            }
+            if (!StringUtils.hasText(dto.getDestination())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "destination is required");
+            }
         }
     }
 

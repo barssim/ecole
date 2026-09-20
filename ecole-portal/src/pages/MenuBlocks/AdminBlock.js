@@ -56,46 +56,6 @@ const AdminBlock = ({ isAuthorized, canAccessAttestations = false, canManageCust
           </Link>
         </li>
         )}
-        {canSeeActivities && (
-        <li>
-          <Link
-            to="/administration/outings"
-            className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 inline-block"
-          >
-            {content.sorties}
-          </Link>
-        </li>
-        )}
-        {canSeeActivities && (
-        <li>
-          <Link
-            to="/administration/parties"
-            className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 inline-block"
-          >
-            {content.fetes}
-          </Link>
-        </li>
-        )}
-        {canSeeActivities && (
-        <li>
-          <Link
-            to="/administration/meetings"
-            className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 inline-block"
-          >
-            {content.reunions}
-          </Link>
-        </li>
-        )}
-        {canManageCustomization && (
-        <li>
-          <Link
-            to="/administration/customization"
-            className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 inline-block"
-          >
-            Tenant customization
-          </Link>
-        </li>
-        )}
       </ul>
       )}
     </div>

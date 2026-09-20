@@ -44,6 +44,7 @@ import ProfilePage from './pages/ProfilePage';
 import TeacherAttendancePage from './pages/TeacherAttendancePage';
 import TeacherNotesPage from './pages/TeacherNotesPage';
 import OutingPage from './pages/OutingPage';
+import AnnouncementsPage from './pages/AnnouncementsPage';
 import TenantCustomizationPage from './pages/TenantCustomizationPage';
 import TeacherAssignmentsPage from './pages/TeacherAssignmentsPage';
 import { getTenantId } from './tenant';
@@ -80,10 +81,7 @@ const mixWithWhite = (color, ratio) => {
   return `rgb(${mixed[0]}, ${mixed[1]}, ${mixed[2]})`;
 };
 
-const HomeLanding = ({ content, language, tenantCustomization }) => {
-  const navigate = useNavigate();
-  const schoolName = tenantCustomization.name?.[language] || tenantCustomization.name?.["fr"] || "School";
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+const AnnouncementsFeedPanel = ({ content, language, tenantCustomization }) => {
   const [feed, setFeed] = useState([]);
 
   useEffect(() => {
@@ -107,26 +105,53 @@ const HomeLanding = ({ content, language, tenantCustomization }) => {
       })
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    Promise.all([
-      fetch(apiUrlFor("/activities?type=sorties"), { headers })
-        .then((response) => readJsonResponse(response, "Impossible de charger les sorties."))
-        .catch(() => []),
-      fetch(apiUrlFor("/activities?type=fetes"), { headers })
-        .then((response) => readJsonResponse(response, "Impossible de charger les fêtes."))
-        .catch(() => []),
-      fetch(apiUrlFor("/activities?type=reunions"), { headers })
-        .then((response) => readJsonResponse(response, "Impossible de charger les réunions."))
-        .catch(() => []),
-    ]).then(([sorties, fetes, reunions]) => {
-      if (!mounted) return;
-      const combined = keepUpcoming([...(sorties || []), ...(fetes || []), ...(reunions || [])]);
-      setFeed(combined);
-    });
+    fetch(apiUrlFor("/activities?type=announcements"), { headers })
+      .then((response) => readJsonResponse(response, "Impossible de charger les annonces."))
+      .catch(() => [])
+      .then((announcements) => {
+        if (!mounted) return;
+        setFeed(keepUpcoming(announcements || []));
+      });
 
     return () => {
       mounted = false;
     };
   }, []);
+
+  return (
+    <div className="home-stat-card home-stat-card-marquee">
+      <h3 className="announcements-feed-title">{content.annonces_activites || "Annonces actuelles"}</h3>
+      {feed.length > 0 ? (
+        <div className="home-outings-marquee" aria-label={content.annonces_activites || "Annonces actuelles"}>
+          <div className="home-outings-track">
+            {[0, 1].flatMap((cycle) => [
+              <span className="home-outings-item home-outings-logo" key={`logo-${cycle}`}>
+                <img
+                  src={tenantCustomization?.logo}
+                  alt={tenantCustomization?.name?.[language] || tenantCustomization?.name?.["fr"] || "School"}
+                />
+              </span>,
+              ...feed.map((activity, index) => (
+                <span className="home-outings-item" key={`${activity.id}-${activity.type}-${cycle}-${index}`}>
+                  📣 {activity.title}
+                  {activity.destination ? ` — ${activity.destination}` : ""}
+                  {activity.date ? ` (${activity.date})` : ""}
+                </span>
+              )),
+            ])}
+          </div>
+        </div>
+      ) : (
+        <span>{content.annonces_fallback || content.messages}</span>
+      )}
+    </div>
+  );
+};
+
+const HomeLanding = ({ content, language, tenantCustomization }) => {
+  const navigate = useNavigate();
+  const schoolName = tenantCustomization.name?.[language] || tenantCustomization.name?.["fr"] || "School";
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
 
   return (
     <main className="home-landing" dir={language === "ar" ? "rtl" : "ltr"}>
@@ -139,35 +164,18 @@ const HomeLanding = ({ content, language, tenantCustomization }) => {
         </div>
       </section>
 
-      <section className="home-stat-grid home-stat-grid-single" aria-label="Portal highlights">
-        <article className="home-stat-card home-stat-card-marquee">
-          <span className="home-stat-icon">01</span>
-          <div>
-            <strong>{content.annonces_activites || "Annonces et Activités"}</strong>
-            {feed.length > 0 ? (
-              <div className="home-outings-marquee" aria-label={content.annonces_activites || "Annonces et Activités"}>
-                <div className="home-outings-track">
-                  {[...feed, ...feed].map((activity, index) => (
-                    <span className="home-outings-item" key={`${activity.id}-${activity.type}-${index}`}>
-                      {activity.type === "fetes" ? "🎉" : activity.type === "reunions" ? "📢" : "🚌"}{" "}
-                      {activity.title}
-                      {activity.destination ? ` — ${activity.destination}` : ""}
-                      {activity.date ? ` (${activity.date})` : ""}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <span>{content.annonces_fallback || content.messages}</span>
-            )}
-          </div>
-        </article>
-      </section>
-
       <section className="home-bottom-row">
         <div>
           <span className="home-section-kicker">UN ESPACE, TOUTE L'ÉCOLE</span>
-          <h2>{content.whoAreWe}</h2>
+          <h2
+            className="home-whoarewe-link"
+            onClick={() => navigate("/about")}
+            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && navigate("/about")}
+            role="button"
+            tabIndex={0}
+          >
+            {content.whoAreWe}
+          </h2>
         </div>
         <p>{content.welcomeon_site}</p>
         <button className="home-link-action" onClick={() => navigate("/contact")}>
@@ -267,10 +275,6 @@ const AppContent = () => {
       <div className={`main-layout ${isRtl ? "layout-rtl" : "layout-ltr"}`}>
 				{/* Left Menu */}
         <aside className={`left-panel ${isMenuOpen ? "left-panel-open" : ""}`}>
-          <div className="panel-heading">
-            <span className="panel-heading-mark">✦</span>
-            <span>{content.services}</span>
-          </div>
 					<Menu language={language} toggleLanguage={toggleLanguage} />
 				</aside>
         {isMenuOpen && <div className="layout-backdrop" onClick={() => setIsMenuOpen(false)} />}
@@ -301,11 +305,13 @@ const AppContent = () => {
                      <Route path="/administration/classes/:id" element={<ClassManagePage language={language} />} />
                       <Route path="/administration/examens" element={<ExamProgram language={language} toggleLanguage={toggleLanguage} />} />
                       <Route path="/administration/outings" element={<OutingPage language={language} />} />
+                      <Route path="/administration/announcements" element={<AnnouncementsPage language={language} />} />
                       <Route path="/administration/parties" element={<PartiesPage language={language} />} />
                       <Route path="/administration/meetings" element={<MeetingPage language={language} />} />
                       <Route path="/administration/attestations" element={<AttestationsPage language={language} />} />
                       <Route path="/administration/customization" element={<TenantCustomizationPage language={language} />} />
                       <Route path="/services/outings" element={<OutingPage language={language} />} />
+                      <Route path="/services/announcements" element={<AnnouncementsPage language={language} />} />
                       <Route path="/services/parties" element={<PartiesPage language={language} />} />
                       <Route path="/services/meetings" element={<MeetingPage language={language} />} />
                       <Route path="/enseignement/parent-meetings" element={<ParentMeetingPage language={language} toggleLanguage={toggleLanguage} />} />
@@ -343,9 +349,9 @@ const AppContent = () => {
           <div className="right-panel-content">
             <span className="panel-heading-mark">✦</span>
             <h2>{tenantCustomization.name?.[language] || tenantCustomization.name?.["fr"] || "School"}</h2>
-            <p>{content.overTheTime}</p>
             <div className="portal-status"><span /> {content.overTheTime}</div>
           </div>
+          <AnnouncementsFeedPanel content={content} language={language} tenantCustomization={tenantCustomization} />
         </aside>
 			</div>
       <Footer language={language} tenantCustomization={tenantCustomization} />

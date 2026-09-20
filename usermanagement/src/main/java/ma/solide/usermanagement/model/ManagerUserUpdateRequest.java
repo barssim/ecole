@@ -1,11 +1,20 @@
 package ma.solide.usermanagement.model;
 
 public class ManagerUserUpdateRequest {
+    private String civilite;
     private String surname;
     private String firstname;
     private String email;
     private String adresse;
     private String role;
+
+    public String getCivilite() {
+        return civilite;
+    }
+
+    public void setCivilite(String civilite) {
+        this.civilite = civilite;
+    }
 
     public String getSurname() {
         return surname;

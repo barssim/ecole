@@ -288,25 +288,28 @@ const ClassesPage = ({ language }) => {
                         <button
                           onClick={() => isAddingHere ? cancelAddStudent() : openAddStudent(cls.id)}
                           disabled={!isAddingHere && isClassFull}
-                          title={!isAddingHere && isClassFull ? `Limite de ${MAX_STUDENTS_PER_CLASS} élèves atteinte` : undefined}
+                          title={
+                            isAddingHere
+                              ? (content.activity_cancel_button || 'Annuler')
+                              : isClassFull
+                                ? `Limite de ${MAX_STUDENTS_PER_CLASS} élèves atteinte`
+                                : (content.classes_addStudent || 'Ajouter un élève')
+                          }
+                          className="activity-icon-btn"
                           style={{
-                            marginRight: 6, padding: '4px 10px', borderRadius: 4, fontSize: 12,
-                            background: isAddingHere ? '#fee2e2' : (isClassFull ? '#e5e7eb' : '#e0f2fe'),
                             color: isAddingHere ? '#b91c1c' : (isClassFull ? '#9ca3af' : '#0369a1'),
-                            border: 'none', cursor: (!isAddingHere && isClassFull) ? 'not-allowed' : 'pointer', fontWeight: 600,
+                            cursor: (!isAddingHere && isClassFull) ? 'not-allowed' : 'pointer',
                           }}
                         >
-                          {isAddingHere ? '✕ Annuler' : (isClassFull ? '✓ Classe complète' : '+ Ajouter un élève')}
+                          {isAddingHere ? '✕' : (isClassFull ? '🚫' : '➕')}
                         </button>
                         <Link
                           to={`/administration/classes/${cls.id}`}
-                          style={{
-                            padding: '4px 10px', borderRadius: 4, fontSize: 12,
-                            background: '#e0e7ff', color: '#3730a3',
-                            textDecoration: 'none', fontWeight: 600,
-                          }}
+                          className="activity-icon-btn activity-icon-edit"
+                          title={content.classes_manageClassButton || 'Gérer'}
+                          style={{ textDecoration: 'none', display: 'inline-block' }}
                         >
-                          {content.classes_manageClassButton || 'Gérer'}
+                          ⚙️
                         </Link>
                       </td>
                     )}

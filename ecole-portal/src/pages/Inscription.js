@@ -21,6 +21,7 @@ const Inscription = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
 
   const [formData, setFormData] = useState({
+    civilite: "Monsieur",
     surname: "",
     firstname: "",
     email: "",
@@ -40,6 +41,7 @@ const Inscription = ({ language }) => {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [showAddUserForm, setShowAddUserForm] = useState(false);
   const [editingUser, setEditingUser] = useState({
+    civilite: "Monsieur",
     surname: "",
     firstname: "",
     email: "",
@@ -171,6 +173,7 @@ const Inscription = ({ language }) => {
 
   const resetForm = () => {
     setFormData({
+      civilite: "Monsieur",
       surname: "",
       firstname: "",
       email: "",
@@ -193,11 +196,12 @@ const Inscription = ({ language }) => {
     }
 
     try {
-      const { surname, firstname, email, adresse, password, role } = formData;
+      const { civilite, surname, firstname, email, adresse, password, role } = formData;
       const response = await fetch(apiUrlFor("/auth/register"), {
         method: "POST",
         headers: buildHeaders(true),
         body: JSON.stringify({
+          civilite,
           surname,
           firstname,
           email,
@@ -238,6 +242,7 @@ const Inscription = ({ language }) => {
     const firstRole = Array.isArray(user.roles) && user.roles.length > 0 ? String(user.roles[0]).trim().toLowerCase() : "student";
     setSelectedUserId(user.id);
     setEditingUser({
+      civilite: user.civilite || "Monsieur",
       surname: user.username || "",
       firstname: user.firstname || "",
       email: user.email || "",
@@ -248,7 +253,7 @@ const Inscription = ({ language }) => {
 
   const cancelManageUser = () => {
     setSelectedUserId(null);
-    setEditingUser({ surname: "", firstname: "", email: "", adresse: "", role: "student" });
+    setEditingUser({ civilite: "Monsieur", surname: "", firstname: "", email: "", adresse: "", role: "student" });
   };
 
   const saveManagedUser = async () => {
@@ -310,6 +315,14 @@ const Inscription = ({ language }) => {
         <h2>{content.userManagementTitle || "User management"}</h2>
         {error.general && <p className="error-message">{error.general}</p>}
         {success && <p className="success-message">{success}</p>}
+
+        <div className="form-group">
+          <label htmlFor="civilite">{content.civilite || "Civilité"}:</label>
+          <select id="civilite" name="civilite" value={formData.civilite} onChange={handleChange}>
+            <option value="Monsieur">{content.civiliteMonsieur || "Monsieur"}</option>
+            <option value="Madame">{content.civiliteMadame || "Madame"}</option>
+          </select>
+        </div>
 
         <div className="form-group">
           <label htmlFor="surname">{content.surname}:</label>
@@ -400,6 +413,7 @@ const Inscription = ({ language }) => {
             <table style={{ width: "100%", minWidth: "900px", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
+                  <th style={th}>{content.civilite || "Civilité"}</th>
                   <th style={th}>{content.surname || "Last name"}</th>
                   <th style={th}>{content.firstname || "First name"}</th>
                   <th style={th}>{content.email || "Email"}</th>
@@ -411,17 +425,18 @@ const Inscription = ({ language }) => {
               <tbody>
                 {usersLoading ? (
                   <tr>
-                    <td style={td} colSpan={6}>{content.loading || "Loading..."}</td>
+                    <td style={td} colSpan={7}>{content.loading || "Loading..."}</td>
                   </tr>
                 ) : users.length === 0 ? (
                   <tr>
-                    <td style={td} colSpan={6}>{content.noUsersLabel || "No users found."}</td>
+                    <td style={td} colSpan={7}>{content.noUsersLabel || "No users found."}</td>
                   </tr>
                 ) : (
                   users.map((user) => {
                     const currentRole = Array.isArray(user.roles) && user.roles.length > 0 ? String(user.roles[0]).trim().toLowerCase() : "student";
                     return (
                       <tr key={user.id}>
+                        <td style={td}>{user.civilite}</td>
                         <td style={td}>{user.username}</td>
                         <td style={td}>{user.firstname}</td>
                         <td style={td}>{user.email}</td>
@@ -443,6 +458,13 @@ const Inscription = ({ language }) => {
           {selectedUserId && (
             <div style={{ marginTop: 16, borderTop: "1px solid #ddd", paddingTop: 16 }}>
               <h3 style={{ marginBottom: 10 }}>{content.manageSelectedUserTitle || "Manage selected user"}</h3>
+              <div className="form-group">
+                <label>{content.civilite || "Civilité"}:</label>
+                <select value={editingUser.civilite} onChange={(e) => setEditingUser((c) => ({ ...c, civilite: e.target.value }))}>
+                  <option value="Monsieur">{content.civiliteMonsieur || "Monsieur"}</option>
+                  <option value="Madame">{content.civiliteMadame || "Madame"}</option>
+                </select>
+              </div>
               <div className="form-group">
                 <label>{content.surname}:</label>
                 <input value={editingUser.surname} onChange={(e) => setEditingUser((c) => ({ ...c, surname: e.target.value }))} />

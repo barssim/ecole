@@ -19,9 +19,7 @@ const OutingPage = ({ language }) => {
   const isAdminAuthorized = hasAnyRole(normalizedRoles, ["admin", "manager"]);
   const isTeacherAuthorized = hasAnyRole(normalizedRoles, ["teacher"]);
   const isTeacherOnly = isTeacherAuthorized && !isSecretaryAuthorized && !isAdminAuthorized;
-  const canManageActivities = isAdministrationPath
-    ? (isSecretaryAuthorized || isAdminAuthorized)
-    : (isSecretaryAuthorized || isTeacherAuthorized);
+  const canManageActivities = isSecretaryAuthorized || isAdminAuthorized;
   const userName = localStorage.getItem("LoggedIn") || "";
   const token = sessionStorage.getItem("jwt_token");
   const apiUrlFor = createApiUrlFor('http://localhost:8085');
@@ -42,6 +40,7 @@ const OutingPage = ({ language }) => {
   });
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const headers = useMemo(
     () => ({
@@ -203,13 +202,6 @@ const OutingPage = ({ language }) => {
       return;
     }
 
-    const shouldDelete = window.confirm(
-      content.activity_delete_confirm || "Are you sure you want to remove this activity?"
-    );
-    if (!shouldDelete) {
-      return;
-    }
-
     try {
       setError("");
       setMessage("");
@@ -225,6 +217,7 @@ const OutingPage = ({ language }) => {
       if (selectedActivity && selectedActivity.id === id) {
         resetForm();
       }
+      setDeleteConfirm(null);
       setMessage(content.outing_remove_button || "Outing deleted successfully");
       fetchActivities();
     } catch (err) {
@@ -235,111 +228,135 @@ const OutingPage = ({ language }) => {
   const isArabic = language === "ar";
 
   return (
-    <div
-      style={{
-        padding: "2rem",
-        direction: isArabic ? "rtl" : "ltr",
-        textAlign: isArabic ? "right" : "left"
-      }}
-    >
-      <h1>{pageTitle}</h1>
-
-      {message && <p style={{ color: "#15803d" }}>{message}</p>}
-      {error && <p style={{ color: "#b91c1c" }}>{error}</p>}
-
-      {canManageActivities && (
-        <>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-            <button type="button" onClick={openPlanner}>
+    <div className="activity-page" dir={isArabic ? "rtl" : "ltr"} style={{ textAlign: isArabic ? "right" : "left" }}>
+      <div className="activity-header">
+        <div>
+          <span className="activity-title-badge">{content.sorties || "Outings"}</span>
+          <h1 className="activity-title">{pageTitle}</h1>
+        </div>
+        {canManageActivities && (
+          <div className="activity-toolbar">
+            <button type="button" className="activity-btn activity-btn-primary" onClick={openPlanner}>
               {isEditing
                 ? (content.activity_edit_button || content.outing_update_button)
                 : (content.activity_plan_button || content.outing_add_button)}
             </button>
             {showPlanner && (
-              <button type="button" onClick={resetForm}>
+              <button type="button" className="activity-btn" onClick={resetForm}>
                 {content.activity_cancel_button || "Cancel"}
               </button>
             )}
           </div>
+        )}
+      </div>
 
-          {showPlanner && (
-            <>
-              <h3>{isEditing ? (content.activity_edit_button || content.outing_update_button) : content.outing_add_title}</h3>
-              <form onSubmit={handleSubmit} style={{ display: "grid", gap: 8, maxWidth: 500 }}>
-                <input
-                  name="title"
-                  value={form.title}
-                  onChange={handleChange}
-                  placeholder={content.outing_title}
-                  required
-                />
-                <input
-                  name="date"
-                  type="date"
-                  value={form.date}
-                  onChange={handleChange}
-                  required
-                />
-                <select name="className" value={form.className} onChange={handleChange} required>
-                  {classes.map((schoolClass) => (
-                    <option key={schoolClass.id} value={schoolClass.name}>
-                      {schoolClass.name}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  name="destination"
-                  value={form.destination}
-                  onChange={handleChange}
-                  placeholder={content.outing_destination}
-                  required
-                />
-                <textarea
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  placeholder={content.outing_description}
-                />
-                <button type="submit">
-                  {isEditing ? content.outing_update_button : content.outing_add_button}
-                </button>
-              </form>
-            </>
-          )}
-        </>
+      {message && <p className="activity-message activity-message-success">{message}</p>}
+      {error && <p className="activity-message activity-message-error">{error}</p>}
+
+      {canManageActivities && showPlanner && (
+        <div className="activity-card">
+          <h3>{isEditing ? (content.activity_edit_button || content.outing_update_button) : content.outing_add_title}</h3>
+          <form onSubmit={handleSubmit} className="activity-form">
+            <input
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              placeholder={content.outing_title}
+              required
+            />
+            <input
+              name="date"
+              type="date"
+              value={form.date}
+              onChange={handleChange}
+              required
+            />
+            <select name="className" value={form.className} onChange={handleChange} required>
+              {classes.map((schoolClass) => (
+                <option key={schoolClass.id} value={schoolClass.name}>
+                  {schoolClass.name}
+                </option>
+              ))}
+            </select>
+            <input
+              name="destination"
+              value={form.destination}
+              onChange={handleChange}
+              placeholder={content.outing_destination}
+              required
+            />
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              placeholder={content.outing_description}
+            />
+            <button type="submit" className="activity-form-submit">
+              {isEditing ? content.outing_update_button : content.outing_add_button}
+            </button>
+          </form>
+        </div>
       )}
 
-      <hr />
-
       {loading ? (
-        <p>{content.loading || "Loading..."}</p>
+        <p className="activity-loading">{content.loading || "Loading..."}</p>
+      ) : activities.length === 0 ? (
+        <div className="activity-empty">{content.no_data || "No outings yet."}</div>
       ) : (
-        <ul style={{ listStyle: "none", padding: 0 }}>
+        <ul className="activity-list">
           {activities.map((activity) => (
             <li
               key={activity.id}
-              style={{
-                border: selectedActivity?.id === activity.id ? "2px solid blue" : "1px solid #ccc",
-                borderRadius: "8px",
-                marginBottom: "10px",
-                padding: "10px"
-              }}
+              className={`activity-item${selectedActivity?.id === activity.id ? " is-selected" : ""}`}
             >
-              <strong>{activity.title}</strong> — {activity.date} — {activity.className} — {activity.destination}
-              <p>{activity.description}</p>
-              {canManageActivities && (
-                <button type="button" onClick={() => handleSelect(activity)}>
-                  {content.activity_edit_button || content.outing_update_button || "Edit"}
-                </button>
+              <div className="activity-item-header">
+                <h3 className="activity-item-title">{activity.title}</h3>
+                <span className="activity-item-date">{activity.date}</span>
+              </div>
+              <p className="activity-item-meta">{activity.className} — {activity.destination}</p>
+              {activity.description && (
+                <p className="activity-item-description">{activity.description}</p>
               )}
               {canManageActivities && (
-                <button
-                  type="button"
-                  onClick={() => handleRemove(activity.id)}
-                  style={{ marginLeft: "10px", color: "red" }}
-                >
-                  {content.outing_remove_button || "Remove"}
-                </button>
+                <div className="activity-item-actions">
+                  <button
+                    type="button"
+                    className="activity-icon-btn activity-icon-edit"
+                    onClick={() => handleSelect(activity)}
+                    title={content.activity_edit_button || content.outing_update_button || "Edit"}
+                  >
+                    ✏️
+                  </button>
+                  {deleteConfirm === activity.id ? (
+                    <>
+                      <button
+                        type="button"
+                        className="activity-icon-btn activity-icon-confirm"
+                        onClick={() => handleRemove(activity.id)}
+                        title={content.exam_confirmDelete || "Confirmer"}
+                      >
+                        ✔
+                      </button>
+                      <button
+                        type="button"
+                        className="activity-icon-btn activity-icon-cancel"
+                        onClick={() => setDeleteConfirm(null)}
+                        title={content.activity_cancel_button || "Annuler"}
+                      >
+                        ✕
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      className="activity-icon-btn activity-icon-delete"
+                      onClick={() => setDeleteConfirm(activity.id)}
+                      title={content.outing_remove_button || "Remove"}
+                    >
+                      🗑
+                    </button>
+                  )}
+                </div>
               )}
             </li>
           ))}
@@ -347,7 +364,7 @@ const OutingPage = ({ language }) => {
       )}
 
       {canManageActivities && selectedActivity && showPlanner && (
-        <div style={{ borderTop: "2px solid #ddd", paddingTop: "10px" }}>
+        <div className="activity-detail-panel">
           <h3>{content.outing_selected_label}:</h3>
           <p><b>{content.outing_title}:</b> {selectedActivity.title}</p>
           <p><b>{content.outing_date}:</b> {selectedActivity.date}</p>

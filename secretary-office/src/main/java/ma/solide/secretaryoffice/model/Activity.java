@@ -37,10 +37,10 @@ public class Activity {
     @Column(nullable = false)
     private LocalDate date;
 
-    @Column(nullable = false, name = "class_name")
+    @Column(name = "class_name")
     private String className;
 
-    @Column(nullable = false)
+    @Column
     private String destination;
 
     @Column(length = 2000)
