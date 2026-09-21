@@ -438,8 +438,9 @@ const TeacherCourses = ({ language }) => {
                     className="tc-btn tc-btn-danger"
                     onClick={() => handleDeleteCourse(course)}
                     disabled={deletingCourseId === course.id}
+                    title="Supprimer"
                   >
-                    {deletingCourseId === course.id ? "..." : "🗑️ Supprimer"}
+                    {deletingCourseId === course.id ? "..." : "🗑"}
                   </button>
                 </div>
               </div>

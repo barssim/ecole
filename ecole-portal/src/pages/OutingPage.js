@@ -239,7 +239,7 @@ const OutingPage = ({ language }) => {
             <button type="button" className="activity-btn activity-btn-primary" onClick={openPlanner}>
               {isEditing
                 ? (content.activity_edit_button || content.outing_update_button)
-                : (content.activity_plan_button || content.outing_add_button)}
+                : content.outing_add_button}
             </button>
             {showPlanner && (
               <button type="button" className="activity-btn" onClick={resetForm}>

@@ -234,7 +234,7 @@ const MeetingPage = ({ language }) => {
         {canManageActivities && (
           <div className="activity-toolbar">
             <button type="button" className="activity-btn activity-btn-primary" onClick={openPlanner}>
-              {isEditing ? `Update ${content.reunions}` : `Add ${content.reunions}`}
+              {isEditing ? `Update ${content.reunions}` : content.meeting_add_button}
             </button>
             {showPlanner && (
               <button type="button" className="activity-btn" onClick={resetForm}>
@@ -250,7 +250,7 @@ const MeetingPage = ({ language }) => {
 
       {canManageActivities && showPlanner && (
         <div className="activity-card">
-          <h3>{isEditing ? `Update ${content.reunions}` : `Add ${content.reunions}`}</h3>
+          <h3>{isEditing ? `Update ${content.reunions}` : content.meeting_add_button}</h3>
           <form onSubmit={handleSubmit} className="activity-form">
             <input
               name="title"
@@ -287,7 +287,7 @@ const MeetingPage = ({ language }) => {
               placeholder="Description"
             />
             <button type="submit" className="activity-form-submit">
-              {isEditing ? `Update ${content.reunions}` : `Add ${content.reunions}`}
+              {isEditing ? `Update ${content.reunions}` : content.meeting_add_button}
             </button>
           </form>
         </div>
@@ -373,4 +373,3 @@ const MeetingPage = ({ language }) => {
 };
 
 export default MeetingPage;
-

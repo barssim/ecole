@@ -6,15 +6,29 @@ import en from "../locales/en.json";
 import { getTenantId } from '../tenant';
 import { hasAnyRole, normalizeRoles } from '../utils/roles';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
+import { getFallbackCustomization } from '../ecoleLoader';
+import '../cssFiles/Finance.css';
 
 const Payments = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
+  const serviceOptions = [
+    { value: 'tuition', label: content.payment_service_tuition || 'Tuition' },
+    { value: 'transport', label: content.payment_service_transport || 'Transport' },
+    { value: 'cafeteria', label: content.payment_service_cafeteria || 'Cafeteria' },
+    { value: 'books', label: content.payment_service_books || 'Books' },
+    { value: 'uniform', label: content.payment_service_uniform || 'Uniform' },
+    { value: 'registration', label: content.payment_service_registration || 'Registration' },
+    { value: 'activities', label: content.payment_service_activities || 'Activities' },
+    { value: 'examFees', label: content.payment_service_examFees || 'Exam Fees' },
+    { value: 'other', label: content.payment_service_other || 'Other' },
+  ];
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formError, setFormError] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [generatingInvoiceId, setGeneratingInvoiceId] = useState(null);
   const [studentOptions, setStudentOptions] = useState([]);
   const [classOptions, setClassOptions] = useState([]);
@@ -22,6 +36,7 @@ const Payments = ({ language }) => {
     studentName: '',
     studentEmail: '',
     className: '',
+    service: '',
     amount: '',
     currency: 'MAD',
     method: 'cash',
@@ -63,6 +78,11 @@ const Payments = ({ language }) => {
     return fallback;
   };
 
+  const extractServiceFromNotes = (notes) => {
+    const match = String(notes || '').match(/^Service:\s*(.+?)(?:\n|$)/i);
+    return match ? match[1].trim() : '';
+  };
+
   const configuredBase = resolveApiBaseUrl('http://localhost:8085');
   const browserIsLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
   const localhostApiTarget = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBase);
@@ -75,6 +95,34 @@ const Payments = ({ language }) => {
   const studentsApiUrl = useRelativeApi ? '/api/users/students' : `${apiRoot}/users/students`;
   const classesApiUrl = useRelativeApi ? '/api/classes' : `${apiRoot}/classes`;
   const token = sessionStorage.getItem('jwt_token');
+  const tenantCustomization = getFallbackCustomization();
+  const schoolLogoPath = tenantCustomization?.logo || '';
+  const schoolLogoUrl = schoolLogoPath ? `${window.location.origin}${schoolLogoPath}` : '';
+  const schoolDisplayName = tenantCustomization?.name?.[language] || tenantCustomization?.name?.fr || '';
+  const schoolAddress = tenantCustomization?.adresse?.[language] || tenantCustomization?.adresse?.fr || '';
+  const schoolPhone = tenantCustomization?.phone || '';
+  const schoolEmail = tenantCustomization?.mail || '';
+
+  const getLogoDataUrl = async () => {
+    if (!schoolLogoUrl) {
+      return '';
+    }
+    try {
+      const response = await fetch(schoolLogoUrl);
+      if (!response.ok) {
+        return '';
+      }
+      const blob = await response.blob();
+      return await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result || '');
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return '';
+    }
+  };
 
   const buildRoleHeader = () => {
     const rawRoles = readStoredRoles();
@@ -99,6 +147,7 @@ const Payments = ({ language }) => {
       studentName: '',
       studentEmail: '',
       className: '',
+      service: '',
       amount: '',
       currency: 'MAD',
       method: 'cash',
@@ -108,6 +157,7 @@ const Payments = ({ language }) => {
     });
     setEditingId(null);
     setFormError('');
+    setShowForm(false);
   };
 
   const fetchPayments = async () => {
@@ -150,9 +200,12 @@ const Payments = ({ language }) => {
       return;
     }
 
-    const description = payment.reference
-      ? `Payment (${payment.method || 'unknown'}) - ${payment.reference}`
-      : `Payment (${payment.method || 'unknown'})`;
+    const serviceLabel = extractServiceFromNotes(payment.notes);
+    const description = serviceLabel
+      ? (payment.reference ? `${serviceLabel} - ${payment.reference}` : serviceLabel)
+      : (payment.reference
+        ? `Payment (${payment.method || 'unknown'}) - ${payment.reference}`
+        : `Payment (${payment.method || 'unknown'})`);
 
     const payload = {
       studentName: payment.studentName || 'Unknown student',
@@ -162,7 +215,13 @@ const Payments = ({ language }) => {
           description,
           amount: amountValue
         }
-      ]
+      ],
+      logoUrl: await getLogoDataUrl(),
+      schoolName: schoolDisplayName,
+      phoneNumber: schoolPhone,
+      emailAddress: schoolEmail,
+      address: schoolAddress,
+      paymentMethod: payment.method || ''
     };
 
     setGeneratingInvoiceId(payment.id);
@@ -259,18 +318,25 @@ const Payments = ({ language }) => {
 
   const handleEdit = (payment) => {
     setEditingId(payment.id);
+    const notesValue = payment.notes || '';
+    const serviceMatch = notesValue.match(/^Service:\s*(.+?)(?:\n|$)/i);
+    const parsedService = serviceMatch
+      ? (serviceOptions.find((option) => option.value === serviceMatch[1].trim() || option.label === serviceMatch[1].trim())?.value || '')
+      : '';
     setFormData({
       studentName: payment.studentName || '',
       studentEmail: payment.studentEmail || '',
       className: payment.className || '',
+      service: parsedService,
       amount: payment.amount ?? '',
       currency: payment.currency || 'MAD',
       method: payment.method || 'cash',
       paymentDate: payment.paymentDate || new Date().toISOString().slice(0, 10),
       reference: payment.reference || '',
-      notes: payment.notes || ''
+      notes: serviceMatch ? notesValue.slice(serviceMatch[0].length) : notesValue
     });
     setFormError('');
+    setShowForm(true);
   };
 
   const handleDelete = async (id) => {
@@ -303,23 +369,33 @@ const Payments = ({ language }) => {
       return;
     }
 
+    if (!formData.service) {
+      setFormError('Please select a service.');
+      return;
+    }
+
     const amountValue = Number(formData.amount);
     if (!Number.isFinite(amountValue) || amountValue <= 0) {
       setFormError('Amount must be greater than 0.');
       return;
     }
 
+    const selectedServiceLabel = serviceOptions.find((option) => option.value === formData.service)?.label || formData.service;
+    const serviceLine = `Service: ${selectedServiceLabel}`;
+    const combinedNotes = [serviceLine, formData.notes.trim()].filter(Boolean).join('\n');
+
     const payload = {
       ...formData,
       studentName: formData.studentName.trim(),
       studentEmail: (formData.studentEmail || '').trim(),
       className: formData.className.trim(),
+      service: formData.service,
       amount: amountValue,
       currency: formData.currency.trim() || 'MAD',
       method: formData.method.trim() || 'cash',
       paymentDate: formData.paymentDate ? formData.paymentDate : null,
       reference: formData.reference.trim() || null,
-      notes: formData.notes.trim() || null
+      notes: combinedNotes || null
     };
 
     setSaving(true);
@@ -343,119 +419,143 @@ const Payments = ({ language }) => {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px',
-        maxWidth: '1000px',
-        margin: '0 auto',
-        width: '100%'
-      }}
-    >
-      <h2 className="text-2xl font-bold text-blue-800 mb-6">
-        {content.payments_title || "Liste des paiements"}
-      </h2>
+    <div className="finance-page">
+      <div className="finance-header">
+        <div>
+          <span className="finance-title-badge">{content.finance_badge || "Finance"}</span>
+          <h2 className="finance-title">{content.payments_title || "Liste des paiements"}</h2>
+        </div>
+        <div className="finance-toolbar">
+          <button
+            type="button"
+            className="finance-btn finance-btn-primary"
+            onClick={() => (showForm ? resetForm() : setShowForm(true))}
+          >
+            {showForm ? (content.payment_cancelButton || 'Cancel') : (content.payment_createButton || 'Create payment')}
+          </button>
+        </div>
+      </div>
 
-      <form onSubmit={handleSubmit} className="overflow-x-auto" style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid rgb(219, 234, 254)' }}>
-        {!canManagePayments && (
-          <p style={{ color: '#b45309', marginBottom: '10px' }}>
-            Only finance, admin, and manager roles can create or update payments.
-          </p>
-        )}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
-          <select name="studentName" value={formData.studentName} onChange={handleInputChange} required>
-            <option value=""></option>
-            {studentOptions.map((student) => (
-              <option key={`${student.name}-${student.email || 'no-email'}`} value={student.name}>{student.name}</option>
-            ))}
-          </select>
-          <input
-            type="email"
-            name="studentEmail"
-            value={formData.studentEmail}
-            onChange={handleInputChange}
-            placeholder="Student email"
-            readOnly
-            style={{ backgroundColor: '#f8fafc' }}
-          />
-          <select name="className" value={formData.className} onChange={handleInputChange}>
-            <option value=""></option>
-            {classOptions.map((name) => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
-          <input name="amount" type="number" min="0" step="0.01" value={formData.amount} onChange={handleInputChange} placeholder="Amount" />
-          <input name="currency" value={formData.currency} onChange={handleInputChange} placeholder="Currency" />
-          <select name="method" value={formData.method} onChange={handleInputChange}>
-            <option value="cash">Cash</option>
-            <option value="card">Card</option>
-            <option value="bank_transfer">Bank transfer</option>
-            <option value="cheque">Cheque</option>
-            <option value="mobile_money">Mobile money</option>
-          </select>
-          <input name="paymentDate" type="date" value={formData.paymentDate} onChange={handleInputChange} />
-          <input name="reference" value={formData.reference} onChange={handleInputChange} placeholder="Reference" />
-          <input name="notes" value={formData.notes} onChange={handleInputChange} placeholder="Notes" />
+      {showForm && (
+        <div className="finance-card">
+          <h3>{editingId ? (content.payment_updateTitle || "Modifier le paiement") : (content.payment_createTitle || "Enregistrer un paiement")}</h3>
+          {!canManagePayments && (
+            <div className="finance-alert finance-alert-warning">
+              Only finance, admin, and manager roles can create or update payments.
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="finance-form">
+            <div className="finance-form-grid">
+              <select name="studentName" value={formData.studentName} onChange={handleInputChange} required>
+                <option value=""></option>
+                {studentOptions.map((student) => (
+                  <option key={`${student.name}-${student.email || 'no-email'}`} value={student.name}>{student.name}</option>
+                ))}
+              </select>
+              <select name="className" value={formData.className} onChange={handleInputChange}>
+                <option value=""></option>
+                {classOptions.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+              <select
+                name="service"
+                required
+                value={formData.service}
+                onChange={handleInputChange}
+              >
+                <option value="">{content.payment_service_label || 'Service'}</option>
+                {serviceOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+              <input name="amount" type="number" min="0" step="0.01" value={formData.amount} onChange={handleInputChange} placeholder="Amount" />
+              <input name="currency" value={formData.currency} onChange={handleInputChange} placeholder="Currency" />
+              <select name="method" value={formData.method} onChange={handleInputChange}>
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="bank_transfer">Bank transfer</option>
+                <option value="cheque">Cheque</option>
+                <option value="mobile_money">Mobile money</option>
+              </select>
+              <input name="paymentDate" type="date" value={formData.paymentDate} onChange={handleInputChange} />
+              <input name="reference" value={formData.reference} onChange={handleInputChange} placeholder="Reference" />
+              <input name="notes" value={formData.notes} onChange={handleInputChange} placeholder="Notes" />
+            </div>
+            {formError && <div className="finance-alert finance-alert-error">{formError}</div>}
+            <div className="finance-form-actions">
+              <button type="submit" className="finance-btn finance-btn-primary" disabled={saving || !canManagePayments}>
+                {saving
+                  ? (content.payment_saving || 'Saving...')
+                  : (editingId ? (content.payment_updateSubmit || 'Update payment') : (content.payment_createSubmit || 'Create payment'))}
+              </button>
+              <button type="button" className="finance-btn finance-btn-outline" onClick={resetForm}>{content.payment_cancelButton || 'Cancel'}</button>
+            </div>
+          </form>
         </div>
-        {formError && <p style={{ color: '#b91c1c', marginTop: '10px' }}>{formError}</p>}
-        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-          <button type="submit" disabled={saving || !canManagePayments}>{saving ? 'Saving...' : (editingId ? 'Update payment' : 'Create payment')}</button>
-          {editingId && <button type="button" onClick={resetForm}>Cancel edit</button>}
-        </div>
-      </form>
+      )}
 
       {error && (
-        <div style={{
-          background: '#fee2e2',
-          border: '1px solid #fca5a5',
-          borderRadius: '6px',
-          padding: '12px',
-          color: '#991b1b'
-        }}>
+        <div className="finance-alert finance-alert-error">
           <strong>Error:</strong> {error}
-          <br />
-          <small style={{ color: '#7f1d1d' }}>
-            API Endpoint: {paymentsApiBase}
-            <br />
-            Gateway URL: {process.env.REACT_APP_API_GATEWAY_URL || '(not set)'}
-            <br />
+          <span className="finance-alert-detail">
+            API Endpoint: {paymentsApiBase}<br />
+            Gateway URL: {process.env.REACT_APP_API_GATEWAY_URL || '(not set)'}<br />
             <em>Check browser console (F12) for more details.</em>
-          </small>
+          </span>
         </div>
       )}
 
       {loading ? (
-        <p className="text-gray-600 text-center mt-4">Loading payments...</p>
+        <p className="finance-loading">Loading payments...</p>
       ) : payments.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-            <thead style={{ background: "rgb(219, 234, 254)", color: "#1e3a8a" }}>
+        <div className="finance-table-wrapper">
+          <table className="finance-table">
+            <thead>
               <tr>
-                <th style={th}>{content.date}</th>
-                <th style={th}>{content.student}</th>
-                <th style={th}>Class</th>
-                <th style={th}>{content.amount}</th>
-                <th style={th}>{content.method}</th>
-                <th style={th}>Reference</th>
-                <th style={th}>Actions</th>
+                <th>{content.date}</th>
+                <th>{content.student}</th>
+                <th>Class</th>
+                <th>{content.payment_service_label || 'Service'}</th>
+                <th>{content.amount}</th>
+                <th>{content.method}</th>
+                <th>Reference</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {payments.map((payment, index) => (
-                <tr key={payment.id} style={{ background: index % 2 === 0 ? "#f0f9ff" : "#fff" }}>
-                  <td style={td}>{payment.paymentDate || '-'}</td>
-                  <td style={td}>{payment.studentName}</td>
-                  <td style={td}>{payment.className || '-'}</td>
-                  <td style={td}>{payment.amount} {payment.currency}</td>
-                  <td style={td}>{payment.method}</td>
-                  <td style={td}>{payment.reference || '-'}</td>
-                  <td style={td}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button type="button" onClick={() => handleEdit(payment)} disabled={!canManagePayments}>Edit</button>
-                      <button type="button" onClick={() => handleDelete(payment.id)} disabled={!canManagePayments}>Delete</button>
+              {payments.map((payment) => (
+                <tr key={payment.id}>
+                  <td>{payment.paymentDate || '-'}</td>
+                  <td>{payment.studentName}</td>
+                  <td>{payment.className || '-'}</td>
+                  <td>{extractServiceFromNotes(payment.notes) || '-'}</td>
+                  <td className="finance-amount">{payment.amount} {payment.currency}</td>
+                  <td>{payment.method}</td>
+                  <td>{payment.reference || '-'}</td>
+                  <td>
+                    <div className="finance-row-actions">
                       <button
                         type="button"
+                        className="finance-icon-btn finance-icon-edit"
+                        onClick={() => handleEdit(payment)}
+                        disabled={!canManagePayments}
+                        title="Edit"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        type="button"
+                        className="finance-icon-btn finance-icon-delete"
+                        onClick={() => handleDelete(payment.id)}
+                        disabled={!canManagePayments}
+                        title="Delete"
+                      >
+                        🗑
+                      </button>
+                      <button
+                        type="button"
+                        className="finance-btn finance-btn-sm finance-btn-primary"
                         onClick={() => handleGenerateFacture(payment)}
                         disabled={generatingInvoiceId === payment.id || !canManagePayments}
                       >
@@ -469,15 +569,12 @@ const Payments = ({ language }) => {
           </table>
         </div>
       ) : (
-        <p className="text-gray-600 text-center mt-4">
+        <p className="finance-empty">
           {content.no_payments || "Aucun paiement enregistré pour le moment."}
         </p>
       )}
     </div>
   );
 };
-
-const th = { padding: "8px 12px", textAlign: "left", fontWeight: 600 };
-const td = { padding: "8px 12px" };
 
 export default Payments;

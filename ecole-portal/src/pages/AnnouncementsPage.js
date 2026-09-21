@@ -118,7 +118,7 @@ const AnnouncementsPage = ({ language }) => {
       setMessage(
         isEditing
           ? (content.outing_update_button || "Announcement updated successfully")
-          : (content.outing_add_button || "Announcement created successfully")
+          : (content.announcement_add_button || "Announcement created successfully")
       );
       resetForm();
       fetchAnnouncements();
@@ -180,7 +180,7 @@ const AnnouncementsPage = ({ language }) => {
             <button type="button" className="activity-btn activity-btn-primary" onClick={openPlanner}>
               {isEditing
                 ? (content.activity_edit_button || content.outing_update_button)
-                : (content.activity_plan_button || content.outing_add_button)}
+                : content.announcement_add_button}
             </button>
             {showPlanner && (
               <button type="button" className="activity-btn" onClick={resetForm}>
@@ -196,7 +196,7 @@ const AnnouncementsPage = ({ language }) => {
 
       {canManageAnnouncements && showPlanner && (
         <div className="activity-card">
-          <h3>{isEditing ? (content.activity_edit_button || content.outing_update_button) : (content.activity_plan_button || content.outing_add_button)}</h3>
+          <h3>{isEditing ? (content.activity_edit_button || content.outing_update_button) : content.announcement_add_button}</h3>
           <form onSubmit={handleSubmit} className="activity-form">
             <input
               name="title"
@@ -219,7 +219,7 @@ const AnnouncementsPage = ({ language }) => {
               placeholder={content.outing_description || "Description"}
             />
             <button type="submit" className="activity-form-submit">
-              {isEditing ? content.outing_update_button : content.outing_add_button}
+              {isEditing ? content.outing_update_button : content.announcement_add_button}
             </button>
           </form>
         </div>

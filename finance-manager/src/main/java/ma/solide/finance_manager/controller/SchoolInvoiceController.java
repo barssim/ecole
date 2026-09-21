@@ -247,7 +247,7 @@ public class SchoolInvoiceController {
     public ResponseEntity<InputStreamResource> generate(@RequestBody InvoiceRequest request) {
         var pdf = pdfService.generateInvoice(request.getStudentName(), request.getClassName(), request.getItems(),
                 request.getLogoUrl(), request.getSchoolName(), request.getPhoneNumber(),
-                request.getEmailAddress(), request.getAddress());
+                request.getEmailAddress(), request.getAddress(), request.getPaymentMethod());
         factureService.saveGeneratedFacture(request.getStudentName(), request.getClassName(), request.getItems());
 
         HttpHeaders headers = new HttpHeaders();
@@ -268,6 +268,7 @@ public class SchoolInvoiceController {
         private String phoneNumber;
         private String emailAddress;
         private String address;
+        private String paymentMethod;
 
         public String getStudentName() {
             return studentName;
@@ -331,6 +332,14 @@ public class SchoolInvoiceController {
 
         public void setAddress(String address) {
             this.address = address;
+        }
+
+        public String getPaymentMethod() {
+            return paymentMethod;
+        }
+
+        public void setPaymentMethod(String paymentMethod) {
+            this.paymentMethod = paymentMethod;
         }
     }
 }

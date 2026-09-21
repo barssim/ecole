@@ -221,7 +221,7 @@ const PartiesPage = ({ language }) => {
         {canManageActivities && (
           <div className="activity-toolbar">
             <button type="button" className="activity-btn activity-btn-primary" onClick={openPlanner}>
-              {isEditing ? `Update ${content.fetes}` : `Add ${content.fetes}`}
+              {isEditing ? `Update ${content.fetes}` : content.party_add_button}
             </button>
             {showPlanner && (
               <button type="button" className="activity-btn" onClick={resetForm}>
@@ -237,7 +237,7 @@ const PartiesPage = ({ language }) => {
 
       {canManageActivities && showPlanner && (
         <div className="activity-card">
-          <h3>{isEditing ? `Update ${content.fetes}` : `Add ${content.fetes}`}</h3>
+          <h3>{isEditing ? `Update ${content.fetes}` : content.party_add_button}</h3>
           <form onSubmit={handleSubmit} className="activity-form">
             <input
               name="title"
@@ -274,7 +274,7 @@ const PartiesPage = ({ language }) => {
               placeholder="Description"
             />
             <button type="submit" className="activity-form-submit">
-              {isEditing ? `Update ${content.fetes}` : `Add ${content.fetes}`}
+              {isEditing ? `Update ${content.fetes}` : content.party_add_button}
             </button>
           </form>
         </div>
@@ -360,4 +360,3 @@ const PartiesPage = ({ language }) => {
 };
 
 export default PartiesPage;
-

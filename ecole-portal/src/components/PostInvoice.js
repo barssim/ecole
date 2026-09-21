@@ -3,8 +3,18 @@ import axios from 'axios';
 import { getTenantId } from '../tenant';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { hasAnyRole, normalizeRoles } from '../utils/roles';
+import { getFallbackCustomization } from '../ecoleLoader';
+import '../cssFiles/Finance.css';
 
-const PostInvoice = () => {
+const PostInvoice = ({ language }) => {
+  const tenantCustomization = getFallbackCustomization();
+  const tenantLogoPath = tenantCustomization?.logo || '';
+  const tenantLogoUrl = tenantLogoPath ? `${window.location.origin}${tenantLogoPath}` : '';
+  const tenantSchoolName = tenantCustomization?.name?.[language] || tenantCustomization?.name?.fr || 'École Solide';
+  const tenantAddress = tenantCustomization?.adresse?.[language] || tenantCustomization?.adresse?.fr || '';
+  const tenantPhone = tenantCustomization?.phone || '';
+  const tenantEmail = tenantCustomization?.mail || '';
+
   const [studentName, setStudentName] = useState('');
   const [className, setClassName] = useState('');
   const [items, setItems] = useState([{ description: '', amount: '' }]);
@@ -12,11 +22,13 @@ const PostInvoice = () => {
   const [factures, setFactures] = useState([]);
   const [loadingFactures, setLoadingFactures] = useState(false);
   const [error, setError] = useState(null);
-  const [logoUrl, setLogoUrl] = useState('');
-  const [schoolName, setSchoolName] = useState('École Solide');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [emailAddress, setEmailAddress] = useState('');
-  const [address, setAddress] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [logoUrl, setLogoUrl] = useState(tenantLogoUrl);
+  const [schoolName, setSchoolName] = useState(tenantSchoolName);
+  const [phoneNumber, setPhoneNumber] = useState(tenantPhone);
+  const [emailAddress, setEmailAddress] = useState(tenantEmail);
+  const [address, setAddress] = useState(tenantAddress);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
 
   const baseUrl = resolveApiBaseUrl('http://localhost:8085');
   const useRelativeApi = process.env.REACT_APP_USE_RELATIVE_API === 'true';
@@ -24,6 +36,27 @@ const PostInvoice = () => {
   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
   const roleHeader = userRoles.join(',');
   const canManageFactures = hasAnyRole(userRoles, ['finance', 'admin', 'manager']);
+
+  const getLogoDataUrl = async (url) => {
+    if (!url) {
+      return '';
+    }
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        return '';
+      }
+      const blob = await response.blob();
+      return await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result || '');
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return '';
+    }
+  };
 
   const buildHeaders = (includeJson = false) => {
     const headers = {
@@ -83,6 +116,7 @@ const PostInvoice = () => {
     try {
       setError(null);
       const generateUrl = useRelativeApi ? '/api/facture/generate' : `${baseUrl}/api/facture/generate`;
+      const resolvedLogo = logoUrl.startsWith('data:') ? logoUrl : await getLogoDataUrl(logoUrl);
       const response = await axios.post(
          generateUrl,
          {
@@ -92,11 +126,12 @@ const PostInvoice = () => {
              description: item.description,
              amount: parseFloat(item.amount)
            })),
-           logoUrl,
+           logoUrl: resolvedLogo,
            schoolName,
            phoneNumber,
            emailAddress,
-           address
+           address,
+           paymentMethod
          },
         {
           headers: buildHeaders(true),
@@ -120,120 +155,157 @@ const PostInvoice = () => {
   };
 
   return (
-    <div style={{ padding: 20, maxWidth: 600 }}>
-      <h2>Générer une Facture Scolaire</h2>
-      {!canManageFactures && <p style={{ color: '#b45309' }}>Only finance, admin, and manager roles can generate factures.</p>}
-      {error && <p style={{ color: '#c00' }}>{error}</p>}
-
-      <input
-        type="text"
-        placeholder="Nom de l'élève"
-        value={studentName}
-        onChange={e => setStudentName(e.target.value)}
-        style={{ width: '100%', marginBottom: 10 }}
-      />
-      <input
-        type="text"
-        placeholder="Classe"
-        value={className}
-        onChange={e => setClassName(e.target.value)}
-        style={{ width: '100%', marginBottom: 10 }}
-      />
-
-      <h4>📋 Coordonnées de l'école</h4>
-      <input
-        type="text"
-        placeholder="Nom de l'école"
-        value={schoolName}
-        onChange={e => setSchoolName(e.target.value)}
-        style={{ width: '100%', marginBottom: 10 }}
-      />
-      <input
-        type="url"
-        placeholder="URL du logo (https://...)"
-        value={logoUrl}
-        onChange={e => setLogoUrl(e.target.value)}
-        style={{ width: '100%', marginBottom: 10 }}
-      />
-      <input
-        type="text"
-        placeholder="Téléphone"
-        value={phoneNumber}
-        onChange={e => setPhoneNumber(e.target.value)}
-        style={{ width: '100%', marginBottom: 10 }}
-      />
-      <input
-        type="email"
-        placeholder="Email"
-        value={emailAddress}
-        onChange={e => setEmailAddress(e.target.value)}
-        style={{ width: '100%', marginBottom: 10 }}
-      />
-      <input
-        type="text"
-        placeholder="Adresse"
-        value={address}
-        onChange={e => setAddress(e.target.value)}
-        style={{ width: '100%', marginBottom: 10 }}
-      />
-      <h4>Services</h4>
-      {items.map((item, index) => (
-        <div key={index} style={{ marginBottom: 10 }}>
-          <input
-            type="text"
-            placeholder="Description"
-            value={item.description}
-            onChange={e => handleItemChange(index, 'description', e.target.value)}
-            style={{ marginRight: 10 }}
-          />
-          <input
-            type="number"
-            placeholder="Montant"
-            value={item.amount}
-            onChange={e => handleItemChange(index, 'amount', e.target.value)}
-          />
+    <div className="finance-page">
+      <div className="finance-header">
+        <div>
+          <span className="finance-title-badge">Finance</span>
+          <h2 className="finance-title">Factures</h2>
         </div>
-      ))}
+        <div className="finance-toolbar">
+          <button
+            type="button"
+            className="finance-btn finance-btn-primary"
+            onClick={() => setShowForm((prev) => !prev)}
+          >
+            {showForm ? 'Annuler' : 'Générer une facture'}
+          </button>
+        </div>
+      </div>
 
-      <button onClick={addItem} style={{ marginBottom: 20 }}>
-        + Ajouter un service
-      </button>
-      <br />
-      <button onClick={generateInvoice} disabled={!canManageFactures}>Générer la facture PDF</button>
-
-      {pdfUrl && (
-        <div style={{ marginTop: 20 }}>
-          <h4>Facture générée :</h4>
-          <iframe src={pdfUrl} width="100%" height="500px" title="Invoice PDF" />
-          <br />
-          <a href={pdfUrl} download="facture.pdf">📥 Télécharger</a>
+      {!canManageFactures && showForm && (
+        <div className="finance-alert finance-alert-warning">
+          Only finance, admin, and manager roles can generate factures.
         </div>
       )}
+      {error && <div className="finance-alert finance-alert-error">{error}</div>}
 
-      <div style={{ marginTop: 30 }}>
-        <h3>Toutes les factures enregistrées</h3>
-        {loadingFactures && <p>Chargement...</p>}
-        {!loadingFactures && factures.length === 0 && <p>Aucune facture enregistrée.</p>}
+      {showForm && (
+        <>
+          <div className="finance-card">
+            <h3>Informations de l'élève</h3>
+            <div className="finance-form finance-form-grid">
+              <input
+                type="text"
+                placeholder="Nom de l'élève"
+                value={studentName}
+                onChange={e => setStudentName(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Classe"
+                value={className}
+                onChange={e => setClassName(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="finance-card">
+            <h3>📋 Coordonnées de l'école</h3>
+            <div className="finance-form finance-form-grid">
+              <input
+                type="text"
+                placeholder="Nom de l'école"
+                value={schoolName}
+                onChange={e => setSchoolName(e.target.value)}
+              />
+              <input
+                type="url"
+                placeholder="URL du logo (https://...)"
+                value={logoUrl}
+                onChange={e => setLogoUrl(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Téléphone"
+                value={phoneNumber}
+                onChange={e => setPhoneNumber(e.target.value)}
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={emailAddress}
+                onChange={e => setEmailAddress(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Adresse"
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+              />
+              <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
+                <option value="cash">Espèces</option>
+                <option value="card">Carte</option>
+                <option value="bank_transfer">Virement bancaire</option>
+                <option value="cheque">Chèque</option>
+                <option value="mobile_money">Mobile money</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="finance-card">
+            <h3>Services</h3>
+            {items.map((item, index) => (
+              <div key={index} className="finance-item-row">
+                <input
+                  type="text"
+                  placeholder="Description"
+                  value={item.description}
+                  onChange={e => handleItemChange(index, 'description', e.target.value)}
+                />
+                <input
+                  type="number"
+                  placeholder="Montant"
+                  value={item.amount}
+                  onChange={e => handleItemChange(index, 'amount', e.target.value)}
+                />
+              </div>
+            ))}
+
+            <div className="finance-form-actions">
+              <button type="button" className="finance-btn finance-btn-outline" onClick={addItem}>
+                + Ajouter un service
+              </button>
+              <button type="button" className="finance-btn finance-btn-primary" onClick={generateInvoice} disabled={!canManageFactures}>
+                Générer la facture PDF
+              </button>
+            </div>
+
+            {pdfUrl && (
+              <div className="finance-pdf-preview">
+                <h4>Facture générée :</h4>
+                <iframe src={pdfUrl} width="100%" height="500px" title="Invoice PDF" />
+                <br />
+                <a className="finance-download-link" href={pdfUrl} download="facture.pdf">📥 Télécharger</a>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      <div className="finance-section">
+        <h3 className="finance-section-title">Toutes les factures enregistrées</h3>
+        {loadingFactures && <p className="finance-loading">Chargement...</p>}
+        {!loadingFactures && factures.length === 0 && <p className="finance-empty">Aucune facture enregistrée.</p>}
         {!loadingFactures && factures.length > 0 && (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-              <thead style={{ background: 'rgb(219, 234, 254)', color: '#1e3a8a' }}>
+          <div className="finance-table-wrapper">
+            <table className="finance-table">
+              <thead>
                 <tr>
-                  <th style={th}>Facture</th>
-                  <th style={th}>Élève</th>
-                  <th style={th}>Classe</th>
-                  <th style={th}>Date</th>
-                  <th style={th}>Total</th>
+                  <th>Facture</th>
+                  <th>Élève</th>
+                  <th>Classe</th>
+                  <th>Date</th>
+                  <th>Total</th>
                 </tr>
               </thead>
               <tbody>
-                {factures.map((facture, index) => (
-                  <tr key={facture.id} style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}>
-                    <td style={td}><strong>{facture.invoiceNumber}</strong></td>
-                    <td style={td}>{facture.studentName}</td>
-                    <td style={td}>{facture.className}</td>
-                    <td style={td}>{formatDate(facture.generatedDate)}</td>
-                    <td style={td}>{Number(facture.totalAmount || 0).toFixed(2)} {facture.currency || 'MAD'}</td>
+                {factures.map((facture) => (
+                  <tr key={facture.id}>
+                    <td><strong>{facture.invoiceNumber}</strong></td>
+                    <td>{facture.studentName}</td>
+                    <td>{facture.className}</td>
+                    <td>{formatDate(facture.generatedDate)}</td>
+                    <td className="finance-amount">{Number(facture.totalAmount || 0).toFixed(2)} {facture.currency || 'MAD'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -244,8 +316,5 @@ const PostInvoice = () => {
     </div>
   );
 };
-
-const th = { padding: '8px 12px', textAlign: 'left', fontWeight: 600 };
-const td = { padding: '8px 12px' };
 
 export default PostInvoice;

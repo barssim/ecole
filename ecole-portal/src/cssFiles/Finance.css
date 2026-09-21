@@ -1,0 +1,426 @@
+/* Finance.css */
+/* Shared design system for /finance/payments, /finance/paymentNotice, /finance/factures */
+
+.finance-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.finance-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.finance-title {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #14213d;
+  font-weight: 700;
+}
+
+.finance-title-badge {
+  display: inline-block;
+  color: var(--tenant-primary, #667eea);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+
+.finance-section {
+  margin-bottom: 2rem;
+}
+
+.finance-toolbar {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.finance-section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* Alerts */
+.finance-alert {
+  border-radius: 10px;
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.finance-alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.finance-alert-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.finance-alert-detail {
+  color: #7f1d1d;
+  font-size: 0.8rem;
+  display: block;
+  margin-top: 0.4rem;
+}
+
+/* Cards */
+.finance-card {
+  background: #fff;
+  border: 1px solid #e7ebf2;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(20, 33, 61, 0.06);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.75rem;
+  box-sizing: border-box;
+}
+
+.finance-card h3,
+.finance-card h4 {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  color: #14213d;
+}
+
+/* Forms */
+.finance-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.finance-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.9rem;
+}
+
+.finance-form input,
+.finance-form select,
+.finance-form textarea {
+  padding: 0.7rem 0.9rem;
+  border: 1.5px solid #dbe2ea;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  box-sizing: border-box;
+  width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.finance-form input:focus,
+.finance-form select:focus,
+.finance-form textarea:focus {
+  outline: none;
+  border-color: var(--tenant-primary, #667eea);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.18);
+}
+
+.finance-form input:read-only {
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.finance-form-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+}
+
+/* Buttons */
+.finance-btn {
+  padding: 0.7rem 1.4rem;
+  border-radius: 10px;
+  border: 1.5px solid #dbe2ea;
+  background: #fff;
+  color: #334155;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
+}
+
+.finance-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(20, 33, 61, 0.12);
+}
+
+.finance-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.finance-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: transparent;
+  color: #fff;
+}
+
+.finance-btn-danger {
+  border-color: #fca5a5;
+  color: #b91c1c;
+  background: #fff5f5;
+}
+
+.finance-btn-outline {
+  background: #fff;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.finance-btn-sm {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  border-radius: 8px;
+}
+
+/* Table */
+.finance-table-wrapper {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(20, 33, 61, 0.06);
+  overflow-x: auto;
+  border: 1px solid #e7ebf2;
+}
+
+.finance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.finance-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.finance-table thead th {
+  padding: 0.95rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.finance-table tbody tr {
+  border-bottom: 1px solid #eef1f6;
+  transition: background-color 0.15s ease;
+}
+
+.finance-table tbody tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+.finance-table tbody tr:hover {
+  background-color: #eef4ff;
+}
+
+.finance-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.finance-table tbody td {
+  padding: 0.85rem 1rem;
+  color: #334155;
+}
+
+.finance-table td.finance-amount {
+  font-weight: 700;
+  color: #4c37b8;
+}
+
+.finance-row-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.finance-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.05rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 8px;
+  line-height: 1;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.finance-icon-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  transform: translateY(-1px);
+}
+
+.finance-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.finance-icon-btn.finance-icon-edit {
+  color: #1d4ed8;
+}
+
+.finance-icon-btn.finance-icon-delete {
+  color: #dc2626;
+}
+
+/* Empty / loading states */
+.finance-empty {
+  text-align: center;
+  color: #68758d;
+  padding: 2.25rem 1rem;
+  border: 1.5px dashed #dbe2ea;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.finance-loading {
+  text-align: center;
+  color: #68758d;
+  padding: 2rem 0;
+}
+
+/* Invoice preview (paymentNotice) */
+.finance-invoice-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 1.75rem;
+  color: #fff;
+  box-shadow: 0 14px 34px rgba(102, 126, 234, 0.25);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.finance-invoice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.finance-invoice-number {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.finance-status-badge {
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.finance-status-badge-inline {
+  display: inline-block;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.finance-invoice-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.finance-invoice-detail label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  opacity: 0.85;
+  margin-bottom: 0.2rem;
+}
+
+.finance-invoice-detail span {
+  font-size: 1.02rem;
+  font-weight: 600;
+}
+
+.finance-invoice-total {
+  font-size: 1.9rem;
+  font-weight: 700;
+  text-align: right;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* Invoice generator preview (factures) */
+.finance-pdf-preview {
+  margin-top: 1.5rem;
+}
+
+.finance-pdf-preview iframe {
+  border: 1px solid #e7ebf2;
+  border-radius: 12px;
+}
+
+.finance-download-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  color: var(--tenant-primary, #667eea);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.finance-download-link:hover {
+  text-decoration: underline;
+}
+
+.finance-item-row {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.7rem;
+  align-items: center;
+}
+
+.finance-item-row input {
+  flex: 1 1 200px;
+}
+
+@media (max-width: 640px) {
+  .finance-card {
+    padding: 1.25rem;
+  }
+
+  .finance-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .finance-invoice-total {
+    text-align: left;
+  }
+}

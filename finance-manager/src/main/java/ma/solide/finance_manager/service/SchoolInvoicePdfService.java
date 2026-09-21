@@ -2,18 +2,24 @@ package ma.solide.finance_manager.service;
 
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
 @Service
 public class SchoolInvoicePdfService {
 
+    private static final Logger log = LoggerFactory.getLogger(SchoolInvoicePdfService.class);
+
     public ByteArrayInputStream generateInvoice(String studentName, String className, List<Map<String, Object>> items,
-            String logoUrl, String schoolName, String phoneNumber, String emailAddress, String address) {
+            String logoUrl, String schoolName, String phoneNumber, String emailAddress, String address,
+            String paymentMethod) {
         Document document = new Document();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -26,15 +32,15 @@ public class SchoolInvoicePdfService {
             Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
             Font smallFont = FontFactory.getFont(FontFactory.HELVETICA, 9);
 
-            // Add logo if provided
+            // Add logo if provided (either a remote/local URL or a base64 data URI)
             if (logoUrl != null && !logoUrl.isEmpty()) {
                 try {
-                    Image logo = Image.getInstance(logoUrl);
+                    Image logo = loadLogoImage(logoUrl);
                     logo.scaleToFit(80, 80);
                     logo.setAlignment(Element.ALIGN_LEFT);
                     document.add(logo);
                 } catch (Exception e) {
-                    // Logo load failed, skip it
+                    log.warn("Unable to load school logo: {}", e.getMessage());
                 }
             }
 
@@ -52,6 +58,9 @@ public class SchoolInvoicePdfService {
             document.add(new Paragraph(" "));
             document.add(new Paragraph("Nom de l'élève : " + studentName, normalFont));
             document.add(new Paragraph("Classe : " + className, normalFont));
+            if (paymentMethod != null && !paymentMethod.isEmpty()) {
+                document.add(new Paragraph("Méthode de paiement : " + paymentMethod, normalFont));
+            }
             document.add(new Paragraph(" "));
 
             PdfPTable table = new PdfPTable(2);
@@ -110,5 +119,15 @@ public class SchoolInvoicePdfService {
         }
 
         return new ByteArrayInputStream(out.toByteArray());
+    }
+
+    private Image loadLogoImage(String logoUrl) throws Exception {
+        if (logoUrl.startsWith("data:")) {
+            int commaIndex = logoUrl.indexOf(',');
+            String base64Data = commaIndex >= 0 ? logoUrl.substring(commaIndex + 1) : logoUrl;
+            byte[] bytes = Base64.getDecoder().decode(base64Data);
+            return Image.getInstance(bytes);
+        }
+        return Image.getInstance(logoUrl);
     }
 }
