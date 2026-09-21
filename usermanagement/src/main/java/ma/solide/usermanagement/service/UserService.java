@@ -23,14 +23,17 @@ public class UserService {
 	private final UserRepository userRepository;
 	private final SchoolCustomizationService schoolCustomizationService;
 	private final CustomerVersionPolicy customerVersionPolicy;
+	private final WelcomeEmailService welcomeEmailService;
 
 	public UserService(
 			UserRepository userRepository,
 			SchoolCustomizationService schoolCustomizationService,
-			CustomerVersionPolicy customerVersionPolicy) {
+			CustomerVersionPolicy customerVersionPolicy,
+			WelcomeEmailService welcomeEmailService) {
 		this.userRepository = userRepository;
 		this.schoolCustomizationService = schoolCustomizationService;
 		this.customerVersionPolicy = customerVersionPolicy;
+		this.welcomeEmailService = welcomeEmailService;
 	}
 
 	public Optional<User> getUser(Integer userNo) {
@@ -88,7 +91,9 @@ public class UserService {
 		String schoolId = SchoolContext.getRequiredSchoolId();
 		enforceSchoolUserLimit(schoolId);
 		user.setSchoolId(schoolId);
-		return userRepository.save(user); // Inserts or updates the user
+		User savedUser = userRepository.save(user); // Inserts or updates the user
+		welcomeEmailService.sendWelcomeEmail(savedUser);
+		return savedUser;
 	}
 
 	private void enforceSchoolUserLimit(String schoolId) {

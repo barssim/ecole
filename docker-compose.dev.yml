@@ -150,6 +150,8 @@ services:
     depends_on:
       mysql-user:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     ports:
       - "5005:5005"
     environment:
@@ -157,6 +159,15 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED: "false"
+      WELCOME_EMAIL_FROM: ${WELCOME_EMAIL_FROM:-noreply@ecole-portal.local}
+      WELCOME_EMAIL_ENABLED: ${WELCOME_EMAIL_ENABLED:-true}
     networks:
       - ecole
 

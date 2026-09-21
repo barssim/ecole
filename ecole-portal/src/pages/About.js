@@ -14,6 +14,9 @@ const labels = {
 	address: 'Adresse',
 	phone: 'Téléphone',
 	email: 'Email',
+	directrice: 'Directrice',
+	directeur: 'Directeur Manager',
+	team: 'Notre équipe de direction',
   },
   en: {
 	title: 'About',
@@ -21,6 +24,9 @@ const labels = {
 	address: 'Address',
 	phone: 'Phone',
 	email: 'Email',
+	directrice: 'Headmistress',
+	directeur: 'Manager Director',
+	team: 'Our leadership team',
   },
   ar: {
 	title: 'من نحن',
@@ -28,6 +34,9 @@ const labels = {
 	address: 'العنوان',
 	phone: 'الهاتف',
 	email: 'البريد الإلكتروني',
+	directrice: 'المديرة',
+	directeur: 'المدير المسير',
+	team: 'فريق الإدارة',
   },
 };
 
@@ -45,6 +54,25 @@ const About = ({ language = 'fr', schoolCustomization }) => {
 		{aboutDescription && (
 		  <p className="about-description">{aboutDescription}</p>
 		)}
+
+		<div className="about-team">
+		  <h2 className="about-team-title">{content.team}</h2>
+		  <div className="about-team-grid">
+			<div className="about-team-member">
+			  <div className="about-team-photo">
+				<img src="/images/directrice-avatar.svg" alt={content.directrice} />
+			  </div>
+			  <span className="about-team-role">{content.directrice}</span>
+			</div>
+			<div className="about-team-member">
+			  <div className="about-team-photo">
+				<img src="/images/directeur-avatar.svg" alt={content.directeur} />
+			  </div>
+			  <span className="about-team-role">{content.directeur}</span>
+			</div>
+		  </div>
+		</div>
+
 		<div className={`about-contact${language === 'ar' ? ' is-rtl' : ''}`}>
 		  <h2>{content.contact}</h2>
 		  {address && (

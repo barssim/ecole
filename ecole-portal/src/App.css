@@ -1413,6 +1413,60 @@ body {
   margin: 0 0 2rem;
 }
 
+.about-team {
+  margin: 0 0 2rem;
+}
+
+.about-team-title {
+  color: var(--school-primary, #007bff);
+  margin: 0 0 1.25rem;
+  font-size: 1.25rem;
+}
+
+.about-team-grid {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.about-team-member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.about-team-photo {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid var(--school-soft, #f3f9ff);
+  box-shadow: 0 8px 20px rgba(20, 33, 61, 0.15);
+  background: #fff;
+}
+
+.about-team-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.about-team-role {
+  font-weight: 700;
+  color: #14213d;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 640px) {
+  .about-team-photo {
+    width: 100px;
+    height: 100px;
+  }
+}
+
 .about-contact {
   background: var(--school-soft, #f3f9ff);
   border-radius: 14px;

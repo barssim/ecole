@@ -24,12 +24,29 @@ spring:
     show-sql: false
     properties:
       hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:false}
+            required: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED:false}
   application:
     name: usermanagement
     Desc: manage solide users
 
   main:
     web-application-type: servlet
+
+welcome:
+  email:
+    from: ${WELCOME_EMAIL_FROM:noreply@ecole-portal.local}
+    enabled: ${WELCOME_EMAIL_ENABLED:true}
 
 management:
   endpoints:

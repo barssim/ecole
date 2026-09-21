@@ -132,7 +132,12 @@ const Inscription = ({ language }) => {
         throw new Error(backendMessage || `HTTP ${response.status}`);
       }
       const payload = await response.json();
-      setUsers(Array.isArray(payload) ? payload : []);
+      const sorted = Array.isArray(payload)
+        ? [...payload].sort((a, b) =>
+            String(a.username || "").localeCompare(String(b.username || ""), undefined, { sensitivity: "base" })
+          )
+        : [];
+      setUsers(sorted);
     } catch {
       setUsers([]);
       setUsersError(content.registrationError || "Failed to load users.");
@@ -311,10 +316,10 @@ const Inscription = ({ language }) => {
   };
 
   const addUserForm = (
-    <form className="signup-form" onSubmit={handleSubmit}>
-        <h2>{content.userManagementTitle || "User management"}</h2>
-        {error.general && <p className="error-message">{error.general}</p>}
-        {success && <p className="success-message">{success}</p>}
+    <form onSubmit={handleSubmit} className={canManageSchoolUsers ? "activity-form" : "signup-form"}>
+        {!canManageSchoolUsers && <h2>{content.userManagementTitle || "User management"}</h2>}
+        {error.general && <p className={canManageSchoolUsers ? "activity-message activity-message-error" : "error-message"}>{error.general}</p>}
+        {success && <p className={canManageSchoolUsers ? "activity-message activity-message-success" : "success-message"}>{success}</p>}
 
         <div className="form-group">
           <label htmlFor="civilite">{content.civilite || "Civilité"}:</label>
@@ -379,144 +384,157 @@ const Inscription = ({ language }) => {
           {error.confirmPassword && <p className="field-error">{error.confirmPassword}</p>}
         </div>
 
-        <button type="submit" className="signup-button" disabled={loading}>
+        <button type="submit" className={canManageSchoolUsers ? "activity-form-submit" : "signup-button"} disabled={loading}>
           {loading ? content.loading : (content.addUserLabel || "Add user")}
         </button>
       </form>
   );
 
-  return (
-    <div className="signup-container">
-      {!canManageSchoolUsers && addUserForm}
+  if (!canManageSchoolUsers) {
+    return (
+      <div className="signup-container">
+        {addUserForm}
+      </div>
+    );
+  }
 
-      {canManageSchoolUsers && (
-        <div className="signup-form" style={{ marginTop: 24, width: "100%", maxWidth: "1200px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-            <h2>{content.usersTitle || "Users"}</h2>
-            <button
-              type="button"
-              className="signup-button"
-              style={{ width: "auto", padding: "8px 14px" }}
-              onClick={() => {
-                setShowAddUserForm((prev) => !prev);
-                setError({});
-                setSuccess("");
-              }}
-            >
-              {showAddUserForm ? (content.cancelLabel || "Cancel") : (content.addUserLabel || "Add user")}
+  return (
+    <div className="activity-page inscription-page">
+      <div className="activity-header">
+        <div>
+          <span className="activity-title-badge">{content.userManagementTitle || "User management"}</span>
+          <h1 className="activity-title">{content.usersTitle || "Users"}</h1>
+        </div>
+        <div className="activity-toolbar">
+          <button
+            type="button"
+            className="activity-btn activity-btn-primary"
+            onClick={() => {
+              setShowAddUserForm((prev) => !prev);
+              setError({});
+              setSuccess("");
+            }}
+          >
+            {showAddUserForm ? (content.cancelLabel || "Cancel") : `+ ${content.addUserLabel || "Add user"}`}
+          </button>
+        </div>
+      </div>
+
+      {showAddUserForm && (
+        <div className="activity-card">
+          <h3>{content.addUserLabel || "Add user"}</h3>
+          {addUserForm}
+        </div>
+      )}
+
+      {selectedUserId && (
+        <div className="activity-card inscription-edit-card">
+          <h3>{content.manageSelectedUserTitle || "Manage selected user"}</h3>
+          <div className="activity-form inscription-edit-form">
+            <div className="form-group">
+              <label>{content.civilite || "Civilité"}:</label>
+              <select value={editingUser.civilite} onChange={(e) => setEditingUser((c) => ({ ...c, civilite: e.target.value }))}>
+                <option value="Monsieur">{content.civiliteMonsieur || "Monsieur"}</option>
+                <option value="Madame">{content.civiliteMadame || "Madame"}</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>{content.surname}:</label>
+              <input value={editingUser.surname} onChange={(e) => setEditingUser((c) => ({ ...c, surname: e.target.value }))} />
+            </div>
+            <div className="form-group">
+              <label>{content.firstname}:</label>
+              <input value={editingUser.firstname} onChange={(e) => setEditingUser((c) => ({ ...c, firstname: e.target.value }))} />
+            </div>
+            <div className="form-group">
+              <label>{content.email}:</label>
+              <input value={editingUser.email} onChange={(e) => setEditingUser((c) => ({ ...c, email: e.target.value }))} />
+            </div>
+            <div className="form-group">
+              <label>{content.adresse}:</label>
+              <input value={editingUser.adresse} onChange={(e) => setEditingUser((c) => ({ ...c, adresse: e.target.value }))} />
+            </div>
+            <div className="form-group">
+              <label>{content.role}:</label>
+              <select value={editingUser.role} onChange={(e) => setEditingUser((c) => ({ ...c, role: e.target.value }))}>
+                {roleOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {content[option.labelKey] || option.fallback}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="inscription-edit-actions">
+            <button type="button" className="activity-btn activity-btn-primary" onClick={saveManagedUser} disabled={savingManagedUser}>
+              {savingManagedUser ? "..." : (content.saveLabel || "Save")}
+            </button>
+            <button type="button" className="activity-btn" onClick={cancelManageUser}>
+              {content.cancelLabel || "Cancel"}
+            </button>
+            <button type="button" className="activity-btn activity-btn-danger" onClick={deleteManagedUser} disabled={deletingManagedUser}>
+              {deletingManagedUser ? "..." : (content.deleteLabel || "Delete")}
             </button>
           </div>
-          <p style={{ marginBottom: 10 }}>{content.usersHint || "You can manage all users in your school."}</p>
-          {usersError && <p className="error-message">{usersError}</p>}
+        </div>
+      )}
 
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", minWidth: "900px", borderCollapse: "collapse" }}>
+      <div className="activity-card inscription-users-card">
+        <p className="inscription-users-hint">{content.usersHint || "You can manage all users in your school."}</p>
+        {usersError && <p className="activity-message activity-message-error">{usersError}</p>}
+
+        {usersLoading ? (
+          <p className="activity-loading">{content.loading || "Loading..."}</p>
+        ) : users.length === 0 ? (
+          <div className="activity-empty">{content.noUsersLabel || "No users found."}</div>
+        ) : (
+          <div className="inscription-table-wrapper">
+            <table className="inscription-table">
               <thead>
                 <tr>
-                  <th style={th}>{content.civilite || "Civilité"}</th>
-                  <th style={th}>{content.surname || "Last name"}</th>
-                  <th style={th}>{content.firstname || "First name"}</th>
-                  <th style={th}>{content.email || "Email"}</th>
-                  <th style={th}>{content.adresse || "Address"}</th>
-                  <th style={th}>{content.role || "Role"}</th>
-                  <th style={th}>{content.actionsLabel || "Actions"}</th>
+                  <th>{content.civilite || "Civilité"}</th>
+                  <th>{content.surname || "Last name"}</th>
+                  <th>{content.firstname || "First name"}</th>
+                  <th>{content.email || "Email"}</th>
+                  <th>{content.role || "Role"}</th>
+                  <th>{content.actionsLabel || "Actions"}</th>
                 </tr>
               </thead>
               <tbody>
-                {usersLoading ? (
-                  <tr>
-                    <td style={td} colSpan={7}>{content.loading || "Loading..."}</td>
-                  </tr>
-                ) : users.length === 0 ? (
-                  <tr>
-                    <td style={td} colSpan={7}>{content.noUsersLabel || "No users found."}</td>
-                  </tr>
-                ) : (
-                  users.map((user) => {
-                    const currentRole = Array.isArray(user.roles) && user.roles.length > 0 ? String(user.roles[0]).trim().toLowerCase() : "student";
-                    return (
-                      <tr key={user.id}>
-                        <td style={td}>{user.civilite}</td>
-                        <td style={td}>{user.username}</td>
-                        <td style={td}>{user.firstname}</td>
-                        <td style={td}>{user.email}</td>
-                        <td style={td}>{user.adresse}</td>
-                        <td style={td}>{roleLabelMap[currentRole] || currentRole}</td>
-                        <td style={td}>
-                          <button type="button" onClick={() => startManageUser(user)}>
-                            {content.manageLabel || "Manage"}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
+                {users.map((user) => {
+                  const currentRole = Array.isArray(user.roles) && user.roles.length > 0 ? String(user.roles[0]).trim().toLowerCase() : "student";
+                  const civiliteAbbrev = user.civilite === "Madame" ? "Mme" : user.civilite === "Monsieur" ? "M." : (user.civilite || "");
+                  return (
+                    <tr key={user.id} className={selectedUserId === user.id ? "is-selected" : ""}>
+                      <td>{civiliteAbbrev}</td>
+                      <td>{user.username}</td>
+                      <td>{user.firstname}</td>
+                      <td>{user.email}</td>
+                      <td>
+                        <span className={`inscription-role-badge inscription-role-${currentRole}`}>
+                          {roleLabelMap[currentRole] || currentRole}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="activity-icon-btn activity-icon-edit"
+                          onClick={() => startManageUser(user)}
+                          title={content.manageLabel || "Modifier"}
+                        >
+                          ✏️
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
-
-          {selectedUserId && (
-            <div style={{ marginTop: 16, borderTop: "1px solid #ddd", paddingTop: 16 }}>
-              <h3 style={{ marginBottom: 10 }}>{content.manageSelectedUserTitle || "Manage selected user"}</h3>
-              <div className="form-group">
-                <label>{content.civilite || "Civilité"}:</label>
-                <select value={editingUser.civilite} onChange={(e) => setEditingUser((c) => ({ ...c, civilite: e.target.value }))}>
-                  <option value="Monsieur">{content.civiliteMonsieur || "Monsieur"}</option>
-                  <option value="Madame">{content.civiliteMadame || "Madame"}</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>{content.surname}:</label>
-                <input value={editingUser.surname} onChange={(e) => setEditingUser((c) => ({ ...c, surname: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label>{content.firstname}:</label>
-                <input value={editingUser.firstname} onChange={(e) => setEditingUser((c) => ({ ...c, firstname: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label>{content.email}:</label>
-                <input value={editingUser.email} onChange={(e) => setEditingUser((c) => ({ ...c, email: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label>{content.adresse}:</label>
-                <input value={editingUser.adresse} onChange={(e) => setEditingUser((c) => ({ ...c, adresse: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label>{content.role}:</label>
-                <select value={editingUser.role} onChange={(e) => setEditingUser((c) => ({ ...c, role: e.target.value }))}>
-                  {roleOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {content[option.labelKey] || option.fallback}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button type="button" onClick={saveManagedUser} disabled={savingManagedUser}>
-                  {savingManagedUser ? "..." : (content.saveLabel || "Save")}
-                </button>
-                <button type="button" onClick={cancelManageUser}>
-                  {content.cancelLabel || "Cancel"}
-                </button>
-                <button type="button" onClick={deleteManagedUser} disabled={deletingManagedUser}>
-                  {deletingManagedUser ? "..." : (content.deleteLabel || "Delete")}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {showAddUserForm && (
-            <div style={{ marginTop: 16, borderTop: "1px solid #ddd", paddingTop: 16 }}>
-              {addUserForm}
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
-
-const th = { textAlign: "left", borderBottom: "1px solid #ddd", padding: "8px" };
-const td = { borderBottom: "1px solid #f0f0f0", padding: "8px" };
 
 export default Inscription;
