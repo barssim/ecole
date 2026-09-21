@@ -3,7 +3,7 @@ import fr from '../locales/fr.json';
 import en from '../locales/en.json';
 import ar from '../locales/ar.json';
 import '../cssFiles/PaymentsPage.css';
-import { getTenantId } from '../tenant';
+import { getSchoolId } from '../school';
 import { hasAnyRole, normalizeRoles } from '../utils/roles';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 
@@ -36,7 +36,7 @@ const PaymentsPage = ({ language }) => {
 
   const buildHeaders = (includeJson = false) => {
     const headers = {
-      'X-Tenant-Id': getTenantId(),
+      'X-School-Id': getSchoolId(),
       ...(roleHeader ? { 'X-User-Roles': roleHeader } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };

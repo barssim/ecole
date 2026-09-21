@@ -7,7 +7,7 @@ import java.util.List;
 import ma.solide.teacherservice.dto.ParentMeetingRequest;
 import ma.solide.teacherservice.model.ParentMeeting;
 import ma.solide.teacherservice.repository.ParentMeetingRepository;
-import ma.solide.teacherservice.tenant.TenantContext;
+import ma.solide.teacherservice.school.SchoolContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -23,13 +23,13 @@ public class ParentMeetingService {
     }
 
     public List<ParentMeeting> list() {
-        return repository.findAllByTenantIdOrderByMeetingDateAsc(TenantContext.getRequiredTenantId());
+        return repository.findAllBySchoolIdOrderByMeetingDateAsc(SchoolContext.getRequiredSchoolId());
     }
 
     public ParentMeeting create(ParentMeetingRequest request) {
         validate(request);
         ParentMeeting meeting = ParentMeeting.builder()
-                .tenantId(TenantContext.getRequiredTenantId())
+                .schoolId(SchoolContext.getRequiredSchoolId())
                 .title(request.getTitle().trim())
                 .meetingDate(LocalDate.parse(request.getDate().trim()))
                 .location(request.getLocation().trim())
@@ -42,10 +42,10 @@ public class ParentMeetingService {
 
     public ParentMeeting update(Long id, ParentMeetingRequest request) {
         validate(request);
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         ParentMeeting meeting = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Meeting not found"));
-        if (!tenantId.equals(meeting.getTenantId())) {
+        if (!schoolId.equals(meeting.getSchoolId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Meeting not found");
         }
 
@@ -57,10 +57,10 @@ public class ParentMeetingService {
     }
 
     public void delete(Long id) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         ParentMeeting meeting = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Meeting not found"));
-        if (!tenantId.equals(meeting.getTenantId())) {
+        if (!schoolId.equals(meeting.getSchoolId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Meeting not found");
         }
         repository.delete(meeting);

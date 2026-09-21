@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { getTenantId } from '../tenant';
+import { getSchoolId } from '../school';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { hasAnyRole, normalizeRoles } from '../utils/roles';
 import { getFallbackCustomization } from '../ecoleLoader';
 import '../cssFiles/Finance.css';
 
 const PostInvoice = ({ language }) => {
-  const tenantCustomization = getFallbackCustomization();
-  const tenantLogoPath = tenantCustomization?.logo || '';
-  const tenantLogoUrl = tenantLogoPath ? `${window.location.origin}${tenantLogoPath}` : '';
-  const tenantSchoolName = tenantCustomization?.name?.[language] || tenantCustomization?.name?.fr || 'École Solide';
-  const tenantAddress = tenantCustomization?.adresse?.[language] || tenantCustomization?.adresse?.fr || '';
-  const tenantPhone = tenantCustomization?.phone || '';
-  const tenantEmail = tenantCustomization?.mail || '';
+  const schoolCustomization = getFallbackCustomization();
+  const schoolLogoPath = schoolCustomization?.logo || '';
+  const schoolLogoUrl = schoolLogoPath ? `${window.location.origin}${schoolLogoPath}` : '';
+  const initialSchoolName = schoolCustomization?.name?.[language] || schoolCustomization?.name?.fr || 'École Solide';
+  const initialSchoolAddress = schoolCustomization?.adresse?.[language] || schoolCustomization?.adresse?.fr || '';
+  const initialSchoolPhone = schoolCustomization?.phone || '';
+  const initialSchoolEmail = schoolCustomization?.mail || '';
 
   const [studentName, setStudentName] = useState('');
   const [className, setClassName] = useState('');
@@ -23,11 +23,11 @@ const PostInvoice = ({ language }) => {
   const [loadingFactures, setLoadingFactures] = useState(false);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [logoUrl, setLogoUrl] = useState(tenantLogoUrl);
-  const [schoolName, setSchoolName] = useState(tenantSchoolName);
-  const [phoneNumber, setPhoneNumber] = useState(tenantPhone);
-  const [emailAddress, setEmailAddress] = useState(tenantEmail);
-  const [address, setAddress] = useState(tenantAddress);
+  const [logoUrl, setLogoUrl] = useState(schoolLogoUrl);
+  const [schoolName, setSchoolName] = useState(initialSchoolName);
+  const [phoneNumber, setPhoneNumber] = useState(initialSchoolPhone);
+  const [emailAddress, setEmailAddress] = useState(initialSchoolEmail);
+  const [address, setAddress] = useState(initialSchoolAddress);
   const [paymentMethod, setPaymentMethod] = useState('cash');
 
   const baseUrl = resolveApiBaseUrl('http://localhost:8085');
@@ -60,7 +60,7 @@ const PostInvoice = ({ language }) => {
 
   const buildHeaders = (includeJson = false) => {
     const headers = {
-      'X-Tenant-Id': getTenantId(),
+      'X-School-Id': getSchoolId(),
       ...(roleHeader ? { 'X-User-Roles': roleHeader } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };

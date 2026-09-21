@@ -7,13 +7,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TeacherCourseRepository extends JpaRepository<TeacherCourse, Long> {
 
-    List<TeacherCourse> findAllByTenantIdAndTeacherIdOrderByUploadedAtDesc(String tenantId, String teacherId);
+    List<TeacherCourse> findAllBySchoolIdAndTeacherIdOrderByUploadedAtDesc(String schoolId, String teacherId);
 
-    List<TeacherCourse> findAllByTenantIdAndClassIdOrderByUploadedAtDesc(String tenantId, String classId);
+    List<TeacherCourse> findAllBySchoolIdAndClassIdOrderByUploadedAtDesc(String schoolId, String classId);
 
-    List<TeacherCourse> findAllByTenantIdAndTeacherIdAndClassIdOrderByUploadedAtDesc(
-            String tenantId, String teacherId, String classId);
+    List<TeacherCourse> findAllBySchoolIdAndTeacherIdAndClassIdOrderByUploadedAtDesc(
+            String schoolId, String teacherId, String classId);
 
-    List<TeacherCourse> findAllByTenantIdOrderByUploadedAtDesc(String tenantId);
+    List<TeacherCourse> findAllBySchoolIdOrderByUploadedAtDesc(String schoolId);
 }
 

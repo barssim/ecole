@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { getTenantId } from "../tenant";
+import { getSchoolId } from "../school";
 import { resolveApiBaseUrl } from "../utils/apiBaseUrl";
 
 const FileUpload = ({ filename, onUploadSuccess }) => {
@@ -33,7 +33,7 @@ const FileUpload = ({ filename, onUploadSuccess }) => {
       const res = await fetch(url, {
         method: "POST",
         headers: {
-          "X-Tenant-Id": getTenantId(),
+          "X-School-Id": getSchoolId(),
         },
         body: formData,
       });

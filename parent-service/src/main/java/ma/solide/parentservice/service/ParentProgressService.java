@@ -4,7 +4,7 @@ import java.util.List;
 
 import ma.solide.parentservice.model.ParentProgressRecord;
 import ma.solide.parentservice.repository.ParentProgressRepository;
-import ma.solide.parentservice.tenant.TenantContext;
+import ma.solide.parentservice.school.SchoolContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -18,11 +18,10 @@ public class ParentProgressService {
     }
 
     public List<ParentProgressRecord> list(String studentName) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         if (StringUtils.hasText(studentName)) {
-            return repository.findAllByTenantIdAndStudentNameOrderByDateDesc(tenantId, studentName.trim());
+            return repository.findAllBySchoolIdAndStudentNameOrderByDateDesc(schoolId, studentName.trim());
         }
-        return repository.findAllByTenantIdOrderByDateDesc(tenantId);
+        return repository.findAllBySchoolIdOrderByDateDesc(schoolId);
     }
 }
-

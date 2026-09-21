@@ -1,5 +1,5 @@
 INSERT IGNORE INTO tb_attestation
-(id, tenant_id, user_id, student_name, class_name, title, type, date, status, document_url, issued_by, valid_from, valid_until, reference)
+(id, school_id, user_id, student_name, class_name, title, type, date, status, document_url, issued_by, valid_from, valid_until, reference)
 VALUES
 (1, 'gardinia', 5, 'Assil', '3e A', 'Attestation de scolarité', 'enrollment', '2024-09-01', 'approved', NULL, 'Directeur de l''école', '2024-09-01', '2025-08-31', 'ATT-2024-001-5'),
 (2, 'gardinia', 5, 'Assil', '3e A', 'Attestation de présence', 'attendance', '2025-01-15', 'approved', NULL, 'Coordinatrice pédagogique', '2025-01-01', '2025-12-31', 'ATT-2025-002-5'),
@@ -8,7 +8,7 @@ VALUES
 (5, 'gardinia', 6, 'Barae', '3e B', 'Attestation de résultats académiques', 'academic', '2025-06-15', 'approved', NULL, 'Chef du département académique', '2025-06-15', '2025-12-31', 'ATT-2025-005-6'),
 (6, 'gardinia', 7, 'Tasnim', 'Terminale C', 'Attestation de scolarité', 'enrollment', '2024-09-01', 'approved', NULL, 'Directeur de l''école', '2024-09-01', '2025-08-31', 'ATT-2024-001-7');
 
-INSERT IGNORE INTO tb_class (id, tenant_id, name)
+INSERT IGNORE INTO tb_class (id, school_id, name)
 VALUES
 (1, 'gardinia', '3e A'),
 (2, 'gardinia', '3e B'),
@@ -145,7 +145,7 @@ VALUES
 (8, 'berrada');
 
 INSERT IGNORE INTO tb_activity
-(id, tenant_id, type, title, date, class_name, destination, description, created_by)
+(id, school_id, type, title, date, class_name, destination, description, created_by)
 VALUES
 (1, 'gardinia', 'sorties', 'Sortie pédagogique au musée', '2026-09-12', '3e A', 'Musée des sciences', 'Sortie encadrée pour découverte scientifique.', 'secretary'),
 (2, 'gardinia', 'fetes', 'Fête de rentrée', '2026-09-20', '3e B', 'Cour principale', 'Activité festive de bienvenue.', 'secretary'),
@@ -168,7 +168,7 @@ VALUES
 (19, 'gardinia', 'reunions', 'Réunion bilan de fin de trimestre', '2027-01-11', 'Terminale C', 'Salle A2', 'Évaluation des résultats du premier trimestre.', 'secretary');
 
 INSERT IGNORE INTO tb_exam
-(id, tenant_id, subject, class_name, date, start_time, end_time, room, notes)
+(id, school_id, subject, class_name, date, start_time, end_time, room, notes)
 VALUES
 (1, 'gardinia', 'Mathématiques', '3e A', '2026-08-05', '08:00:00', '10:00:00', 'Salle 101', NULL),
 (2, 'gardinia', 'Français',      '3e B', '2026-08-06', '09:00:00', '11:00:00', 'Salle 102', NULL),
@@ -176,7 +176,7 @@ VALUES
 (4, 'gardinia', 'Histoire',      'Terminale C', '2026-08-08', '08:30:00', '10:30:00', 'Amphithéâtre', NULL);
 
 INSERT IGNORE INTO tb_professor_attendance
-(id, tenant_id, teacher_id, teacher_name, attendance_date, scheduled_time, check_in_time, status, notes, updated_at)
+(id, school_id, teacher_id, teacher_name, attendance_date, scheduled_time, check_in_time, status, notes, updated_at)
 VALUES
 (1, 'gardinia', 101, 'Mme Benali', '2026-09-19', '08:00:00', '07:55:00', 'present', 'Cours de mathématiques', '2026-09-19 07:55:00'),
 (2, 'gardinia', 102, 'M. Alaoui', '2026-09-19', '08:30:00', '08:40:00', 'late', 'Retard signalé', '2026-09-19 08:40:00'),
@@ -197,15 +197,15 @@ VALUES
 (17, 'gardinia', 225, 'Amine Aissaoui', '2026-09-19', '10:00:00', NULL, 'absent', 'Absence déclarée', '2026-09-19 09:30:00'),
 (18, 'gardinia', 228, 'Hafsa Draoui', '2026-09-19', '11:00:00', '11:03:00', 'present', 'Cours d''arts plastiques', '2026-09-19 11:03:00');
 
--- Backfill legacy rows created before tenant support.
-UPDATE tb_class SET tenant_id = 'gardinia' WHERE tenant_id IS NULL OR tenant_id = '';
-UPDATE tb_attestation SET tenant_id = 'gardinia' WHERE tenant_id IS NULL OR tenant_id = '';
-UPDATE tb_activity SET tenant_id = 'gardinia' WHERE tenant_id IS NULL OR tenant_id = '';
-UPDATE tb_exam SET tenant_id = 'gardinia' WHERE tenant_id IS NULL OR tenant_id = '';
-UPDATE tb_professor_attendance SET tenant_id = 'gardinia' WHERE tenant_id IS NULL OR tenant_id = '';
+-- Backfill legacy rows created before SCHOOL support.
+UPDATE tb_class SET school_id = 'gardinia' WHERE school_id IS NULL OR school_id = '';
+UPDATE tb_attestation SET school_id = 'gardinia' WHERE school_id IS NULL OR school_id = '';
+UPDATE tb_activity SET school_id = 'gardinia' WHERE school_id IS NULL OR school_id = '';
+UPDATE tb_exam SET school_id = 'gardinia' WHERE school_id IS NULL OR school_id = '';
+UPDATE tb_professor_attendance SET school_id = 'gardinia' WHERE school_id IS NULL OR school_id = '';
 
 INSERT IGNORE INTO class_schedule_entries
-(id, tenant_id, class_id, day_name, slot_order, slot_text)
+(id, school_id, class_id, day_name, slot_order, slot_text)
 VALUES
 (1, 'gardinia', 1, 'Monday', 1, '08:00-09:00 Français - Salle 101'),
 (2, 'gardinia', 1, 'Monday', 2, '09:00-10:00 Arabe - Salle 101'),
@@ -407,3 +407,4 @@ VALUES
 (198, 'gardinia', 8, 'Friday', 3, '10:15-11:15 Mathématiques - Salle 108'),
 (199, 'gardinia', 8, 'Friday', 4, '11:15-12:15 Français - Salle 108'),
 (200, 'gardinia', 8, 'Friday', 5, '14:00-15:00 Arabe - Salle 108');
+

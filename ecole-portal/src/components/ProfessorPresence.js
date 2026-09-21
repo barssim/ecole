@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import fr from "../locales/fr.json";
 import en from "../locales/en.json";
 import ar from "../locales/ar.json";
-import { getTenantId } from "../tenant";
+import { getSchoolId } from "../school";
 import { createApiUrlFor, readJsonResponse } from "../utils/apiClient";
 
 const ProfessorPresence = ({ language }) => {
@@ -40,7 +40,7 @@ const ProfessorPresence = ({ language }) => {
       try {
         const response = await fetch(apiUrlFor('/users/teachers'), {
           headers: {
-            'X-Tenant-Id': getTenantId(),
+            'X-School-Id': getSchoolId(),
             'X-User-Roles': rolesHeader,
           },
         });
@@ -66,7 +66,7 @@ const ProfessorPresence = ({ language }) => {
         const response = await fetch(apiUrlFor(`/presence/professors?date=${selectedDate}`), {
           headers: {
             'Content-Type': 'application/json',
-              'X-Tenant-Id': getTenantId(),
+              'X-School-Id': getSchoolId(),
             'X-User-Roles': rolesHeader,
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
@@ -102,7 +102,7 @@ const ProfessorPresence = ({ language }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Tenant-Id': getTenantId(),
+          'X-School-Id': getSchoolId(),
           'X-User-Roles': rolesHeader,
         },
         body: JSON.stringify({

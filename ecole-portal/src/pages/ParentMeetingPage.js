@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getTenantId } from '../tenant';
+import { getSchoolId } from '../school';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 
 const ParentMeetingPage = () => {
@@ -18,7 +18,7 @@ const ParentMeetingPage = () => {
     const token = sessionStorage.getItem('jwt_token');
     return {
       ...(json ? { 'Content-Type': 'application/json' } : {}),
-      'X-Tenant-Id': getTenantId(),
+      'X-School-Id': getSchoolId(),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
   };

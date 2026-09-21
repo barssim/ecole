@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import fr from "../locales/fr.json";
 import en from "../locales/en.json";
 import ar from "../locales/ar.json";
-import { getTenantId } from '../tenant';
+import { getSchoolId } from '../school';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { readJsonResponse } from '../utils/apiClient';
 import { normalizeRoles, hasAnyRole } from '../utils/roles';
@@ -53,7 +53,7 @@ const ClassesPage = ({ language }) => {
   const buildHeaders = (includeJson = false) => {
     const token = sessionStorage.getItem('jwt_token');
     const headers = {
-      'X-Tenant-Id': getTenantId(),
+      'X-School-Id': getSchoolId(),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
     if (includeJson) {

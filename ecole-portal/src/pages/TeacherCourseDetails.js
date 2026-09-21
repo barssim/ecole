@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { getTenantId } from "../tenant";
+import { getSchoolId } from "../school";
 import { resolveApiBaseUrl } from "../utils/apiBaseUrl";
 import "../cssFiles/TeacherCourses.css";
 
@@ -20,7 +20,7 @@ const TeacherCourseDetails = () => {
     const teacherId = localStorage.getItem("userId");
     fetch(`${API_BASE}/api/teachercourses?teacher=${encodeURIComponent(teacherId || "")}`, {
       headers: {
-        "X-Tenant-Id": getTenantId(),
+        "X-School-Id": getSchoolId(),
       },
     })
       .then((response) => {

@@ -7,14 +7,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TeacherAssignmentRepository extends JpaRepository<TeacherAssignment, Long> {
 
-    List<TeacherAssignment> findAllByTenantIdOrderByCreatedAtDesc(String tenantId);
+    List<TeacherAssignment> findAllBySchoolIdOrderByCreatedAtDesc(String schoolId);
 
-    List<TeacherAssignment> findAllByTenantIdAndTeacherIdOrderByCreatedAtDesc(String tenantId, String teacherId);
+    List<TeacherAssignment> findAllBySchoolIdAndTeacherIdOrderByCreatedAtDesc(String schoolId, String teacherId);
 
-    List<TeacherAssignment> findAllByTenantIdAndClassIdOrderByCreatedAtDesc(String tenantId, String classId);
+    List<TeacherAssignment> findAllBySchoolIdAndClassIdOrderByCreatedAtDesc(String schoolId, String classId);
 
-    List<TeacherAssignment> findAllByTenantIdAndTeacherIdAndClassIdOrderByCreatedAtDesc(
-            String tenantId,
+    List<TeacherAssignment> findAllBySchoolIdAndTeacherIdAndClassIdOrderByCreatedAtDesc(
+            String schoolId,
             String teacherId,
             String classId
     );

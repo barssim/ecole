@@ -23,12 +23,12 @@ import ma.solide.secretaryoffice.dto.AttestationRequestDTO;
 import ma.solide.secretaryoffice.dto.AttestationResponse;
 import ma.solide.secretaryoffice.model.Attestation;
 import ma.solide.secretaryoffice.repository.AttestationRepository;
-import ma.solide.secretaryoffice.tenant.TenantContext;
+import ma.solide.secretaryoffice.school.SchoolContext;
 
 @ExtendWith(MockitoExtension.class)
 class AttestationServiceTest {
 
-    private static final String TENANT = "gardinia";
+    private static final String SCHOOL = "gardinia";
 
     @Mock
     private AttestationRepository attestationRepository;
@@ -37,13 +37,13 @@ class AttestationServiceTest {
     private AttestationService attestationService;
 
     @BeforeEach
-    void setTenant() {
-        TenantContext.setTenantId(TENANT);
+    void setSCHOOL() {
+        SchoolContext.setSchoolId(SCHOOL);
     }
 
     @AfterEach
-    void clearTenant() {
-        TenantContext.clear();
+    void clearSCHOOL() {
+        SchoolContext.clear();
     }
 
     @Test
@@ -63,7 +63,7 @@ class AttestationServiceTest {
                 .reference("REF-1")
                 .build();
 
-        when(attestationRepository.findByIdAndTenantId(10, TENANT)).thenReturn(Optional.of(attestation));
+        when(attestationRepository.findByIdAndSchoolId(10, SCHOOL)).thenReturn(Optional.of(attestation));
         when(attestationRepository.save(any(Attestation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         AttestationResponse response = attestationService.approve(10);
@@ -74,14 +74,14 @@ class AttestationServiceTest {
     }
 
     @Test
-    void requestAttestationShouldPersistPendingRequestInTenant() {
+    void requestAttestationShouldPersistPendingRequestInSCHOOL() {
         AttestationRequestDTO request = new AttestationRequestDTO();
         request.setUserId(9);
         request.setStudentName("Salma");
         request.setClassName("4ème A");
         request.setType("registration");
 
-        when(attestationRepository.existsByTenantIdAndUserIdAndTypeAndStatus(TENANT, 9, "registration", "pending"))
+        when(attestationRepository.existsBySchoolIdAndUserIdAndTypeAndStatus(SCHOOL, 9, "registration", "pending"))
                 .thenReturn(false);
         when(attestationRepository.save(any(Attestation.class))).thenAnswer(invocation -> {
             Attestation saved = invocation.getArgument(0);
@@ -94,7 +94,7 @@ class AttestationServiceTest {
         assertThat(response.getId()).isEqualTo(99);
         assertThat(response.getStatus()).isEqualTo("pending");
         assertThat(response.getUserId()).isEqualTo(9);
-        verify(attestationRepository).existsByTenantIdAndUserIdAndTypeAndStatus(TENANT, 9, "registration", "pending");
+        verify(attestationRepository).existsBySchoolIdAndUserIdAndTypeAndStatus(SCHOOL, 9, "registration", "pending");
         verify(attestationRepository).save(any(Attestation.class));
     }
 
@@ -115,7 +115,7 @@ class AttestationServiceTest {
                 .reference("REF-2")
                 .build();
 
-        when(attestationRepository.findByIdAndTenantId(11, TENANT)).thenReturn(Optional.of(attestation));
+        when(attestationRepository.findByIdAndSchoolId(11, SCHOOL)).thenReturn(Optional.of(attestation));
         when(attestationRepository.save(any(Attestation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         AttestationResponse response = attestationService.cancel(11);
@@ -149,7 +149,7 @@ class AttestationServiceTest {
                 .reference("REF-3")
                 .build();
 
-        when(attestationRepository.findByIdAndTenantId(12, TENANT)).thenReturn(Optional.of(attestation));
+        when(attestationRepository.findByIdAndSchoolId(12, SCHOOL)).thenReturn(Optional.of(attestation));
 
         assertThatThrownBy(() -> attestationService.cancel(12))
                 .isInstanceOf(ResponseStatusException.class)
@@ -174,7 +174,7 @@ class AttestationServiceTest {
                 .reference("REF-4")
                 .build();
 
-        when(attestationRepository.findByIdAndTenantId(13, TENANT)).thenReturn(Optional.of(attestation));
+        when(attestationRepository.findByIdAndSchoolId(13, SCHOOL)).thenReturn(Optional.of(attestation));
 
         attestationService.delete(13);
 
@@ -198,7 +198,7 @@ class AttestationServiceTest {
                 .reference("REF-5")
                 .build();
 
-        when(attestationRepository.findByIdAndTenantId(14, TENANT)).thenReturn(Optional.of(attestation));
+        when(attestationRepository.findByIdAndSchoolId(14, SCHOOL)).thenReturn(Optional.of(attestation));
         when(attestationRepository.save(any(Attestation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         AttestationResponse response = attestationService.updateStatus(14, "approved", "Mme Rahmani");
@@ -208,3 +208,4 @@ class AttestationServiceTest {
         verify(attestationRepository).save(attestation);
     }
 }
+

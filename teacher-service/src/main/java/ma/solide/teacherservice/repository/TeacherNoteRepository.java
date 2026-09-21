@@ -7,14 +7,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TeacherNoteRepository extends JpaRepository<TeacherNote, Long> {
 
-    List<TeacherNote> findAllByTenantIdOrderByDateDescIdDesc(String tenantId);
+    List<TeacherNote> findAllBySchoolIdOrderByDateDescIdDesc(String schoolId);
 
-    List<TeacherNote> findAllByTenantIdAndTeacherIdOrderByDateDescIdDesc(String tenantId, String teacherId);
+    List<TeacherNote> findAllBySchoolIdAndTeacherIdOrderByDateDescIdDesc(String schoolId, String teacherId);
 
-    List<TeacherNote> findAllByTenantIdAndClassIdOrderByDateDescIdDesc(String tenantId, String classId);
+    List<TeacherNote> findAllBySchoolIdAndClassIdOrderByDateDescIdDesc(String schoolId, String classId);
 
-    List<TeacherNote> findAllByTenantIdAndTeacherIdAndClassIdOrderByDateDescIdDesc(
-            String tenantId,
+    List<TeacherNote> findAllBySchoolIdAndTeacherIdAndClassIdOrderByDateDescIdDesc(
+            String schoolId,
             String teacherId,
             String classId
     );

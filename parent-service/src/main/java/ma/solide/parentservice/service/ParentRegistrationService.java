@@ -6,7 +6,7 @@ import java.util.List;
 import ma.solide.parentservice.dto.ParentRegistrationRequest;
 import ma.solide.parentservice.model.ParentRegistration;
 import ma.solide.parentservice.repository.ParentRegistrationRepository;
-import ma.solide.parentservice.tenant.TenantContext;
+import ma.solide.parentservice.school.SchoolContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -22,7 +22,7 @@ public class ParentRegistrationService {
     }
 
     public List<ParentRegistration> list() {
-        return repository.findAllByTenantIdOrderByCreatedAtDesc(TenantContext.getRequiredTenantId());
+        return repository.findAllBySchoolIdOrderByCreatedAtDesc(SchoolContext.getRequiredSchoolId());
     }
 
     public ParentRegistration create(ParentRegistrationRequest request) {
@@ -37,7 +37,7 @@ public class ParentRegistrationService {
         }
 
         ParentRegistration registration = ParentRegistration.builder()
-                .tenantId(TenantContext.getRequiredTenantId())
+                .schoolId(SchoolContext.getRequiredSchoolId())
                 .parentName(request.getParentName().trim())
                 .studentName(request.getStudentName().trim())
                 .className(StringUtils.hasText(request.getClassName()) ? request.getClassName().trim() : null)
@@ -48,4 +48,3 @@ public class ParentRegistrationService {
         return repository.save(registration);
     }
 }
-

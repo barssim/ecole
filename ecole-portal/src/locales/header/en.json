@@ -46,7 +46,7 @@
   "roleRequired": "Please select a role",
   "usersTitle": "Users",
   "userManagementTitle": "Add user",
-  "usersHint": "As manager, you can manage all users in your tenant.",
+  "usersHint": "As manager, you can manage all users in your school.",
   "actionsLabel": "Actions",
   "manageLabel": "Manage",
   "manageSelectedUserTitle": "Manage selected user",

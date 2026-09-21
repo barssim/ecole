@@ -7,6 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ParentRegistrationRepository extends JpaRepository<ParentRegistration, Long> {
 
-    List<ParentRegistration> findAllByTenantIdOrderByCreatedAtDesc(String tenantId);
+    List<ParentRegistration> findAllBySchoolIdOrderByCreatedAtDesc(String schoolId);
 }
-

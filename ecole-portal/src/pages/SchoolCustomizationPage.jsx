@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { getTenantId } from "../tenant";
+import { getSchoolId } from "../school";
 import { hasAnyRole, normalizeRoles } from "../utils/roles";
 import { createApiUrlFor, readJsonResponse } from "../utils/apiClient";
 
-const TenantCustomizationPage = () => {
-  const tenantId = getTenantId();
+const SchoolCustomizationPage = () => {
+  const schoolId = getSchoolId();
   const token = sessionStorage.getItem("jwt_token");
   const userRoles = useMemo(() => {
     try {
@@ -37,7 +37,7 @@ const TenantCustomizationPage = () => {
 
   const requestHeaders = {
     "Content-Type": "application/json",
-    "X-Tenant-Id": tenantId,
+    "X-School-Id": schoolId,
     "X-User-Roles": normalizedRoles.join(","),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
@@ -48,7 +48,7 @@ const TenantCustomizationPage = () => {
         setLoading(true);
         setError("");
 
-        const response = await fetch(apiUrlFor('/tenant-customization'), {
+        const response = await fetch(apiUrlFor('/school-customization'), {
           headers: requestHeaders,
         });
 
@@ -81,7 +81,7 @@ const TenantCustomizationPage = () => {
   const onSubmit = async (event) => {
     event.preventDefault();
     if (!isManager) {
-      setError("Only managers can update tenant customization.");
+      setError("Only managers can update school customization.");
       return;
     }
 
@@ -104,7 +104,7 @@ const TenantCustomizationPage = () => {
         footerText: form.footerText,
       };
 
-      const response = await fetch(apiUrlFor('/tenant-customization'), {
+      const response = await fetch(apiUrlFor('/school-customization'), {
         method: "PUT",
         headers: requestHeaders,
         body: JSON.stringify(payload),
@@ -112,7 +112,7 @@ const TenantCustomizationPage = () => {
 
       await readJsonResponse(response, "Unable to save customization");
 
-      setMessage("Customization saved. Refresh the page to see updated tenant theme/text.");
+      setMessage("Customization saved. Refresh the page to see updated school theme/text.");
     } catch (err) {
       setError(err.message || "Unable to save customization");
     } finally {
@@ -121,21 +121,21 @@ const TenantCustomizationPage = () => {
   };
 
   if (loading) {
-    return <div style={{ padding: 20 }}>Loading tenant customization...</div>;
+    return <div style={{ padding: 20 }}>Loading school customization...</div>;
   }
 
   if (!isManager) {
     return (
       <div style={{ padding: 20 }}>
-        <h2>Tenant customization</h2>
-        <p style={{ color: "#c00" }}>Only manager role can manage customization for this tenant.</p>
+        <h2>School customization</h2>
+        <p style={{ color: "#c00" }}>Only manager role can manage customization for this school.</p>
       </div>
     );
   }
 
   return (
     <div style={{ padding: 20, maxWidth: 760 }}>
-      <h2>Tenant customization ({tenantId})</h2>
+      <h2>School customization ({schoolId})</h2>
       {error && <p style={{ color: "#c00" }}>{error}</p>}
       {message && <p style={{ color: "#0a7a2f" }}>{message}</p>}
 
@@ -187,5 +187,5 @@ const TenantCustomizationPage = () => {
   );
 };
 
-export default TenantCustomizationPage;
+export default SchoolCustomizationPage;
 

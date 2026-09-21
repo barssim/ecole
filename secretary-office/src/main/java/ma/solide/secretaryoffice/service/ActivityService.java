@@ -17,7 +17,7 @@ import ma.solide.secretaryoffice.model.Activity;
 import ma.solide.secretaryoffice.model.SchoolClass;
 import ma.solide.secretaryoffice.repository.ActivityRepository;
 import ma.solide.secretaryoffice.repository.SchoolClassRepository;
-import ma.solide.secretaryoffice.tenant.TenantContext;
+import ma.solide.secretaryoffice.school.SchoolContext;
 
 @Service
 public class ActivityService {
@@ -37,35 +37,35 @@ public class ActivityService {
     }
 
     public List<ActivityResponseDTO> getActivities(String type, String rolesHeader, String userNameHeader) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         String normalizedType = normalizeType(type);
         Set<String> roles = parseRoles(rolesHeader);
 
         List<Activity> activities;
         if (hasAnyRole(roles, "secretary", "admin", "manager")) {
             activities = normalizedType == null
-                    ? activityRepository.findAllByTenantIdOrderByDateAscIdAsc(tenantId)
-                    : activityRepository.findByTenantIdAndTypeOrderByDateAscIdAsc(tenantId, normalizedType);
+                    ? activityRepository.findAllBySchoolIdOrderByDateAscIdAsc(schoolId)
+                    : activityRepository.findBySchoolIdAndTypeOrderByDateAscIdAsc(schoolId, normalizedType);
         } else if (normalizedType != null && GLOBALLY_VISIBLE_TYPES.contains(normalizedType)) {
             // Announcements/Fêtes are not restricted to a class; visible to every authenticated user/role.
-            activities = activityRepository.findByTenantIdAndTypeOrderByDateAscIdAsc(tenantId, normalizedType);
+            activities = activityRepository.findBySchoolIdAndTypeOrderByDateAscIdAsc(schoolId, normalizedType);
         } else {
             if (!StringUtils.hasText(userNameHeader)) {
                 return List.of();
             }
-            List<String> classNames = resolveUserClasses(tenantId, roles, userNameHeader.trim());
+            List<String> classNames = resolveUserClasses(schoolId, roles, userNameHeader.trim());
 
             List<Activity> classActivities = classNames.isEmpty()
                     ? List.of()
                     : (normalizedType == null
-                        ? activityRepository.findByTenantIdAndClassNameInOrderByDateAscIdAsc(tenantId, classNames)
-                        : activityRepository.findByTenantIdAndTypeAndClassNameInOrderByDateAscIdAsc(tenantId, normalizedType, classNames));
+                        ? activityRepository.findBySchoolIdAndClassNameInOrderByDateAscIdAsc(schoolId, classNames)
+                        : activityRepository.findBySchoolIdAndTypeAndClassNameInOrderByDateAscIdAsc(schoolId, normalizedType, classNames));
 
             if (normalizedType == null) {
                 // Also include globally-visible types (announcements/fêtes), which have no class restriction.
                 List<Activity> globalActivities = new java.util.ArrayList<>();
                 for (String globalType : GLOBALLY_VISIBLE_TYPES) {
-                    globalActivities.addAll(activityRepository.findByTenantIdAndTypeOrderByDateAscIdAsc(tenantId, globalType));
+                    globalActivities.addAll(activityRepository.findBySchoolIdAndTypeOrderByDateAscIdAsc(schoolId, globalType));
                 }
                 activities = new java.util.ArrayList<>(classActivities);
                 activities.addAll(globalActivities);
@@ -79,17 +79,17 @@ public class ActivityService {
     }
 
     public ActivityResponseDTO createActivity(ActivityRequestDTO dto, String createdBy) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         validate(dto);
         String normalizedType = dto.getType().trim().toLowerCase();
 
         if (!TYPES_WITHOUT_CLASS_DESTINATION.contains(normalizedType)
-                && !schoolClassRepository.existsByTenantIdAndNameIgnoreCase(tenantId, dto.getClassName().trim())) {
+                && !schoolClassRepository.existsBySchoolIdAndNameIgnoreCase(schoolId, dto.getClassName().trim())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Class not found");
         }
 
         Activity activity = Activity.builder()
-                .tenantId(tenantId)
+                .schoolId(schoolId)
                 .type(normalizedType)
                 .title(dto.getTitle().trim())
                 .date(dto.getDate())
@@ -103,13 +103,13 @@ public class ActivityService {
     }
 
     public ActivityResponseDTO updateActivity(Integer id, ActivityRequestDTO dto) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         validate(dto);
-        Activity activity = findById(tenantId, id);
+        Activity activity = findById(schoolId, id);
         String normalizedType = dto.getType().trim().toLowerCase();
 
         if (!TYPES_WITHOUT_CLASS_DESTINATION.contains(normalizedType)
-                && !schoolClassRepository.existsByTenantIdAndNameIgnoreCase(tenantId, dto.getClassName().trim())) {
+                && !schoolClassRepository.existsBySchoolIdAndNameIgnoreCase(schoolId, dto.getClassName().trim())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Class not found");
         }
 
@@ -124,13 +124,13 @@ public class ActivityService {
     }
 
     public void deleteActivity(Integer id) {
-        String tenantId = TenantContext.getRequiredTenantId();
-        findById(tenantId, id);
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        findById(schoolId, id);
         activityRepository.deleteById(id);
     }
 
-    private Activity findById(String tenantId, Integer id) {
-        return activityRepository.findByIdAndTenantId(id, tenantId)
+    private Activity findById(String schoolId, Integer id) {
+        return activityRepository.findByIdAndSchoolId(id, schoolId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Activity not found"));
     }
 
@@ -193,8 +193,8 @@ public class ActivityService {
         return false;
     }
 
-    private List<String> resolveUserClasses(String tenantId, Set<String> roles, String userName) {
-        List<SchoolClass> classes = schoolClassRepository.findAllByTenantIdOrderByNameAsc(tenantId);
+    private List<String> resolveUserClasses(String schoolId, Set<String> roles, String userName) {
+        List<SchoolClass> classes = schoolClassRepository.findAllBySchoolIdOrderByNameAsc(schoolId);
         Set<String> classNames = new HashSet<>();
 
         if (roles.contains("student")) {
@@ -252,4 +252,5 @@ public class ActivityService {
         return normalized;
     }
 }
+
 

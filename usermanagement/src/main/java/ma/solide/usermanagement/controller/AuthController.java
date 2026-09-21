@@ -32,11 +32,10 @@ public class AuthController {
         // Mock authentication logic (replace with database/user service in production)
         if (userService.existsBySurnameAndPassword(loginRequest.getUsername(), loginRequest.getPassword())) {
             User user = userService.findBySurnameAndPassword(loginRequest.getUsername(), loginRequest.getPassword());
-            String token = jwtUtil.generateToken(loginRequest.getUsername(), user.getTenantId(), user.getRole());
+            String token = jwtUtil.generateToken(loginRequest.getUsername(), user.getSchoolId(), user.getRole());
             return ResponseEntity.ok(new AuthResponse(token, user));
         } else
             return ResponseEntity.status(401).body("Invalid username or password");
-
     }
 
     @PostMapping("/register")
@@ -71,7 +70,7 @@ public class AuthController {
         
         // Return response with user and roles
         return new ResponseEntity<>(new AuthResponse(
-                jwtUtil.generateToken(createdUser.getSurname(), createdUser.getTenantId(), createdUser.getRole()),
+                jwtUtil.generateToken(createdUser.getSurname(), createdUser.getSchoolId(), createdUser.getRole()),
                 createdUser),
                 HttpStatus.CREATED);
     }
@@ -102,7 +101,7 @@ public class AuthController {
         private final String civilite;
         private final String firstname;
         private final String email;
-        private final String tenantId;
+        private final String schoolId;
         private final java.util.List<String> roles;
 
         public UserResponse(User user) {
@@ -111,7 +110,7 @@ public class AuthController {
             this.civilite = user.getCivilite();
             this.firstname = user.getFirstname();
             this.email = user.getEmail();
-            this.tenantId = user.getTenantId();
+            this.schoolId = user.getSchoolId();
             // Convert single role to list of roles
             this.roles = user.getRole() != null ? 
                 java.util.Arrays.asList(user.getRole().split(",")) : 
@@ -138,8 +137,8 @@ public class AuthController {
             return email;
         }
 
-        public String getTenantId() {
-            return tenantId;
+        public String getSchoolId() {
+            return schoolId;
         }
 
         public java.util.List<String> getRoles() {

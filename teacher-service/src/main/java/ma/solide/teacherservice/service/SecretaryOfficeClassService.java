@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Objects;
 
 import ma.solide.teacherservice.dto.SecretaryClassDTO;
-import ma.solide.teacherservice.tenant.TenantContext;
+import ma.solide.teacherservice.school.SchoolContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -61,9 +61,9 @@ public class SecretaryOfficeClassService {
     }
 
     private List<SecretaryClassDTO> fetchClasses(String teacherName) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         HttpHeaders headers = new HttpHeaders();
-        headers.set("X-Tenant-Id", tenantId);
+        headers.set("X-School-Id", schoolId);
 
         HttpEntity<Void> request = new HttpEntity<>(headers);
         String targetUrl = secretaryOfficeBaseUrl + "/api/classes";

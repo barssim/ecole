@@ -26,8 +26,8 @@ public class User {
 	@Column(length = 255)  // Allow multiple comma-separated roles
 	String role;
 
-	@Column(name = "tenant_id", nullable = false, length = 64)
-	String tenantId;
+	@Column(name = "school_id", nullable = false, length = 64)
+	String schoolId;
 
 	@Column(length = 20)
 	String civilite;

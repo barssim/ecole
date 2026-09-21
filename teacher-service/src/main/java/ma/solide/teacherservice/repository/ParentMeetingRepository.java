@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ParentMeetingRepository extends JpaRepository<ParentMeeting, Long> {
 
-    List<ParentMeeting> findAllByTenantIdOrderByMeetingDateAsc(String tenantId);
+    List<ParentMeeting> findAllBySchoolIdOrderByMeetingDateAsc(String schoolId);
 }
 

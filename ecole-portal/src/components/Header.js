@@ -6,9 +6,9 @@ import en from "../locales/header/en.json";
 import "../App.css";
 import { useNavigate } from "react-router-dom";
 
-const Header = ({ language, toggleLanguage, tenantCustomization }) => {
+const Header = ({ language, toggleLanguage, schoolCustomization }) => {
 	let content;
-  const tenant = tenantCustomization || {};
+  const school = schoolCustomization || {};
 
 if (language === "fr") {
   content = fr;
@@ -31,10 +31,10 @@ if (language === "fr") {
 		>
 			<div className="header-logo">
 				<img
-					src={tenant.logo}
-					alt={tenant.name?.[language] || tenant.name?.["fr"] || "School"}
+					src={school.logo}
+					alt={school.name?.[language] || school.name?.["fr"] || "School"}
 				/>
-				<span className="header-brand-name">{tenant.name?.[language] || tenant.name?.["fr"] || "School"}</span>
+				<span className="header-brand-name">{school.name?.[language] || school.name?.["fr"] || "School"}</span>
 			</div>
 
 			<nav className="site-navigation">

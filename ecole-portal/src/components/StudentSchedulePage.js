@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import fr from "../locales/fr.json";
 import en from "../locales/en.json";
 import ar from "../locales/ar.json";
-import { getTenantId } from "../tenant";
+import { getSchoolId } from "../school";
 import { createApiUrlFor, readJsonResponse } from "../utils/apiClient";
 
 const StudentSchedulePage = ({ language }) => {
@@ -46,7 +46,7 @@ const StudentSchedulePage = ({ language }) => {
   };
 
   const buildHeaders = () => ({
-    "X-Tenant-Id": getTenantId(),
+    "X-School-Id": getSchoolId(),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   });
 

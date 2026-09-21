@@ -3,7 +3,7 @@ package ma.solide.finance_manager.service;
 import ma.solide.finance_manager.dto.PaymentNoticeDTO;
 import ma.solide.finance_manager.entity.PaymentNotice;
 import ma.solide.finance_manager.repository.PaymentNoticeRepository;
-import ma.solide.finance_manager.tenant.TenantContext;
+import ma.solide.finance_manager.school.SchoolContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -26,8 +26,8 @@ public class PaymentNoticeService {
      * Get all payment notices
      */
     public List<PaymentNoticeDTO> getAllNotices() {
-        String tenantId = TenantContext.getRequiredTenantId();
-        List<PaymentNotice> notices = paymentNoticeRepository.findByTenantId(tenantId);
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        List<PaymentNotice> notices = paymentNoticeRepository.findBySchoolId(schoolId);
         return notices.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -37,8 +37,8 @@ public class PaymentNoticeService {
      * Get payment notice by ID
      */
     public PaymentNoticeDTO getNoticeById(Integer id) {
-        String tenantId = TenantContext.getRequiredTenantId();
-        PaymentNotice notice = paymentNoticeRepository.findByIdAndTenantId(id, tenantId)
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        PaymentNotice notice = paymentNoticeRepository.findByIdAndSchoolId(id, schoolId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Facture non trouvée"));
         return toDTO(notice);
     }
@@ -47,8 +47,8 @@ public class PaymentNoticeService {
      * Get payment notices for a specific student
      */
     public List<PaymentNoticeDTO> getNoticesByStudent(String studentName) {
-        String tenantId = TenantContext.getRequiredTenantId();
-        List<PaymentNotice> notices = paymentNoticeRepository.findByTenantIdAndStudentName(tenantId, studentName);
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        List<PaymentNotice> notices = paymentNoticeRepository.findBySchoolIdAndStudentName(schoolId, studentName);
         return notices.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -58,8 +58,8 @@ public class PaymentNoticeService {
      * Get payment notice for current month/student (the "current" invoice)
      */
     public PaymentNoticeDTO getCurrentNotice(String studentName) {
-        String tenantId = TenantContext.getRequiredTenantId();
-        List<PaymentNotice> notices = paymentNoticeRepository.findByTenantIdAndStudentName(tenantId, studentName);
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        List<PaymentNotice> notices = paymentNoticeRepository.findBySchoolIdAndStudentName(schoolId, studentName);
         
         // Return the most recent pending or unpaid notice
         return notices.stream()
@@ -74,7 +74,7 @@ public class PaymentNoticeService {
      * Create a new payment notice
      */
     public PaymentNoticeDTO createNotice(PaymentNoticeDTO noticeDTO) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         if (noticeDTO.getStudentName() == null || noticeDTO.getStudentName().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nom de l'élève requis");
         }
@@ -83,8 +83,8 @@ public class PaymentNoticeService {
         }
 
         PaymentNotice notice = new PaymentNotice();
-        notice.setTenantId(tenantId);
-        notice.setInvoiceNumber(generateInvoiceNumber(tenantId));
+        notice.setSchoolId(schoolId);
+        notice.setInvoiceNumber(generateInvoiceNumber(schoolId));
         notice.setInvoiceDate(noticeDTO.getInvoiceDate() != null ? noticeDTO.getInvoiceDate() : LocalDate.now());
         notice.setDueDate(noticeDTO.getDueDate() != null ? noticeDTO.getDueDate() : LocalDate.now().plusDays(15));
         notice.setStudentName(noticeDTO.getStudentName().trim());
@@ -102,8 +102,8 @@ public class PaymentNoticeService {
      * Update payment notice status
      */
     public PaymentNoticeDTO updateNoticeStatus(Integer id, String status) {
-        String tenantId = TenantContext.getRequiredTenantId();
-        PaymentNotice notice = paymentNoticeRepository.findByIdAndTenantId(id, tenantId)
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        PaymentNotice notice = paymentNoticeRepository.findByIdAndSchoolId(id, schoolId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Facture non trouvée"));
 
         if (status == null || status.trim().isEmpty()) {
@@ -128,8 +128,8 @@ public class PaymentNoticeService {
      * Get notices by status
      */
     public List<PaymentNoticeDTO> getNoticesByStatus(String status) {
-        String tenantId = TenantContext.getRequiredTenantId();
-        List<PaymentNotice> notices = paymentNoticeRepository.findByTenantIdAndStatus(tenantId, status);
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        List<PaymentNotice> notices = paymentNoticeRepository.findBySchoolIdAndStatus(schoolId, status);
         return notices.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -138,9 +138,9 @@ public class PaymentNoticeService {
     /**
      * Generate unique invoice number
      */
-    private String generateInvoiceNumber(String tenantId) {
+    private String generateInvoiceNumber(String schoolId) {
         YearMonth now = YearMonth.now();
-        long count = paymentNoticeRepository.findByTenantId(tenantId).stream()
+        long count = paymentNoticeRepository.findBySchoolId(schoolId).stream()
                 .filter(n -> n.getInvoiceDate().getYear() == now.getYear() &&
                             n.getInvoiceDate().getMonthValue() == now.getMonthValue())
                 .count();
@@ -163,4 +163,3 @@ public class PaymentNoticeService {
         return dto;
     }
 }
-

@@ -17,7 +17,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  background: linear-gradient(135deg, var(--tenant-primary, #007bff) 0%, var(--tenant-accent, #5b21b6) 100%);
+  background: linear-gradient(135deg, var(--school-primary, #007bff) 0%, var(--school-accent, #5b21b6) 100%);
   border-radius: 16px;
   padding: 20px 24px;
   color: #fff;
@@ -151,7 +151,7 @@
 .teacher-form-group select:focus,
 .teacher-form-group textarea:focus {
   outline: none;
-  border-color: var(--tenant-primary, #007bff);
+  border-color: var(--school-primary, #007bff);
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
 }
 
@@ -159,7 +159,7 @@
 .teacher-btn {
   width: auto;
   padding: 9px 18px;
-  background: var(--tenant-primary, #007bff);
+  background: var(--school-primary, #007bff);
   color: #fff;
   border: none;
   border-radius: 10px;

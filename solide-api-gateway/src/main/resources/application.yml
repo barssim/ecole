@@ -43,7 +43,7 @@ spring:
               - "*"
             exposedHeaders:
               - "Content-Disposition"
-              - "X-Tenant-Id"
+              - "X-School-Id"
             allowCredentials: true
 
       default-filters:
@@ -65,7 +65,7 @@ spring:
         - id: usermanagement
           uri: "http://usermanagement:8091"
           predicates:
-            - Path=/api/auth/**,/api/users/**,/api/tenant-customization,/api/tenant-customization/**
+            - Path=/api/auth/**,/api/users/**,/api/school-customization,/api/school-customization/**
           filters:
             - StripPrefix=0
 
@@ -100,7 +100,7 @@ spring:
         - id: secretary-office
           uri: "http://secretary-office:8095"
           predicates:
-            - Path=/api/attestations,/api/attestations/**,/api/attestationsproduction,/api/attestationsproduction/**,/api/classes,/api/classes/**,/api/exams,/api/exams/**,/api/activities,/api/activities/**
+            - Path=/api/attestations,/api/attestations/**,/api/attestationsproduction,/api/attestationsproduction/**,/api/classes,/api/classes/**,/api/exams,/api/exams/**,/api/activities,/api/activities/**,/api/gallery,/api/gallery/**
           filters:
             - StripPrefix=0
 

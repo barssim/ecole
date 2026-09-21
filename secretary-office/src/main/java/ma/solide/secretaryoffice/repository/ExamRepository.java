@@ -8,10 +8,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import ma.solide.secretaryoffice.model.Exam;
 
 public interface ExamRepository extends JpaRepository<Exam, Integer> {
-    List<Exam> findAllByTenantIdOrderByDateAscStartTimeAsc(String tenantId);
-    List<Exam> findByTenantIdAndDateGreaterThanEqualOrderByDateAscStartTimeAsc(String tenantId, LocalDate from);
-    List<Exam> findByTenantIdAndClassNameOrderByDateAscStartTimeAsc(String tenantId, String className);
-    java.util.Optional<Exam> findByIdAndTenantId(Integer id, String tenantId);
-    boolean existsByIdAndTenantId(Integer id, String tenantId);
+    List<Exam> findAllBySchoolIdOrderByDateAscStartTimeAsc(String schoolId);
+    List<Exam> findBySchoolIdAndDateGreaterThanEqualOrderByDateAscStartTimeAsc(String schoolId, LocalDate from);
+    List<Exam> findBySchoolIdAndClassNameOrderByDateAscStartTimeAsc(String schoolId, String className);
+    java.util.Optional<Exam> findByIdAndSchoolId(Integer id, String schoolId);
+    boolean existsByIdAndSchoolId(Integer id, String schoolId);
 }
+
 

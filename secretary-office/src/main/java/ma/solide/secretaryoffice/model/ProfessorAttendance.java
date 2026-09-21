@@ -27,8 +27,8 @@ public class ProfessorAttendance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "tenant_id", nullable = false)
-    private String tenantId;
+    @Column(name = "school_id", nullable = false)
+    private String schoolId;
 
     @Column(nullable = false, name = "teacher_id")
     private Integer teacherId;
@@ -54,4 +54,5 @@ public class ProfessorAttendance {
     @Column(nullable = false, name = "updated_at")
     private LocalDateTime updatedAt;
 }
+
 

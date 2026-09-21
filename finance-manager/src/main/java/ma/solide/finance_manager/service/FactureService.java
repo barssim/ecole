@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ma.solide.finance_manager.dto.FactureDTO;
 import ma.solide.finance_manager.entity.Facture;
 import ma.solide.finance_manager.repository.FactureRepository;
-import ma.solide.finance_manager.tenant.TenantContext;
+import ma.solide.finance_manager.school.SchoolContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -29,7 +29,7 @@ public class FactureService {
     }
 
     public FactureDTO saveGeneratedFacture(String studentName, String className, List<Map<String, Object>> items) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         if (studentName == null || studentName.trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nom de l'eleve requis");
         }
@@ -43,8 +43,8 @@ public class FactureService {
                 .sum();
 
         Facture facture = new Facture();
-        facture.setTenantId(tenantId);
-        facture.setInvoiceNumber(generateInvoiceNumber(tenantId));
+        facture.setSchoolId(schoolId);
+        facture.setInvoiceNumber(generateInvoiceNumber(schoolId));
         facture.setStudentName(studentName.trim());
         facture.setClassName(className == null || className.trim().isEmpty() ? "-" : className.trim());
         facture.setCurrency("MAD");
@@ -56,8 +56,8 @@ public class FactureService {
     }
 
     public List<FactureDTO> getAllFactures() {
-        String tenantId = TenantContext.getRequiredTenantId();
-        return factureRepository.findByTenantIdOrderByGeneratedDateDescIdDesc(tenantId).stream()
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        return factureRepository.findBySchoolIdOrderByGeneratedDateDescIdDesc(schoolId).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -105,9 +105,9 @@ public class FactureService {
         }
     }
 
-    private String generateInvoiceNumber(String tenantId) {
+    private String generateInvoiceNumber(String schoolId) {
         YearMonth now = YearMonth.now();
-        long count = factureRepository.findByTenantId(tenantId).stream()
+        long count = factureRepository.findBySchoolId(schoolId).stream()
                 .filter(f -> f.getGeneratedDate() != null
                         && f.getGeneratedDate().getYear() == now.getYear()
                         && f.getGeneratedDate().getMonthValue() == now.getMonthValue())
@@ -128,4 +128,3 @@ public class FactureService {
         return dto;
     }
 }
-

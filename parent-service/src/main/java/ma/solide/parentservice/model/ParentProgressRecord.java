@@ -25,8 +25,8 @@ public class ParentProgressRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "tenant_id", nullable = false)
-    private String tenantId;
+    @Column(name = "school_id", nullable = false)
+    private String schoolId;
 
     @Column(name = "student_name", nullable = false)
     private String studentName;
@@ -49,4 +49,3 @@ public class ParentProgressRecord {
     @Column(name = "updated_at", nullable = false)
     private LocalDate date;
 }
-

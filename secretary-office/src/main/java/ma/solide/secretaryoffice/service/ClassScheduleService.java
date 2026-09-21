@@ -12,7 +12,7 @@ import ma.solide.secretaryoffice.dto.ClassScheduleRequestDTO;
 import ma.solide.secretaryoffice.model.ClassScheduleEntry;
 import ma.solide.secretaryoffice.repository.ClassScheduleEntryRepository;
 import ma.solide.secretaryoffice.repository.SchoolClassRepository;
-import ma.solide.secretaryoffice.tenant.TenantContext;
+import ma.solide.secretaryoffice.school.SchoolContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -41,16 +41,16 @@ public class ClassScheduleService {
     }
 
     public List<ClassScheduleDayResponse> listSchedule(Integer classId) {
-        String tenantId = TenantContext.getRequiredTenantId();
-        ensureClassExists(classId, tenantId);
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        ensureClassExists(classId, schoolId);
         List<ClassScheduleEntry> entries = classScheduleEntryRepository
-                .findAllByTenantIdAndClassIdOrderByDayAscSlotOrderAsc(tenantId, classId);
+                .findAllBySchoolIdAndClassIdOrderByDayAscSlotOrderAsc(schoolId, classId);
         return groupEntries(entries);
     }
 
     public ClassScheduleDayResponse createDayPlan(Integer classId, ClassScheduleRequestDTO request) {
-        String tenantId = TenantContext.getRequiredTenantId();
-        ensureClassExists(classId, tenantId);
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        ensureClassExists(classId, schoolId);
 
         if (request == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request body is required");
@@ -64,7 +64,7 @@ public class ClassScheduleService {
 
         String day = request.getDay().trim();
         List<ClassScheduleEntry> existingEntries = classScheduleEntryRepository
-                .findAllByTenantIdAndClassIdOrderByDayAscSlotOrderAsc(tenantId, classId);
+                .findAllBySchoolIdAndClassIdOrderByDayAscSlotOrderAsc(schoolId, classId);
         List<String> createdSlots = new ArrayList<>();
         List<ClassScheduleEntry> savedEntries = new ArrayList<>();
         int order = existingEntries.stream()
@@ -78,7 +78,7 @@ public class ClassScheduleService {
             }
             String slotText = slot.trim();
             ClassScheduleEntry savedEntry = classScheduleEntryRepository.save(ClassScheduleEntry.builder()
-                    .tenantId(tenantId)
+                    .schoolId(schoolId)
                     .classId(classId)
                     .day(day)
                     .slotOrder(order++)
@@ -100,22 +100,22 @@ public class ClassScheduleService {
     }
 
     public void deleteEntry(Integer classId, Long entryId) {
-        String tenantId = TenantContext.getRequiredTenantId();
-        ClassScheduleEntry entry = classScheduleEntryRepository.findByIdAndTenantId(entryId, tenantId)
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        ClassScheduleEntry entry = classScheduleEntryRepository.findByIdAndSchoolId(entryId, schoolId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule entry not found"));
 
-        ensureClassExists(entry.getClassId(), tenantId);
+        ensureClassExists(entry.getClassId(), schoolId);
         if (classId == null || !classId.equals(entry.getClassId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule entry not found");
         }
         classScheduleEntryRepository.delete(entry);
     }
 
-    private void ensureClassExists(Integer classId, String tenantId) {
+    private void ensureClassExists(Integer classId, String schoolId) {
         if (classId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "classId is required");
         }
-        if (!schoolClassRepository.existsByIdAndTenantId(classId, tenantId)) {
+        if (!schoolClassRepository.existsByIdAndSchoolId(classId, schoolId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Classe introuvable pour l'id " + classId);
         }
     }
@@ -177,5 +177,6 @@ public class ClassScheduleService {
         return DAY_ORDER.getOrDefault(dayName.trim().toLowerCase(Locale.ROOT), Integer.MAX_VALUE);
     }
 }
+
 
 

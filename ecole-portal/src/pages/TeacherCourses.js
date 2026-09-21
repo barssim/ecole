@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getTenantId } from "../tenant";
+import { getSchoolId } from "../school";
 import { resolveApiBaseUrl } from "../utils/apiBaseUrl";
 import fr from "../locales/fr.json";
 import en from "../locales/en.json";
@@ -13,7 +13,7 @@ const buildHeaders = (isJson = true) => {
   const token = sessionStorage.getItem("jwt_token");
   return {
     ...(isJson ? { "Content-Type": "application/json" } : {}),
-    "X-Tenant-Id": getTenantId(),
+    "X-School-Id": getSchoolId(),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 };
@@ -217,7 +217,7 @@ const TeacherCourses = ({ language }) => {
       const uploadRes = await fetch(`${API_BASE}/api/upload`, {
         method: "POST",
         headers: {
-          "X-Tenant-Id": getTenantId(),
+          "X-School-Id": getSchoolId(),
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: formData,

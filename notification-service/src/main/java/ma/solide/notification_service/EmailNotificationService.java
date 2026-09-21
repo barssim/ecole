@@ -14,7 +14,7 @@ public class EmailNotificationService {
     private static final Logger log = LoggerFactory.getLogger(EmailNotificationService.class);
 
     private final JavaMailSender mailSender;
-    private final TenantEmailService tenantEmailService;
+    private final SchoolEmailService schoolEmailService;
 
     @Value("${notification.email.from}")
     private String from;
@@ -22,28 +22,28 @@ public class EmailNotificationService {
     @Value("${notification.email.to}")
     private String to;
 
-    public EmailNotificationService(JavaMailSender mailSender, TenantEmailService tenantEmailService) {
+    public EmailNotificationService(JavaMailSender mailSender, SchoolEmailService schoolEmailService) {
         this.mailSender = mailSender;
-        this.tenantEmailService = tenantEmailService;
+        this.schoolEmailService = schoolEmailService;
     }
 
     public void sendPaymentReceivedEmail(PaymentReceivedEvent event) {
         try {
-            String tenantFrom = tenantEmailService.resolveTenantEmail(event.tenantId());
-            if (tenantFrom == null || tenantFrom.isBlank()) {
-                tenantFrom = from;
+            String schoolFrom = schoolEmailService.resolveSchoolEmail(event.schoolId());
+            if (schoolFrom == null || schoolFrom.isBlank()) {
+                schoolFrom = from;
             }
             String recipient = (event.studentEmail() != null && !event.studentEmail().isBlank())
                     ? event.studentEmail()
                     : to;
 
-            log.info("tenant_email is: {}", tenantFrom);
-            String tenantSignature = (event.tenantId() != null && !event.tenantId().isBlank())
-                    ? "Ecole " + event.tenantId()
+            log.info("school_email is: {}", schoolFrom);
+            String schoolSignature = (event.schoolId() != null && !event.schoolId().isBlank())
+                    ? "Ecole " + event.schoolId()
                     : "Ecole Finance";
 
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(tenantFrom);
+            message.setFrom(schoolFrom);
             message.setTo(recipient);
             message.setSubject("Payment received");
 
@@ -53,12 +53,12 @@ public class EmailNotificationService {
                     "Identifiant du paiement : " + event.paymentId() + "\n" +
                     "Montant : " + event.amount() + " " + event.currency() + "\n" +
                     "Mode de paiement : " + event.paymentMethod() + "\n\n" +
-                    "Cordialement,\n" + tenantSignature
+                    "Cordialement,\n" + schoolSignature
             );
 
             mailSender.send(message);
-            log.info("Payment email sent for paymentId={}, studentName={}, tenantId={}, recipient={}, from={}",
-                    event.paymentId(), event.studentName(), event.tenantId(), recipient, tenantFrom);
+            log.info("Payment email sent for paymentId={}, studentName={}, schoolId={}, recipient={}, from={}",
+                    event.paymentId(), event.studentName(), event.schoolId(), recipient, schoolFrom);
         } catch (Exception ex) {
             log.error("Failed to send payment notification email for paymentId={}, studentName={}",
                     event.paymentId(), event.studentName(), ex);

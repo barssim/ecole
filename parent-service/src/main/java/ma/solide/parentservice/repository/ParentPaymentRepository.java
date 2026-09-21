@@ -7,8 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ParentPaymentRepository extends JpaRepository<ParentPaymentView, Long> {
 
-    List<ParentPaymentView> findAllByTenantIdAndStudentNameOrderByPaymentDateDesc(String tenantId, String studentName);
+    List<ParentPaymentView> findAllBySchoolIdAndStudentNameOrderByPaymentDateDesc(String schoolId, String studentName);
 
-    List<ParentPaymentView> findAllByTenantIdOrderByPaymentDateDesc(String tenantId);
+    List<ParentPaymentView> findAllBySchoolIdOrderByPaymentDateDesc(String schoolId);
 }
-

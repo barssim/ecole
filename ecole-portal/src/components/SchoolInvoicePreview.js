@@ -3,7 +3,7 @@ import axios from 'axios';
 import fr from "../locales/fr.json";
 import ar from "../locales/ar.json";
 import en from "../locales/en.json";
-import { getTenantId } from '../tenant';
+import { getSchoolId } from '../school';
 import { normalizeRoles } from '../utils/roles';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import '../cssFiles/Finance.css';
@@ -37,7 +37,7 @@ const SchoolInvoicePreview =  ({language}) => {
     setLoading(true);
     axios.get(apiUrl, {
       headers: {
-        'X-Tenant-Id': getTenantId(),
+        'X-School-Id': getSchoolId(),
         ...(userRoles.length > 0 ? { 'X-User-Roles': userRoles.join(',') } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       }

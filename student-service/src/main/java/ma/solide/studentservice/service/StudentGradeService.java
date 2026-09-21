@@ -7,7 +7,7 @@ import java.util.List;
 import ma.solide.studentservice.dto.StudentGradeRequest;
 import ma.solide.studentservice.model.StudentGrade;
 import ma.solide.studentservice.repository.StudentGradeRepository;
-import ma.solide.studentservice.tenant.TenantContext;
+import ma.solide.studentservice.school.SchoolContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -25,22 +25,22 @@ public class StudentGradeService {
     }
 
     public List<StudentGrade> listGrades(String studentId, String classId) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         if (StringUtils.hasText(studentId) && StringUtils.hasText(classId)) {
-            return studentGradeRepository.findAllByTenantIdAndStudentIdAndClassIdOrderByDateDesc(
-                    tenantId,
+            return studentGradeRepository.findAllBySchoolIdAndStudentIdAndClassIdOrderByDateDesc(
+                    schoolId,
                     studentId.trim(),
                     classId.trim()
             );
         }
         if (StringUtils.hasText(studentId)) {
-            return studentGradeRepository.findAllByTenantIdAndStudentIdOrderByDateDesc(tenantId, studentId.trim());
+            return studentGradeRepository.findAllBySchoolIdAndStudentIdOrderByDateDesc(schoolId, studentId.trim());
         }
-        return studentGradeRepository.findAllByTenantIdOrderByDateDesc(tenantId);
+        return studentGradeRepository.findAllBySchoolIdOrderByDateDesc(schoolId);
     }
 
     public StudentGrade createGrade(StudentGradeRequest request) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         if (request == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request body is required");
         }
@@ -55,7 +55,7 @@ public class StudentGradeService {
         }
 
         StudentGrade grade = StudentGrade.builder()
-                .tenantId(tenantId)
+                .schoolId(schoolId)
                 .studentId(request.getStudentId().trim())
                 .studentName(StringUtils.hasText(request.getStudentName()) ? request.getStudentName().trim() : null)
                 .subject(request.getSubject().trim())
@@ -71,15 +71,16 @@ public class StudentGradeService {
     }
 
     public void deleteGrade(Long gradeId) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         StudentGrade grade = studentGradeRepository.findById(gradeId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Grade not found"));
 
-        if (!tenantId.equals(grade.getTenantId())) {
+        if (!schoolId.equals(grade.getSchoolId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Grade not found");
         }
 
         studentGradeRepository.delete(grade);
     }
 }
+
 

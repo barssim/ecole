@@ -4,7 +4,7 @@ import axios from 'axios';
 import fr from "../locales/header/fr.json";
 import ar from "../locales/header/ar.json";
 import en from "../locales/header/en.json";
-import { resolveTenantFromHost, setTenantId } from "../tenant";
+import { resolveSchoolFromHost, setSchoolId } from "../school";
 import { resolveApiBaseUrl } from "../utils/apiBaseUrl";
 
 const decodeJwtPayload = (token) => {
@@ -24,24 +24,24 @@ const decodeJwtPayload = (token) => {
 	}
 };
 
-const resolveTenantFromLoginResponse = (token, user, topLevelTenantId) => {
-	const normalizedUserTenant = String(user?.tenantId || '').trim().toLowerCase();
-	if (normalizedUserTenant) {
-		return normalizedUserTenant;
+const resolveSchoolFromLoginResponse = (token, user, topLevelSchoolId) => {
+	const normalizedUserSchool = String(user?.schoolId || '').trim().toLowerCase();
+	if (normalizedUserSchool) {
+		return normalizedUserSchool;
 	}
 
-	const normalizedTopLevelTenant = String(topLevelTenantId || '').trim().toLowerCase();
-	if (normalizedTopLevelTenant) {
-		return normalizedTopLevelTenant;
+	const normalizedTopLevelSchool = String(topLevelSchoolId || '').trim().toLowerCase();
+	if (normalizedTopLevelSchool) {
+		return normalizedTopLevelSchool;
 	}
 
 	const jwtPayload = decodeJwtPayload(token);
-	const normalizedJwtTenant = String(jwtPayload?.tenant_id || '').trim().toLowerCase();
-	if (normalizedJwtTenant) {
-		return normalizedJwtTenant;
+	const normalizedJwtSchool = String(jwtPayload?.school_id || '').trim().toLowerCase();
+	if (normalizedJwtSchool) {
+		return normalizedJwtSchool;
 	}
 
-	return resolveTenantFromHost();
+	return resolveSchoolFromHost();
 };
 
 const resolveUserIdFromLoginResponse = (token, user) => {
@@ -120,7 +120,7 @@ const Login = ({language}) => {
 		const configuredBase = resolveApiBaseUrl('http://localhost:8085');
 		const useRelativeApi = String(process.env.REACT_APP_USE_RELATIVE_API || '').trim().toLowerCase() === 'true';
 		const apiUrl = useRelativeApi ? '/api/auth/login' : `${configuredBase}/api/auth/login`;
-		const tenantHint = resolveTenantFromHost();
+		const schoolHint = resolveSchoolFromHost();
 
 		console.log('Login attempt - API URL:', apiUrl);
 		console.log('Debug mode:', process.env.REACT_APP_DEBUG);
@@ -133,7 +133,7 @@ const Login = ({language}) => {
 					timeout: 10000,
 					headers: {
 						'Content-Type': 'application/json',
-						'X-Tenant-Id': tenantHint
+						'X-School-Id': schoolHint
 					}
 				}
 			);
@@ -184,7 +184,7 @@ const Login = ({language}) => {
 
 			const userRoles = resolveRolesFromLoginResponse(token, user);
 			localStorage.setItem("user_roles", JSON.stringify(userRoles));
-			setTenantId(resolveTenantFromLoginResponse(token, user, response.data?.tenantId));
+			setSchoolId(resolveSchoolFromLoginResponse(token, user, response.data?.schoolId));
 
 			console.log('Login successful! Stored roles:', userRoles);
 			window.location.href = "/";

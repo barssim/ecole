@@ -9,7 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import ma.solide.secretaryoffice.model.ProfessorAttendance;
 
 public interface ProfessorAttendanceRepository extends JpaRepository<ProfessorAttendance, Integer> {
-    List<ProfessorAttendance> findAllByTenantIdAndAttendanceDateOrderByTeacherNameAsc(String tenantId, LocalDate attendanceDate);
-    Optional<ProfessorAttendance> findByTenantIdAndTeacherIdAndAttendanceDate(String tenantId, Integer teacherId, LocalDate attendanceDate);
+    List<ProfessorAttendance> findAllBySchoolIdAndAttendanceDateOrderByTeacherNameAsc(String schoolId, LocalDate attendanceDate);
+    Optional<ProfessorAttendance> findBySchoolIdAndTeacherIdAndAttendanceDate(String schoolId, Integer teacherId, LocalDate attendanceDate);
 }
+
 

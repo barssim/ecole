@@ -26,8 +26,8 @@ public class StudentGrade {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "tenant_id", nullable = false)
-    private String tenantId;
+    @Column(name = "school_id", nullable = false)
+    private String schoolId;
 
     @Column(name = "student_id", nullable = false)
     private String studentId;
@@ -56,4 +56,5 @@ public class StudentGrade {
     @Column(name = "teacher_name")
     private String teacherName;
 }
+
 

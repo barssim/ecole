@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import fr from "../locales/fr.json";
 import en from "../locales/en.json";
 import ar from "../locales/ar.json";
-import { getTenantId } from "../tenant";
+import { getSchoolId } from "../school";
 import { createApiUrlFor, readJsonResponse } from "../utils/apiClient";
 import "../cssFiles/TeacherCourses.css";
 
@@ -40,7 +40,7 @@ const StudentGradesPage = ({ language }) => {
   const token = sessionStorage.getItem("jwt_token");
 
   const buildHeaders = () => ({
-    "X-Tenant-Id": getTenantId(),
+    "X-School-Id": getSchoolId(),
     ...(token ? { Authorization: "Bearer " + token } : {}),
   });
 

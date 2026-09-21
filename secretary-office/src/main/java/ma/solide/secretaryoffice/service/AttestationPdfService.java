@@ -2,6 +2,8 @@ package ma.solide.secretaryoffice.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.Base64;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -16,10 +18,14 @@ import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 
+import ma.solide.secretaryoffice.dto.SchoolCustomizationResponseDTO;
 import ma.solide.secretaryoffice.model.Attestation;
 
 @Service
 public class AttestationPdfService {
+
+    private static final byte[] DEFAULT_LOGO = Base64.getDecoder().decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAoMBgU8M2X8AAAAASUVORK5CYII=");
 
     public ByteArrayInputStream generatePdf(Attestation attestation) {
         Document document = new Document();
@@ -71,5 +77,25 @@ public class AttestationPdfService {
         table.addCell(labelCell);
         table.addCell(valueCell);
     }
-}
 
+    public SchoolCustomizationResponseDTO getCustomization(Long schoolClassId) {
+        String suffix = schoolClassId == null ? "" : " " + schoolClassId;
+        return new SchoolCustomizationResponseDTO(
+                Map.of("fr", "ECOLE", "en", "ECOLE"),
+                "/api/school-customization/logo",
+                null,
+                Map.of("fr", "Personnalisation par défaut du secrétariat", "en", "Default secretary office branding"),
+                Map.of("fr", "Siège principal" + suffix, "en", "Main campus" + suffix),
+                "#1F4E79",
+                "#F4B400",
+                "#E8F0FE",
+                "secretary-office",
+                "+212 000 000 000",
+                "contact@ecole.local",
+                "ECOLE");
+    }
+
+    public byte[] getLogo() {
+        return DEFAULT_LOGO.clone();
+    }
+}

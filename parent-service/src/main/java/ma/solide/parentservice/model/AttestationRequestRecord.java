@@ -25,8 +25,8 @@ public class AttestationRequestRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "tenant_id", nullable = false)
-    private String tenantId;
+    @Column(name = "school_id", nullable = false)
+    private String schoolId;
 
     @Column(name = "user_id")
     private Integer userId;
@@ -49,4 +49,3 @@ public class AttestationRequestRecord {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 }
-

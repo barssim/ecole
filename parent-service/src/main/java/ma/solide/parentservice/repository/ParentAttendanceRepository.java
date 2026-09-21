@@ -7,8 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ParentAttendanceRepository extends JpaRepository<ParentAttendanceRecord, Long> {
 
-    List<ParentAttendanceRecord> findAllByTenantIdAndStudentNameOrderByDateDesc(String tenantId, String studentName);
+    List<ParentAttendanceRecord> findAllBySchoolIdAndStudentNameOrderByDateDesc(String schoolId, String studentName);
 
-    List<ParentAttendanceRecord> findAllByTenantIdOrderByDateDesc(String tenantId);
+    List<ParentAttendanceRecord> findAllBySchoolIdOrderByDateDesc(String schoolId);
 }
-

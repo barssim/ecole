@@ -15,7 +15,7 @@ import ma.solide.secretaryoffice.dto.ProfessorAttendanceRequestDTO;
 import ma.solide.secretaryoffice.dto.ProfessorAttendanceResponseDTO;
 import ma.solide.secretaryoffice.model.ProfessorAttendance;
 import ma.solide.secretaryoffice.repository.ProfessorAttendanceRepository;
-import ma.solide.secretaryoffice.tenant.TenantContext;
+import ma.solide.secretaryoffice.school.SchoolContext;
 
 @Service
 public class ProfessorAttendanceService {
@@ -30,28 +30,28 @@ public class ProfessorAttendanceService {
     }
 
     public List<ProfessorAttendanceResponseDTO> getAttendanceForDate(LocalDate attendanceDate) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         LocalDate effectiveDate = attendanceDate != null ? attendanceDate : LocalDate.now();
-        return professorAttendanceRepository.findAllByTenantIdAndAttendanceDateOrderByTeacherNameAsc(tenantId, effectiveDate)
+        return professorAttendanceRepository.findAllBySchoolIdAndAttendanceDateOrderByTeacherNameAsc(schoolId, effectiveDate)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     public ProfessorAttendanceResponseDTO getTeacherAttendance(Integer teacherId, LocalDate attendanceDate) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         if (teacherId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "teacherId is required");
         }
 
         LocalDate effectiveDate = attendanceDate != null ? attendanceDate : LocalDate.now();
-        ProfessorAttendance attendance = professorAttendanceRepository.findByTenantIdAndTeacherIdAndAttendanceDate(tenantId, teacherId, effectiveDate)
+        ProfessorAttendance attendance = professorAttendanceRepository.findBySchoolIdAndTeacherIdAndAttendanceDate(schoolId, teacherId, effectiveDate)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Attendance not found for this teacher and date"));
         return toResponse(attendance);
     }
 
     public ProfessorAttendanceResponseDTO saveAttendance(ProfessorAttendanceRequestDTO dto) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         if (dto.getTeacherId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "teacherId is required");
         }
@@ -70,9 +70,9 @@ public class ProfessorAttendanceService {
 
         LocalDate effectiveDate = dto.getAttendanceDate() != null ? dto.getAttendanceDate() : LocalDate.now();
         ProfessorAttendance attendance = professorAttendanceRepository
-                .findByTenantIdAndTeacherIdAndAttendanceDate(tenantId, dto.getTeacherId(), effectiveDate)
+                .findBySchoolIdAndTeacherIdAndAttendanceDate(schoolId, dto.getTeacherId(), effectiveDate)
                 .orElseGet(() -> ProfessorAttendance.builder()
-                        .tenantId(tenantId)
+                        .schoolId(schoolId)
                         .teacherId(dto.getTeacherId())
                         .attendanceDate(effectiveDate)
                         .build());
@@ -114,5 +114,6 @@ public class ProfessorAttendanceService {
                 .build();
     }
 }
+
 
 

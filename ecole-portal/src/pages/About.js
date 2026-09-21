@@ -31,12 +31,12 @@ const labels = {
   },
 };
 
-const About = ({ language = 'fr', tenantCustomization }) => {
+const About = ({ language = 'fr', schoolCustomization }) => {
   const content = labels[language] || labels.fr;
-  const tenant = tenantCustomization || {};
-  const aboutTitle = getLocalizedValue(tenant.about?.title, language, getLocalizedValue(tenant.name, language, content.title));
-  const aboutDescription = getLocalizedValue(tenant.about?.description, language, '');
-  const address = getLocalizedValue(tenant.adresse, language, '');
+  const school = schoolCustomization || {};
+  const aboutTitle = getLocalizedValue(school.about?.title, language, getLocalizedValue(school.name, language, content.title));
+  const aboutDescription = getLocalizedValue(school.about?.description, language, '');
+  const address = getLocalizedValue(school.adresse, language, '');
 
 	return (
 	<div className="about-page">
@@ -50,11 +50,11 @@ const About = ({ language = 'fr', tenantCustomization }) => {
 		  {address && (
 			<p><span className="about-contact-icon">📍</span><strong>{content.address}:</strong> {address}</p>
 		  )}
-		  {tenant.phone && (
-			<p><span className="about-contact-icon">📞</span><strong>{content.phone}:</strong> {tenant.phone}</p>
+		  {school.phone && (
+			<p><span className="about-contact-icon">📞</span><strong>{content.phone}:</strong> {school.phone}</p>
 		  )}
-		  {tenant.mail && (
-			<p><span className="about-contact-icon">✉️</span><strong>{content.email}:</strong> {tenant.mail}</p>
+		  {school.mail && (
+			<p><span className="about-contact-icon">✉️</span><strong>{content.email}:</strong> {school.mail}</p>
 		  )}
 		</div>
 	  </div>

@@ -49,7 +49,7 @@ customer-version:
     bronze: 100
     silver: 500
     gold: 1000
-  default-by-tenant:
+  default-by-school:
     gardinia: trial
     qods: bronze
 

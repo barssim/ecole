@@ -4,17 +4,17 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "tb_factures")
+@Table(name = "tb_factures", uniqueConstraints = @UniqueConstraint(name = "uk_tb_factures_school_invoice_number", columnNames = {"school_id", "invoice_number"}))
 public class Facture {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "tenant_id", nullable = false, length = 64, columnDefinition = "varchar(64) default 'default'")
-    private String tenantId;
+    @Column(name = "school_id", nullable = false, length = 64, columnDefinition = "varchar(64) default 'default'")
+    private String schoolId;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "invoice_number", nullable = false)
     private String invoiceNumber;
 
     @Column(nullable = false)
@@ -44,12 +44,12 @@ public class Facture {
         this.id = id;
     }
 
-    public String getTenantId() {
-        return tenantId;
+    public String getSchoolId() {
+        return schoolId;
     }
 
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
+    public void setSchoolId(String schoolId) {
+        this.schoolId = schoolId;
     }
 
     public String getInvoiceNumber() {
@@ -108,4 +108,3 @@ public class Facture {
         this.itemsJson = itemsJson;
     }
 }
-

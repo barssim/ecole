@@ -78,14 +78,14 @@ public class SchoolInvoiceController {
 
     /**
      * Get all payments history
-     * Accessible to users with valid tenant ID
+     * Accessible to users with valid school ID
      */
     @GetMapping("/payments")
     public ResponseEntity<List<PaymentDTO>> getPayments(
             @RequestParam(value = "studentName", required = false) String studentName,
             @RequestParam(value = "className", required = false) String className,
             @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
-        // Allow access to any authenticated user (tenant ID is already validated by TenantFilter)
+        // Allow access to any authenticated user (school ID is already validated by SchoolFilter)
         if (studentName != null && !studentName.trim().isEmpty()) {
             return ResponseEntity.ok(paymentService.getPaymentsByStudent(studentName));
         }
@@ -97,13 +97,13 @@ public class SchoolInvoiceController {
 
     /**
      * Get a single payment by ID
-     * Accessible to users with valid tenant ID
+     * Accessible to users with valid school ID
      */
     @GetMapping("/payments/{id}")
     public ResponseEntity<PaymentDTO> getPaymentById(
             @PathVariable Integer id,
             @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
-        // Allow access to any authenticated user (tenant ID is already validated by TenantFilter)
+        // Allow access to any authenticated user (school ID is already validated by SchoolFilter)
         PaymentDTO payment = paymentService.getPaymentById(id);
         return ResponseEntity.ok(payment);
     }

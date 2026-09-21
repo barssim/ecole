@@ -20,10 +20,24 @@ spring:
     init:
       mode: always
       data-locations: classpath:data.sql
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 25MB
   application:
     name: secretary-office
   main:
     web-application-type: servlet
+
+gallery:
+  uploads:
+    directory: ${GALLERY_UPLOADS_DIR:/tmp/gallery-uploads}
+    s3:
+      bucket: ${GALLERY_S3_BUCKET:}
+      region: ${GALLERY_S3_REGION:eu-west-1}
+      endpoint: ${GALLERY_S3_ENDPOINT:}
+      presign-endpoint: ${GALLERY_S3_PRESIGN_ENDPOINT:}
+      url-duration-minutes: ${GALLERY_S3_URL_DURATION_MINUTES:15}
 
 management:
   endpoints:

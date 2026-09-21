@@ -9,16 +9,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ProfessorAttendanceRepository extends JpaRepository<ProfessorAttendance, Long> {
 
-    List<ProfessorAttendance> findAllByTenantIdAndAttendanceDateOrderByTeacherNameAsc(String tenantId, LocalDate date);
+    List<ProfessorAttendance> findAllBySchoolIdAndAttendanceDateOrderByTeacherNameAsc(String schoolId, LocalDate date);
 
-    Optional<ProfessorAttendance> findByTenantIdAndTeacherIdAndAttendanceDate(
-            String tenantId,
+    Optional<ProfessorAttendance> findBySchoolIdAndTeacherIdAndAttendanceDate(
+            String schoolId,
             Integer teacherId,
             LocalDate date
     );
 
-    List<ProfessorAttendance> findAllByTenantIdAndTeacherIdAndAttendanceDateBetweenOrderByAttendanceDateDesc(
-            String tenantId,
+    List<ProfessorAttendance> findAllBySchoolIdAndTeacherIdAndAttendanceDateBetweenOrderByAttendanceDateDesc(
+            String schoolId,
             Integer teacherId,
             LocalDate startDate,
             LocalDate endDate

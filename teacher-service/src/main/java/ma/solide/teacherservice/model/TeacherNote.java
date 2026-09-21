@@ -26,8 +26,8 @@ public class TeacherNote {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "tenant_id", nullable = false)
-    private String tenantId;
+    @Column(name = "school_id", nullable = false)
+    private String schoolId;
 
     @Column(name = "teacher_id", nullable = false)
     private String teacherId;

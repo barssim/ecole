@@ -14,22 +14,22 @@ import ma.solide.usermanagement.model.StudentSummaryDTO;
 import ma.solide.usermanagement.model.User;
 import ma.solide.usermanagement.model.UserProfileDTO;
 import ma.solide.usermanagement.repository.UserRepository;
-import ma.solide.usermanagement.tenant.TenantContext;
+import ma.solide.usermanagement.school.SchoolContext;
 
 @Service
 public class UserService {
 
 
 	private final UserRepository userRepository;
-	private final TenantCustomizationService tenantCustomizationService;
+	private final SchoolCustomizationService schoolCustomizationService;
 	private final CustomerVersionPolicy customerVersionPolicy;
 
 	public UserService(
 			UserRepository userRepository,
-			TenantCustomizationService tenantCustomizationService,
+			SchoolCustomizationService schoolCustomizationService,
 			CustomerVersionPolicy customerVersionPolicy) {
 		this.userRepository = userRepository;
-		this.tenantCustomizationService = tenantCustomizationService;
+		this.schoolCustomizationService = schoolCustomizationService;
 		this.customerVersionPolicy = customerVersionPolicy;
 	}
 
@@ -37,29 +37,29 @@ public class UserService {
 		if (userNo == null) {
 			throw new IllegalArgumentException("User number cannot be null");
 		}
-		String tenantId = TenantContext.getRequiredTenantId();
-		return userRepository.findByTenantIdAndUserno(tenantId, userNo);
+		String schoolId = SchoolContext.getRequiredSchoolId();
+		return userRepository.findBySchoolIdAndUserno(schoolId, userNo);
 	}
 
 	public boolean existsBySurnameAndPassword(String username, String password)
 	{
-		String tenantId = TenantContext.getRequiredTenantId();
-		return userRepository.existsByTenantIdAndSurnameAndPassword(tenantId, username, password);
+		String schoolId = SchoolContext.getRequiredSchoolId();
+		return userRepository.existsBySchoolIdAndSurnameAndPassword(schoolId, username, password);
 		
 	}
 
 	public User findBySurnameAndPassword(String surname, String password) {
-		String tenantId = TenantContext.getRequiredTenantId();
+		String schoolId = SchoolContext.getRequiredSchoolId();
 		// Several accounts may share the same surname (e.g. siblings), so we must
 		// disambiguate using surname + password rather than a singular surname lookup,
 		// which would blow up with an IncorrectResultSizeDataAccessException.
-		List<User> matches = userRepository.findAllByTenantIdAndSurnameAndPassword(tenantId, surname, password);
+		List<User> matches = userRepository.findAllBySchoolIdAndSurnameAndPassword(schoolId, surname, password);
 		return matches.isEmpty() ? null : matches.get(0);
 	}
 
 	public List<User> findAllUsers() {
-		String tenantId = TenantContext.getRequiredTenantId();
-		return userRepository.findByTenantId(tenantId);
+		String schoolId = SchoolContext.getRequiredSchoolId();
+		return userRepository.findBySchoolId(schoolId);
 	}
 
 	public List<UserProfileDTO> findAllUserProfiles() {
@@ -67,8 +67,8 @@ public class UserService {
 	}
 
 	public List<TeacherSummaryDTO> findAllTeachers() {
-		String tenantId = TenantContext.getRequiredTenantId();
-		return userRepository.findByTenantId(tenantId)
+		String schoolId = SchoolContext.getRequiredSchoolId();
+		return userRepository.findBySchoolId(schoolId)
 				.stream()
 				.filter(this::isTeacher)
 				.map(this::toTeacherSummary)
@@ -76,8 +76,8 @@ public class UserService {
 	}
 
 	public List<StudentSummaryDTO> findAllStudents() {
-		String tenantId = TenantContext.getRequiredTenantId();
-		return userRepository.findByTenantId(tenantId)
+		String schoolId = SchoolContext.getRequiredSchoolId();
+		return userRepository.findBySchoolId(schoolId)
 				.stream()
 				.filter(this::isStudent)
 				.map(this::toStudentSummary)
@@ -85,15 +85,15 @@ public class UserService {
 	}
 
 	public User createUser(User user) {
-		String tenantId = TenantContext.getRequiredTenantId();
-		enforceTenantUserLimit(tenantId);
-		user.setTenantId(tenantId);
+		String schoolId = SchoolContext.getRequiredSchoolId();
+		enforceSchoolUserLimit(schoolId);
+		user.setSchoolId(schoolId);
 		return userRepository.save(user); // Inserts or updates the user
 	}
 
-	private void enforceTenantUserLimit(String tenantId) {
-		long currentUserCount = userRepository.countByTenantId(tenantId);
-		String customerVersion = tenantCustomizationService.resolveCustomerVersion(tenantId);
+	private void enforceSchoolUserLimit(String schoolId) {
+		long currentUserCount = userRepository.countBySchoolId(schoolId);
+		String customerVersion = schoolCustomizationService.resolveCustomerVersion(schoolId);
 		long maxUsers = customerVersionPolicy.resolveMaxUsers(customerVersion);
 
 		if (currentUserCount >= maxUsers) {
@@ -108,8 +108,8 @@ public class UserService {
 		if (userNo == null) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User id is required");
 		}
-		String tenantId = TenantContext.getRequiredTenantId();
-		return userRepository.findByTenantIdAndUserno(tenantId, userNo)
+		String schoolId = SchoolContext.getRequiredSchoolId();
+		return userRepository.findBySchoolIdAndUserno(schoolId, userNo)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 	}
 

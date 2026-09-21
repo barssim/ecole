@@ -101,7 +101,7 @@ public class UserProfileController {
 
     private void ensureManagerRole(String userRolesHeader) {
         if (!RoleHeaderAuthorization.hasAnyRole(userRolesHeader, "manager")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only manager role can manage tenant users");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only manager role can manage school users");
         }
     }
 }

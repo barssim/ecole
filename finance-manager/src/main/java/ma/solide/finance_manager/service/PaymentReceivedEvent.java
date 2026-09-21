@@ -5,7 +5,7 @@ import java.time.Instant;
 public record PaymentReceivedEvent(
         String eventId,
         Integer paymentId,
-        String tenantId,
+        String schoolId,
         String studentName,
         String studentEmail,
         Double amount,

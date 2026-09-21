@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import fr from '../locales/fr.json';
 import en from '../locales/en.json';
 import ar from '../locales/ar.json';
-import { getTenantId } from '../tenant';
+import { getSchoolId } from '../school';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { normalizeRoles } from '../utils/roles';
 import '../cssFiles/Inscription.css';
@@ -45,7 +45,7 @@ const TeacherNotesPage = ({ language }) => {
   const buildHeaders = (includeJson = false) => {
     const token = sessionStorage.getItem('jwt_token');
     const headers = {
-      'X-Tenant-Id': getTenantId(),
+      'X-School-Id': getSchoolId(),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
     if (includeJson) headers['Content-Type'] = 'application/json';

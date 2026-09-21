@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import fr from '../locales/fr.json';
 import en from '../locales/en.json';
 import ar from '../locales/ar.json';
-import { getTenantId } from '../tenant';
+import { getSchoolId } from '../school';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import '../cssFiles/TeacherPages.css';
 
@@ -30,7 +30,7 @@ const TeacherAttendancePage = ({ language }) => {
 
   const headers = useMemo(() => ({
     'Content-Type': 'application/json',
-    'X-Tenant-Id': getTenantId(),
+    'X-School-Id': getSchoolId(),
     'X-User-Roles': rolesHeader,
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }), [token, rolesHeader]);

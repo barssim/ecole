@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import fr from '../locales/fr.json';
 import ar from '../locales/ar.json';
 import en from '../locales/en.json';
-import { getTenantId } from '../tenant';
+import { getSchoolId } from '../school';
 import { createApiUrlFor, readJsonResponse } from '../utils/apiClient';
 
 const ProfilePage = ({ language = 'fr' }) => {
@@ -20,7 +20,7 @@ const ProfilePage = ({ language = 'fr' }) => {
 
   const authHeaders = {
     'Content-Type': 'application/json',
-    'X-Tenant-Id': getTenantId(),
+    'X-School-Id': getSchoolId(),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 

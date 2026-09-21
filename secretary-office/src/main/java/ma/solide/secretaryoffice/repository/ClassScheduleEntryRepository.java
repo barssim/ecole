@@ -7,8 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ClassScheduleEntryRepository extends JpaRepository<ClassScheduleEntry, Long> {
 
-    List<ClassScheduleEntry> findAllByTenantIdAndClassIdOrderByDayAscSlotOrderAsc(String tenantId, Integer classId);
+    List<ClassScheduleEntry> findAllBySchoolIdAndClassIdOrderByDayAscSlotOrderAsc(String schoolId, Integer classId);
 
-    java.util.Optional<ClassScheduleEntry> findByIdAndTenantId(Long id, String tenantId);
+    java.util.Optional<ClassScheduleEntry> findByIdAndSchoolId(Long id, String schoolId);
 }
+
 

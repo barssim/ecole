@@ -1,11 +1,11 @@
--- Insert tenant master data
-INSERT IGNORE INTO tb_tenant (tenant_id, tenant_name, tenant_email) VALUES
+-- Insert school master data
+INSERT IGNORE INTO tb_school (school_id, school_name, school_email) VALUES
 ('gardinia', 'Gardinia', 'noreply_gardinia@example.com'),
 ('qods', 'Qods', 'noreply_qods@example.com'),
 ('amana', 'Amana', 'noreply_amana@example.com');
 
 -- Insert test users with roles
-INSERT IGNORE INTO tb_user (userno, surname, firstname, email, adresse, password, role, tenant_id) VALUES
+INSERT IGNORE INTO tb_user (userno, surname, firstname, email, adresse, password, role, school_id) VALUES
 (1, 'admin', 'Gardinia', 'admin@school.com', 'Admin Street', 'Youssef83#', 'manager', 'gardinia'),
 (2, 'parent', 'Parent', 'parent@school.com', 'Parent Street', 'parentpass', 'parent', 'gardinia'),
 (3, 'student', 'Student', 'student@school.com', 'Student Street', 'studentpass', 'student', 'gardinia'),
@@ -13,10 +13,10 @@ INSERT IGNORE INTO tb_user (userno, surname, firstname, email, adresse, password
 (5, 'teacher', 'Teacher', 'teacher@school.com', 'Teacher Street', 'teacherpass', 'teacher', 'qods'),
 (6, 'finance', 'Finance', 'finance@school.com', 'Finance Street', 'financepass', 'finance', 'qods');
 
--- 30 teacher accounts (tenant 'gardinia'), 3 teachers per subject across 10 subjects.
+-- 30 teacher accounts (school 'gardinia'), 3 teachers per subject across 10 subjects.
 -- Subject assignment is tracked in teacher-service.data.sql (tb table teacher_courses)
 -- via the matching teacher_id (teacher-201 .. teacher-230).
-INSERT IGNORE INTO tb_user (userno, surname, firstname, email, adresse, password, role, tenant_id) VALUES
+INSERT IGNORE INTO tb_user (userno, surname, firstname, email, adresse, password, role, school_id) VALUES
 (201, 'Alami', 'Karim', 'karim.alami@school.com', 'Enseignant - Mathématiques', 'teacherpass', 'teacher', 'gardinia'),
 (202, 'Benjelloun', 'Salma', 'salma.benjelloun@school.com', 'Enseignante - Mathématiques', 'teacherpass', 'teacher', 'gardinia'),
 (203, 'Ouazzani', 'Yassine', 'yassine.ouazzani@school.com', 'Enseignant - Mathématiques', 'teacherpass', 'teacher', 'gardinia'),
@@ -49,9 +49,9 @@ INSERT IGNORE INTO tb_user (userno, surname, firstname, email, adresse, password
 (230, 'Fakhouri', 'Nawal', 'nawal.fakhouri@school.com', 'Enseignante - Arts Plastiques', 'teacherpass', 'teacher', 'gardinia');
 
 
--- 100 student accounts (tenant gardinia), matching secretary-office class rosters (userno 301-400).
+-- 100 student accounts (school gardinia), matching secretary-office class rosters (userno 301-400).
 -- 100 students generated, userno 301-400
-INSERT IGNORE INTO tb_user (userno, surname, firstname, email, adresse, password, role, tenant_id) VALUES
+INSERT IGNORE INTO tb_user (userno, surname, firstname, email, adresse, password, role, school_id) VALUES
 (301, 'El Amrani', 'Adam', 'adam.elamrani@school.com', 'Eleve - classe 1', 'studentpass', 'student', 'gardinia'),
 (302, 'Bennani', 'Aya', 'aya.bennani@school.com', 'Eleve - classe 1', 'studentpass', 'student', 'gardinia'),
 (303, 'Alaoui', 'Bilal', 'bilal.alaoui@school.com', 'Eleve - classe 1', 'studentpass', 'student', 'gardinia'),

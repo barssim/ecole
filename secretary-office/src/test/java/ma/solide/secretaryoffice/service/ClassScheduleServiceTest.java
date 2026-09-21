@@ -27,12 +27,12 @@ import ma.solide.secretaryoffice.model.ClassScheduleEntry;
 import ma.solide.secretaryoffice.model.SchoolClass;
 import ma.solide.secretaryoffice.repository.ClassScheduleEntryRepository;
 import ma.solide.secretaryoffice.repository.SchoolClassRepository;
-import ma.solide.secretaryoffice.tenant.TenantContext;
+import ma.solide.secretaryoffice.school.SchoolContext;
 
 @ExtendWith(MockitoExtension.class)
 class ClassScheduleServiceTest {
 
-    private static final String TENANT = "gardinia";
+    private static final String SCHOOL = "gardinia";
 
     @Mock
     private ClassScheduleEntryRepository classScheduleEntryRepository;
@@ -44,22 +44,22 @@ class ClassScheduleServiceTest {
     private ClassScheduleService classScheduleService;
 
     @BeforeEach
-    void setTenant() {
-        TenantContext.setTenantId(TENANT);
+    void setSCHOOL() {
+        SchoolContext.setSchoolId(SCHOOL);
     }
 
     @AfterEach
-    void clearTenant() {
-        TenantContext.clear();
+    void clearSCHOOL() {
+        SchoolContext.clear();
     }
 
     @Test
     void listScheduleShouldGroupAndSortEntriesByDayAndSlot() {
-        when(schoolClassRepository.existsByIdAndTenantId(1, TENANT)).thenReturn(true);
-        when(classScheduleEntryRepository.findAllByTenantIdAndClassIdOrderByDayAscSlotOrderAsc(TENANT, 1)).thenReturn(List.of(
-                ClassScheduleEntry.builder().id(3L).tenantId(TENANT).classId(1).day("Wednesday").slotOrder(2).slotText("English - 10:00").build(),
-                ClassScheduleEntry.builder().id(1L).tenantId(TENANT).classId(1).day("Monday").slotOrder(1).slotText("Math - 08:00").build(),
-                ClassScheduleEntry.builder().id(2L).tenantId(TENANT).classId(1).day("Monday").slotOrder(2).slotText("Physics - 10:00").build()
+        when(schoolClassRepository.existsByIdAndSchoolId(1, SCHOOL)).thenReturn(true);
+        when(classScheduleEntryRepository.findAllBySchoolIdAndClassIdOrderByDayAscSlotOrderAsc(SCHOOL, 1)).thenReturn(List.of(
+                ClassScheduleEntry.builder().id(3L).schoolId(SCHOOL).classId(1).day("Wednesday").slotOrder(2).slotText("English - 10:00").build(),
+                ClassScheduleEntry.builder().id(1L).schoolId(SCHOOL).classId(1).day("Monday").slotOrder(1).slotText("Math - 08:00").build(),
+                ClassScheduleEntry.builder().id(2L).schoolId(SCHOOL).classId(1).day("Monday").slotOrder(2).slotText("Physics - 10:00").build()
         ));
 
         List<ClassScheduleDayResponse> result = classScheduleService.listSchedule(1);
@@ -72,8 +72,8 @@ class ClassScheduleServiceTest {
 
     @Test
     void createDayPlanShouldPersistTrimmedSlots() {
-        when(schoolClassRepository.existsByIdAndTenantId(1, TENANT)).thenReturn(true);
-        when(classScheduleEntryRepository.findAllByTenantIdAndClassIdOrderByDayAscSlotOrderAsc(TENANT, 1))
+        when(schoolClassRepository.existsByIdAndSchoolId(1, SCHOOL)).thenReturn(true);
+        when(classScheduleEntryRepository.findAllBySchoolIdAndClassIdOrderByDayAscSlotOrderAsc(SCHOOL, 1))
                 .thenReturn(List.of());
         when(classScheduleEntryRepository.save(any(ClassScheduleEntry.class))).thenAnswer(invocation -> {
             ClassScheduleEntry entry = invocation.getArgument(0);
@@ -99,7 +99,7 @@ class ClassScheduleServiceTest {
 
     @Test
     void createDayPlanShouldRejectUnknownClass() {
-        when(schoolClassRepository.existsByIdAndTenantId(99, TENANT)).thenReturn(false);
+        when(schoolClassRepository.existsByIdAndSchoolId(99, SCHOOL)).thenReturn(false);
 
         ClassScheduleRequestDTO request = new ClassScheduleRequestDTO();
         request.setDay("Monday");
@@ -113,18 +113,18 @@ class ClassScheduleServiceTest {
 
     @Test
     void deleteEntryShouldRemoveMatchingScheduleEntry() {
-        SchoolClass schoolClass = SchoolClass.builder().id(1).tenantId(TENANT).name("3e A").build();
-        when(classScheduleEntryRepository.findByIdAndTenantId(7L, TENANT)).thenReturn(java.util.Optional.of(
+        SchoolClass schoolClass = SchoolClass.builder().id(1).schoolId(SCHOOL).name("3e A").build();
+        when(classScheduleEntryRepository.findByIdAndSchoolId(7L, SCHOOL)).thenReturn(java.util.Optional.of(
                 ClassScheduleEntry.builder()
                         .id(7L)
-                        .tenantId(TENANT)
+                        .schoolId(SCHOOL)
                         .classId(1)
                         .day("Monday")
                         .slotOrder(1)
                         .slotText("Math - 08:00")
                         .build()
         ));
-        when(schoolClassRepository.existsByIdAndTenantId(1, TENANT)).thenReturn(true);
+        when(schoolClassRepository.existsByIdAndSchoolId(1, SCHOOL)).thenReturn(true);
 
         classScheduleService.deleteEntry(1, 7L);
 
@@ -133,17 +133,17 @@ class ClassScheduleServiceTest {
 
     @Test
     void deleteEntryShouldRejectDifferentClassId() {
-        when(classScheduleEntryRepository.findByIdAndTenantId(7L, TENANT)).thenReturn(java.util.Optional.of(
+        when(classScheduleEntryRepository.findByIdAndSchoolId(7L, SCHOOL)).thenReturn(java.util.Optional.of(
                 ClassScheduleEntry.builder()
                         .id(7L)
-                        .tenantId(TENANT)
+                        .schoolId(SCHOOL)
                         .classId(2)
                         .day("Monday")
                         .slotOrder(1)
                         .slotText("Math - 08:00")
                         .build()
         ));
-        when(schoolClassRepository.existsByIdAndTenantId(2, TENANT)).thenReturn(true);
+        when(schoolClassRepository.existsByIdAndSchoolId(2, SCHOOL)).thenReturn(true);
 
         assertThatThrownBy(() -> classScheduleService.deleteEntry(1, 7L))
                 .isInstanceOf(ResponseStatusException.class)
@@ -153,3 +153,4 @@ class ClassScheduleServiceTest {
         verify(classScheduleEntryRepository, never()).delete(any());
     }
 }
+

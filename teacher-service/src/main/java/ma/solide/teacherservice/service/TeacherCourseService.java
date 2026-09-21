@@ -8,7 +8,7 @@ import ma.solide.teacherservice.dto.TeacherCourseRequest;
 import ma.solide.teacherservice.model.TeacherCourse;
 import ma.solide.teacherservice.model.TeacherCourseFile;
 import ma.solide.teacherservice.repository.TeacherCourseRepository;
-import ma.solide.teacherservice.tenant.TenantContext;
+import ma.solide.teacherservice.school.SchoolContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -24,25 +24,25 @@ public class TeacherCourseService {
     }
 
     public List<TeacherCourse> listCourses(String teacherId, String classId) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         boolean hasTeacher = StringUtils.hasText(teacherId);
         boolean hasClass = StringUtils.hasText(classId);
 
         if (hasTeacher && hasClass) {
-            return teacherCourseRepository.findAllByTenantIdAndTeacherIdAndClassIdOrderByUploadedAtDesc(
-                    tenantId, teacherId.trim(), classId.trim());
+            return teacherCourseRepository.findAllBySchoolIdAndTeacherIdAndClassIdOrderByUploadedAtDesc(
+                    schoolId, teacherId.trim(), classId.trim());
         }
         if (hasClass) {
-            return teacherCourseRepository.findAllByTenantIdAndClassIdOrderByUploadedAtDesc(tenantId, classId.trim());
+            return teacherCourseRepository.findAllBySchoolIdAndClassIdOrderByUploadedAtDesc(schoolId, classId.trim());
         }
         if (hasTeacher) {
-            return teacherCourseRepository.findAllByTenantIdAndTeacherIdOrderByUploadedAtDesc(tenantId, teacherId.trim());
+            return teacherCourseRepository.findAllBySchoolIdAndTeacherIdOrderByUploadedAtDesc(schoolId, teacherId.trim());
         }
-        return teacherCourseRepository.findAllByTenantIdOrderByUploadedAtDesc(tenantId);
+        return teacherCourseRepository.findAllBySchoolIdOrderByUploadedAtDesc(schoolId);
     }
 
     public TeacherCourse createCourse(TeacherCourseRequest request) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         if (!StringUtils.hasText(request.getTeacherId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "teacherId is required");
         }
@@ -54,7 +54,7 @@ public class TeacherCourseService {
         }
 
         TeacherCourse course = TeacherCourse.builder()
-                .tenantId(tenantId)
+                .schoolId(schoolId)
                 .teacherId(request.getTeacherId().trim())
                 .classId(request.getClassId().trim())
                 .className(StringUtils.hasText(request.getClassName()) ? request.getClassName().trim() : null)
@@ -81,11 +81,11 @@ public class TeacherCourseService {
     }
 
     public void deleteCourse(Long courseId) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         TeacherCourse course = teacherCourseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
 
-        if (!tenantId.equals(course.getTenantId())) {
+        if (!schoolId.equals(course.getSchoolId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found");
         }
 

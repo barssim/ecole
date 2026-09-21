@@ -26,12 +26,12 @@ import ma.solide.secretaryoffice.dto.SchoolClassResponse;
 import ma.solide.secretaryoffice.dto.StudentRequestDTO;
 import ma.solide.secretaryoffice.model.SchoolClass;
 import ma.solide.secretaryoffice.repository.SchoolClassRepository;
-import ma.solide.secretaryoffice.tenant.TenantContext;
+import ma.solide.secretaryoffice.school.SchoolContext;
 
 @ExtendWith(MockitoExtension.class)
 class SchoolClassServiceTest {
 
-    private static final String TENANT = "gardinia";
+    private static final String SCHOOL = "gardinia";
 
     @Mock
     private SchoolClassRepository schoolClassRepository;
@@ -40,13 +40,13 @@ class SchoolClassServiceTest {
     private SchoolClassService schoolClassService;
 
     @BeforeEach
-    void setTenant() {
-        TenantContext.setTenantId(TENANT);
+    void setSCHOOL() {
+        SchoolContext.setSchoolId(SCHOOL);
     }
 
     @AfterEach
-    void clearTenant() {
-        TenantContext.clear();
+    void clearSCHOOL() {
+        SchoolContext.clear();
     }
 
     @Test
@@ -62,7 +62,7 @@ class SchoolClassServiceTest {
                 .teachers(new java.util.ArrayList<>(List.of("teacher.two")))
                 .build();
 
-        when(schoolClassRepository.findAllByTenantIdAndTeacherNameOrderByNameAsc(TENANT, "TEACHER.ONE"))
+        when(schoolClassRepository.findAllBySchoolIdAndTeacherNameOrderByNameAsc(SCHOOL, "TEACHER.ONE"))
                 .thenReturn(List.of(classA));
 
         List<SchoolClassResponse> result = schoolClassService.getClasses("TEACHER.ONE");
@@ -76,7 +76,7 @@ class SchoolClassServiceTest {
         SchoolClass classA = SchoolClass.builder().id(1).name("3e A").build();
         SchoolClass classB = SchoolClass.builder().id(2).name("4e B").build();
 
-        when(schoolClassRepository.findAllByTenantIdOrderByNameAsc(TENANT)).thenReturn(List.of(classA, classB));
+        when(schoolClassRepository.findAllBySchoolIdOrderByNameAsc(SCHOOL)).thenReturn(List.of(classA, classB));
 
         List<SchoolClassResponse> result = schoolClassService.getClasses("   ");
 
@@ -88,7 +88,7 @@ class SchoolClassServiceTest {
     void addStudentShouldAppendToClassStudents() {
         SchoolClass existing = SchoolClass.builder().id(1).name("3e A")
                 .students(new java.util.ArrayList<>(List.of("Alice"))).build();
-        when(schoolClassRepository.findByIdAndTenantId(1, TENANT)).thenReturn(java.util.Optional.of(existing));
+        when(schoolClassRepository.findByIdAndSchoolId(1, SCHOOL)).thenReturn(java.util.Optional.of(existing));
         when(schoolClassRepository.save(any(SchoolClass.class))).thenAnswer(inv -> inv.getArgument(0));
 
         StudentRequestDTO dto = new StudentRequestDTO();
@@ -102,7 +102,7 @@ class SchoolClassServiceTest {
     void addStudentShouldRejectDuplicate() {
         SchoolClass existing = SchoolClass.builder().id(1).name("3e A")
                 .students(new java.util.ArrayList<>(List.of("Alice"))).build();
-        when(schoolClassRepository.findByIdAndTenantId(1, TENANT)).thenReturn(java.util.Optional.of(existing));
+        when(schoolClassRepository.findByIdAndSchoolId(1, SCHOOL)).thenReturn(java.util.Optional.of(existing));
 
         StudentRequestDTO dto = new StudentRequestDTO();
         dto.setName("alice"); // case-insensitive duplicate
@@ -117,7 +117,7 @@ class SchoolClassServiceTest {
     void removeStudentShouldRemoveFromClassStudents() {
         SchoolClass existing = SchoolClass.builder().id(1).name("3e A")
                 .students(new java.util.ArrayList<>(List.of("Alice", "Bob"))).build();
-        when(schoolClassRepository.findByIdAndTenantId(1, TENANT)).thenReturn(java.util.Optional.of(existing));
+        when(schoolClassRepository.findByIdAndSchoolId(1, SCHOOL)).thenReturn(java.util.Optional.of(existing));
         when(schoolClassRepository.save(any(SchoolClass.class))).thenAnswer(inv -> inv.getArgument(0));
 
         SchoolClassResponse response = schoolClassService.removeStudent(1, "Alice");
@@ -128,7 +128,7 @@ class SchoolClassServiceTest {
     void removeStudentShouldThrowNotFoundForUnknownStudent() {
         SchoolClass existing = SchoolClass.builder().id(1).name("3e A")
                 .students(new java.util.ArrayList<>(List.of("Alice"))).build();
-        when(schoolClassRepository.findByIdAndTenantId(1, TENANT)).thenReturn(java.util.Optional.of(existing));
+        when(schoolClassRepository.findByIdAndSchoolId(1, SCHOOL)).thenReturn(java.util.Optional.of(existing));
 
         assertThatThrownBy(() -> schoolClassService.removeStudent(1, "Unknown"))
                 .isInstanceOf(ResponseStatusException.class)
@@ -139,8 +139,8 @@ class SchoolClassServiceTest {
     @Test
     void updateClassNameShouldPersistNewName() {
         SchoolClass existing = SchoolClass.builder().id(1).name("3e A").students(new java.util.ArrayList<>()).build();
-        when(schoolClassRepository.findByIdAndTenantId(1, TENANT)).thenReturn(java.util.Optional.of(existing));
-        when(schoolClassRepository.existsByTenantIdAndNameIgnoreCase(TENANT, "4e A")).thenReturn(false);
+        when(schoolClassRepository.findByIdAndSchoolId(1, SCHOOL)).thenReturn(java.util.Optional.of(existing));
+        when(schoolClassRepository.existsBySchoolIdAndNameIgnoreCase(SCHOOL, "4e A")).thenReturn(false);
         when(schoolClassRepository.save(any(SchoolClass.class))).thenAnswer(inv -> inv.getArgument(0));
 
         SchoolClassRequestDTO dto = new SchoolClassRequestDTO();
@@ -155,7 +155,7 @@ class SchoolClassServiceTest {
     @Test
     void updateClassNameShouldAllowSameNameCaseInsensitive() {
         SchoolClass existing = SchoolClass.builder().id(1).name("3e A").students(new java.util.ArrayList<>()).build();
-        when(schoolClassRepository.findByIdAndTenantId(1, TENANT)).thenReturn(java.util.Optional.of(existing));
+        when(schoolClassRepository.findByIdAndSchoolId(1, SCHOOL)).thenReturn(java.util.Optional.of(existing));
         when(schoolClassRepository.save(any(SchoolClass.class))).thenAnswer(inv -> inv.getArgument(0));
 
         SchoolClassRequestDTO dto = new SchoolClassRequestDTO();
@@ -168,8 +168,8 @@ class SchoolClassServiceTest {
     @Test
     void updateClassNameShouldRejectDuplicate() {
         SchoolClass existing = SchoolClass.builder().id(1).name("3e A").students(new java.util.ArrayList<>()).build();
-        when(schoolClassRepository.findByIdAndTenantId(1, TENANT)).thenReturn(java.util.Optional.of(existing));
-        when(schoolClassRepository.existsByTenantIdAndNameIgnoreCase(TENANT, "4e B")).thenReturn(true);
+        when(schoolClassRepository.findByIdAndSchoolId(1, SCHOOL)).thenReturn(java.util.Optional.of(existing));
+        when(schoolClassRepository.existsBySchoolIdAndNameIgnoreCase(SCHOOL, "4e B")).thenReturn(true);
 
         SchoolClassRequestDTO dto = new SchoolClassRequestDTO();
         dto.setName("4e B");
@@ -182,7 +182,7 @@ class SchoolClassServiceTest {
 
     @Test
     void deleteClassShouldCallRepositoryDeleteById() {
-        when(schoolClassRepository.existsByIdAndTenantId(1, TENANT)).thenReturn(true);
+        when(schoolClassRepository.existsByIdAndSchoolId(1, SCHOOL)).thenReturn(true);
         doNothing().when(schoolClassRepository).deleteById(1);
 
         schoolClassService.deleteClass(1);
@@ -192,7 +192,7 @@ class SchoolClassServiceTest {
 
     @Test
     void deleteClassShouldThrowNotFoundForUnknownId() {
-        when(schoolClassRepository.existsByIdAndTenantId(99, TENANT)).thenReturn(false);
+        when(schoolClassRepository.existsByIdAndSchoolId(99, SCHOOL)).thenReturn(false);
 
         assertThatThrownBy(() -> schoolClassService.deleteClass(99))
                 .isInstanceOf(ResponseStatusException.class)
@@ -208,7 +208,7 @@ class SchoolClassServiceTest {
         dto.setName(" 4e A ");
         dto.setStudents(List.of(" Sara ", "", "Sara", " Youssef "));
 
-        when(schoolClassRepository.existsByTenantIdAndNameIgnoreCase(TENANT, "4e A")).thenReturn(false);
+        when(schoolClassRepository.existsBySchoolIdAndNameIgnoreCase(SCHOOL, "4e A")).thenReturn(false);
         when(schoolClassRepository.save(any(SchoolClass.class))).thenAnswer(invocation -> {
             SchoolClass schoolClass = invocation.getArgument(0);
             schoolClass.setId(12);
@@ -222,7 +222,7 @@ class SchoolClassServiceTest {
         SchoolClass saved = captor.getValue();
 
         assertThat(saved.getName()).isEqualTo("4e A");
-        assertThat(saved.getTenantId()).isEqualTo(TENANT);
+        assertThat(saved.getSchoolId()).isEqualTo(SCHOOL);
         assertThat(saved.getStudents()).containsExactly("Sara", "Youssef");
         assertThat(response.getId()).isEqualTo(12);
         assertThat(response.getName()).isEqualTo("4e A");
@@ -234,7 +234,7 @@ class SchoolClassServiceTest {
         SchoolClassRequestDTO dto = new SchoolClassRequestDTO();
         dto.setName("3e A");
 
-        when(schoolClassRepository.existsByTenantIdAndNameIgnoreCase(TENANT, "3e A")).thenReturn(true);
+        when(schoolClassRepository.existsBySchoolIdAndNameIgnoreCase(SCHOOL, "3e A")).thenReturn(true);
 
         assertThatThrownBy(() -> schoolClassService.createClass(dto))
                 .isInstanceOf(ResponseStatusException.class)
@@ -242,4 +242,5 @@ class SchoolClassServiceTest {
                 .isEqualTo(HttpStatus.CONFLICT);
     }
 }
+
 

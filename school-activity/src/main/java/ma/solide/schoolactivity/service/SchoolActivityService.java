@@ -8,7 +8,7 @@ import ma.solide.schoolactivity.dto.ActivityRequestDTO;
 import ma.solide.schoolactivity.dto.ActivityResponseDTO;
 import ma.solide.schoolactivity.model.SchoolActivity;
 import ma.solide.schoolactivity.repository.SchoolActivityRepository;
-import ma.solide.schoolactivity.tenant.TenantContext;
+import ma.solide.schoolactivity.school.SchoolContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -38,20 +38,20 @@ public class SchoolActivityService {
     // Read
     // -------------------------------------------------------------------------
 
-    /** Returns all activities for the tenant, optionally filtered by type. */
+    /** Returns all activities for the school, optionally filtered by type. */
     public List<ActivityResponseDTO> getAll(String type) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         String normalized = normalizeType(type);
         List<SchoolActivity> rows = normalized == null
-                ? repository.findAllByTenantIdOrderByDateAscIdAsc(tenantId)
-                : repository.findByTenantIdAndTypeOrderByDateAscIdAsc(tenantId, normalized);
+                ? repository.findAllBySchoolIdOrderByDateAscIdAsc(schoolId)
+                : repository.findBySchoolIdAndTypeOrderByDateAscIdAsc(schoolId, normalized);
         return rows.stream().map(this::toResponse).toList();
     }
 
     /** Returns activities for a fixed type (used by package-specific services). */
     public List<ActivityResponseDTO> getByType(String fixedType) {
-        String tenantId = TenantContext.getRequiredTenantId();
-        return repository.findByTenantIdAndTypeOrderByDateAscIdAsc(tenantId, fixedType)
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        return repository.findBySchoolIdAndTypeOrderByDateAscIdAsc(schoolId, fixedType)
                 .stream().map(this::toResponse).toList();
     }
 
@@ -62,7 +62,7 @@ public class SchoolActivityService {
     public ActivityResponseDTO create(ActivityRequestDTO dto, String createdBy) {
         validate(dto);
         SchoolActivity activity = SchoolActivity.builder()
-                .tenantId(TenantContext.getRequiredTenantId())
+                .schoolId(SchoolContext.getRequiredSchoolId())
                 .type(normalizeType(dto.getType()))
                 .title(dto.getTitle().trim())
                 .date(dto.getDate())
@@ -82,8 +82,8 @@ public class SchoolActivityService {
 
     public ActivityResponseDTO update(Integer id, ActivityRequestDTO dto) {
         validate(dto);
-        String tenantId = TenantContext.getRequiredTenantId();
-        SchoolActivity activity = findOrThrow(id, tenantId);
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        SchoolActivity activity = findOrThrow(id, schoolId);
         activity.setType(normalizeType(dto.getType()));
         activity.setTitle(dto.getTitle().trim());
         activity.setDate(dto.getDate());
@@ -94,7 +94,7 @@ public class SchoolActivityService {
     }
 
     public void delete(Integer id) {
-        SchoolActivity activity = findOrThrow(id, TenantContext.getRequiredTenantId());
+        SchoolActivity activity = findOrThrow(id, SchoolContext.getRequiredSchoolId());
         repository.delete(activity);
     }
 
@@ -102,8 +102,8 @@ public class SchoolActivityService {
     // Helpers
     // -------------------------------------------------------------------------
 
-    private SchoolActivity findOrThrow(Integer id, String tenantId) {
-        return repository.findByIdAndTenantId(id, tenantId)
+    private SchoolActivity findOrThrow(Integer id, String schoolId) {
+        return repository.findByIdAndSchoolId(id, schoolId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Activity not found"));
     }
 
@@ -159,4 +159,3 @@ public class SchoolActivityService {
                 .build();
     }
 }
-

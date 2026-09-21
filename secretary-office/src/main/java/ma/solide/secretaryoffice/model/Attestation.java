@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
     name = "tb_attestation",
-    uniqueConstraints = @UniqueConstraint(name = "uk_attestation_tenant_reference", columnNames = {"tenant_id", "reference"})
+    uniqueConstraints = @UniqueConstraint(name = "uk_attestation_school_reference", columnNames = {"school_id", "reference"})
 )
 @Data
 @Builder
@@ -29,8 +29,8 @@ public class Attestation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "tenant_id", nullable = false)
-    private String tenantId;
+    @Column(name = "school_id", nullable = false)
+    private String schoolId;
 
     @Column(nullable = false, name = "user_id")
     private Integer userId;
@@ -68,4 +68,5 @@ public class Attestation {
     @Column(nullable = false)
     private String reference;
 }
+
 

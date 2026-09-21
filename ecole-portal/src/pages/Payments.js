@@ -3,7 +3,7 @@ import axios from 'axios';
 import fr from "../locales/fr.json";
 import ar from "../locales/ar.json";
 import en from "../locales/en.json";
-import { getTenantId } from '../tenant';
+import { getSchoolId } from '../school';
 import { hasAnyRole, normalizeRoles } from '../utils/roles';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { getFallbackCustomization } from '../ecoleLoader';
@@ -95,13 +95,13 @@ const Payments = ({ language }) => {
   const studentsApiUrl = useRelativeApi ? '/api/users/students' : `${apiRoot}/users/students`;
   const classesApiUrl = useRelativeApi ? '/api/classes' : `${apiRoot}/classes`;
   const token = sessionStorage.getItem('jwt_token');
-  const tenantCustomization = getFallbackCustomization();
-  const schoolLogoPath = tenantCustomization?.logo || '';
+  const schoolCustomization = getFallbackCustomization();
+  const schoolLogoPath = schoolCustomization?.logo || '';
   const schoolLogoUrl = schoolLogoPath ? `${window.location.origin}${schoolLogoPath}` : '';
-  const schoolDisplayName = tenantCustomization?.name?.[language] || tenantCustomization?.name?.fr || '';
-  const schoolAddress = tenantCustomization?.adresse?.[language] || tenantCustomization?.adresse?.fr || '';
-  const schoolPhone = tenantCustomization?.phone || '';
-  const schoolEmail = tenantCustomization?.mail || '';
+  const schoolDisplayName = schoolCustomization?.name?.[language] || schoolCustomization?.name?.fr || '';
+  const schoolAddress = schoolCustomization?.adresse?.[language] || schoolCustomization?.adresse?.fr || '';
+  const schoolPhone = schoolCustomization?.phone || '';
+  const schoolEmail = schoolCustomization?.mail || '';
 
   const getLogoDataUrl = async () => {
     if (!schoolLogoUrl) {
@@ -136,7 +136,7 @@ const Payments = ({ language }) => {
   const getHeaders = () => {
     const roleHeader = buildRoleHeader();
     return {
-      'X-Tenant-Id': getTenantId(),
+      'X-School-Id': getSchoolId(),
       ...(roleHeader ? { 'X-User-Roles': roleHeader } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };

@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SharedDocumentRepository extends JpaRepository<SharedDocument, Long> {
 
-    List<SharedDocument> findAllByTenantIdOrderByUploadedAtDesc(String tenantId);
+    List<SharedDocument> findAllBySchoolIdOrderByUploadedAtDesc(String schoolId);
 }
 

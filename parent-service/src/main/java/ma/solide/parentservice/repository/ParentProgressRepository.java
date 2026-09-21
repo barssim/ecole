@@ -7,8 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ParentProgressRepository extends JpaRepository<ParentProgressRecord, Long> {
 
-    List<ParentProgressRecord> findAllByTenantIdAndStudentNameOrderByDateDesc(String tenantId, String studentName);
+    List<ParentProgressRecord> findAllBySchoolIdAndStudentNameOrderByDateDesc(String schoolId, String studentName);
 
-    List<ParentProgressRecord> findAllByTenantIdOrderByDateDesc(String tenantId);
+    List<ParentProgressRecord> findAllBySchoolIdOrderByDateDesc(String schoolId);
 }
-

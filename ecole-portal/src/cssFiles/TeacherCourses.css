@@ -13,7 +13,7 @@
   margin-bottom: 20px;
   flex-wrap: wrap;
   gap: 12px;
-  background: linear-gradient(135deg, var(--tenant-primary, #007bff) 0%, var(--tenant-accent, #5b21b6) 100%);
+  background: linear-gradient(135deg, var(--school-primary, #007bff) 0%, var(--school-accent, #5b21b6) 100%);
   border-radius: 16px;
   padding: 20px 24px;
   color: #fff;
@@ -62,12 +62,12 @@
 }
 
 .tc-btn-primary {
-  background-color: var(--tenant-primary, #007bff);
+  background-color: var(--school-primary, #007bff);
   color: #fff;
 }
 
 .tc-btn-primary:hover:not(:disabled) {
-  background-color: var(--tenant-accent, #0056b3);
+  background-color: var(--school-accent, #0056b3);
 }
 
 .tc-btn-success {
@@ -169,7 +169,7 @@
 .tc-form-group input:focus,
 .tc-form-group textarea:focus {
   outline: none;
-  border-color: var(--tenant-primary, #007bff);
+  border-color: var(--school-primary, #007bff);
 }
 
 .tc-form-actions {
@@ -273,7 +273,7 @@
 }
 
 .tc-file-list a {
-  color: var(--tenant-primary, #007bff);
+  color: var(--school-primary, #007bff);
   text-decoration: none;
 }
 

@@ -11,10 +11,10 @@ import ma.solide.usermanagement.model.User;
 
 public interface UserRepository extends JpaRepository<User, Integer> {
 	Optional<User> findById(Integer id);
-	List<User> findByTenantId(String tenantId);
-	long countByTenantId(String tenantId);
-	boolean existsByTenantIdAndSurnameAndPassword(String tenantId, String username, String password);
-	List<User> findAllByTenantIdAndSurnameAndPassword(String tenantId, String username, String password);
-	Optional<User> findByTenantIdAndUserno(String tenantId, Integer id);
+	List<User> findBySchoolId(String schoolId);
+	long countBySchoolId(String schoolId);
+	boolean existsBySchoolIdAndSurnameAndPassword(String schoolId, String username, String password);
+	List<User> findAllBySchoolIdAndSurnameAndPassword(String schoolId, String username, String password);
+	Optional<User> findBySchoolIdAndUserno(String schoolId, Integer id);
 
 }

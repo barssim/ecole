@@ -15,7 +15,7 @@ import ma.solide.secretaryoffice.dto.AttestationRequestDTO;
 import ma.solide.secretaryoffice.dto.AttestationResponse;
 import ma.solide.secretaryoffice.model.Attestation;
 import ma.solide.secretaryoffice.repository.AttestationRepository;
-import ma.solide.secretaryoffice.tenant.TenantContext;
+import ma.solide.secretaryoffice.school.SchoolContext;
 
 @Service
 public class AttestationService {
@@ -37,18 +37,18 @@ public class AttestationService {
     }
 
     public List<AttestationResponse> getAttestations(Integer userId, String search) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         List<Attestation> attestations;
         boolean hasSearch = StringUtils.hasText(search);
 
         if (userId != null && hasSearch) {
-            attestations = attestationRepository.findByTenantIdAndUserIdAndTitleContainingIgnoreCaseOrderByDateDesc(tenantId, userId, search.trim());
+            attestations = attestationRepository.findBySchoolIdAndUserIdAndTitleContainingIgnoreCaseOrderByDateDesc(schoolId, userId, search.trim());
         } else if (userId != null) {
-            attestations = attestationRepository.findByTenantIdAndUserIdOrderByDateDesc(tenantId, userId);
+            attestations = attestationRepository.findBySchoolIdAndUserIdOrderByDateDesc(schoolId, userId);
         } else if (hasSearch) {
-            attestations = attestationRepository.findByTenantIdAndTitleContainingIgnoreCaseOrderByDateDesc(tenantId, search.trim());
+            attestations = attestationRepository.findBySchoolIdAndTitleContainingIgnoreCaseOrderByDateDesc(schoolId, search.trim());
         } else {
-            attestations = attestationRepository.findAllByTenantIdOrderByDateDesc(tenantId);
+            attestations = attestationRepository.findAllBySchoolIdOrderByDateDesc(schoolId);
         }
 
         return attestations.stream().map(this::toResponse).toList();
@@ -59,8 +59,8 @@ public class AttestationService {
     }
 
     public Attestation findEntity(Integer id) {
-        String tenantId = TenantContext.getRequiredTenantId();
-        return attestationRepository.findByIdAndTenantId(id, tenantId)
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        return attestationRepository.findByIdAndSchoolId(id, schoolId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Attestation introuvable pour l'id " + id));
     }
@@ -89,7 +89,7 @@ public class AttestationService {
     }
 
     public AttestationResponse requestAttestation(AttestationRequestDTO dto) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         if (dto.getUserId() == null || !StringUtils.hasText(dto.getType())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId et type sont requis");
         }
@@ -100,7 +100,7 @@ public class AttestationService {
                     "Type invalide. Valeurs acceptées : " + TYPE_TITLES.keySet());
         }
 
-        if (attestationRepository.existsByTenantIdAndUserIdAndTypeAndStatus(tenantId, dto.getUserId(), type, "pending")) {
+        if (attestationRepository.existsBySchoolIdAndUserIdAndTypeAndStatus(schoolId, dto.getUserId(), type, "pending")) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Une demande de type '" + type + "' est déjà en attente pour cet utilisateur");
         }
@@ -110,7 +110,7 @@ public class AttestationService {
                 + "-" + dto.getUserId() + "-" + type.substring(0, 3).toUpperCase();
 
         Attestation attestation = Attestation.builder()
-                .tenantId(tenantId)
+                .schoolId(schoolId)
                 .userId(dto.getUserId())
                 .studentName(StringUtils.hasText(dto.getStudentName()) ? dto.getStudentName() : "Étudiant " + dto.getUserId())
                 .className(StringUtils.hasText(dto.getClassName()) ? dto.getClassName() : "-")
@@ -180,3 +180,4 @@ public class AttestationService {
         return toResponse(attestationRepository.save(attestation));
     }
 }
+

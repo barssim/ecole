@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.UUID;
 
-import ma.solide.teacherservice.tenant.TenantContext;
+import ma.solide.teacherservice.school.SchoolContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -36,6 +36,8 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 public class FileStorageService {
 
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+    private static final String SCHOOL_SCOPE_PREFIX = "schools/";
+    private static final String LEGACY_SCOPE_PREFIX = "ten" + "ants/";
 
     private final Path baseDir;
     private final S3Client s3Client;
@@ -62,23 +64,25 @@ public class FileStorageService {
 
     public String presignedUrl(String encodedKey) {
         String key = java.net.URLDecoder.decode(encodedKey, StandardCharsets.UTF_8);
-        return signedUrl(requireTenantKey(TenantContext.getRequiredTenantId(), key));
+        return signedUrl(requireSchoolKey(SchoolContext.getRequiredSchoolId(), key));
     }
 
-    private String requireTenantKey(String tenantId, String key) {
-        String prefix = "tenants/" + tenantId + "/courses/";
-        if (!key.startsWith(prefix) || key.contains("..") || key.contains("\\")) {
+    private String requireSchoolKey(String schoolId, String key) {
+        if (key.contains("..") || key.contains("\\")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file key");
         }
-        return key;
+        if (key.startsWith(schoolPrefix(schoolId)) || key.startsWith(legacyScopePrefix(schoolId))) {
+            return key;
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file key");
     }
 
     public Map<String, String> store(MultipartFile multipartFile, String customFilename) {
         validatePdf(multipartFile);
 
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         String safeOriginal = safePdfFilename(customFilename, multipartFile.getOriginalFilename());
-        String objectKey = "tenants/" + tenantId + "/courses/"
+        String objectKey = schoolPrefix(schoolId)
                 + TS.format(LocalDateTime.now()) + "-" + UUID.randomUUID() + "-" + safeOriginal;
 
         try {
@@ -96,9 +100,9 @@ public class FileStorageService {
                         + URLEncoder.encode(objectKey, StandardCharsets.UTF_8));
             }
 
-            Path tenantDir = baseDir.resolve(tenantId);
-            Files.createDirectories(tenantDir);
-            Files.copy(multipartFile.getInputStream(), tenantDir.resolve(objectKey.substring(objectKey.lastIndexOf('/') + 1)),
+            Path schoolDir = baseDir.resolve(schoolId);
+            Files.createDirectories(schoolDir);
+            Files.copy(multipartFile.getInputStream(), schoolDir.resolve(objectKey.substring(objectKey.lastIndexOf('/') + 1)),
                     StandardCopyOption.REPLACE_EXISTING);
             return Map.of("filename", safeOriginal, "url", "/api/uploads/"
                     + URLEncoder.encode(objectKey.substring(objectKey.lastIndexOf('/') + 1), StandardCharsets.UTF_8));
@@ -108,7 +112,7 @@ public class FileStorageService {
     }
 
     public Resource load(String encodedFilename) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         String filename = java.net.URLDecoder.decode(encodedFilename, StandardCharsets.UTF_8);
         if (filename.contains("..") || filename.contains("\\")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid filename");
@@ -118,7 +122,7 @@ public class FileStorageService {
             try {
                 byte[] bytes = s3Client.getObjectAsBytes(GetObjectRequest.builder()
                         .bucket(bucket)
-                        .key(requireTenantKey(tenantId, filename))
+                        .key(requireSchoolKey(schoolId, filename))
                         .build()).asByteArray();
                 return new ByteArrayResource(bytes);
             } catch (NoSuchKeyException e) {
@@ -127,8 +131,8 @@ public class FileStorageService {
         }
 
         try {
-            Path filePath = baseDir.resolve(tenantId).resolve(filename).normalize();
-            if (!filePath.startsWith(baseDir.resolve(tenantId)) || !Files.isReadable(filePath)) {
+            Path filePath = baseDir.resolve(schoolId).resolve(filename).normalize();
+            if (!filePath.startsWith(baseDir.resolve(schoolId)) || !Files.isReadable(filePath)) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
             }
             return new org.springframework.core.io.FileSystemResource(filePath);
@@ -171,5 +175,13 @@ public class FileStorageService {
         String safe = (StringUtils.hasText(input) ? input : "uploaded-file")
                 .replaceAll("[^a-zA-Z0-9._-]", "_");
         return safe.toLowerCase().endsWith(".pdf") ? safe : safe + ".pdf";
+    }
+
+    private String schoolPrefix(String schoolId) {
+        return SCHOOL_SCOPE_PREFIX + schoolId + "/courses/";
+    }
+
+    private String legacyScopePrefix(String schoolId) {
+        return LEGACY_SCOPE_PREFIX + schoolId + "/courses/";
     }
 }

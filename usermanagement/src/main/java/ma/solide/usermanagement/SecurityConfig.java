@@ -16,8 +16,8 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/users/**").permitAll()
-                        .requestMatchers("/api/tenant-customization").permitAll()
-                        .requestMatchers("/api/tenant-customization/**").permitAll()
+                        .requestMatchers("/api/school-customization").permitAll()
+                        .requestMatchers("/api/school-customization/**").permitAll()
                         .anyRequest().authenticated())
                 .formLogin(form -> form.disable())
                 .httpBasic(httpbasic -> httpbasic.disable());

@@ -6,7 +6,7 @@ import java.util.List;
 import ma.solide.teacherservice.dto.SharedDocumentRequest;
 import ma.solide.teacherservice.model.SharedDocument;
 import ma.solide.teacherservice.repository.SharedDocumentRepository;
-import ma.solide.teacherservice.tenant.TenantContext;
+import ma.solide.teacherservice.school.SchoolContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -22,7 +22,7 @@ public class SharedDocumentService {
     }
 
     public List<SharedDocument> list() {
-        return repository.findAllByTenantIdOrderByUploadedAtDesc(TenantContext.getRequiredTenantId());
+        return repository.findAllBySchoolIdOrderByUploadedAtDesc(SchoolContext.getRequiredSchoolId());
     }
 
     public SharedDocument create(SharedDocumentRequest request) {
@@ -31,7 +31,7 @@ public class SharedDocumentService {
         }
 
         SharedDocument doc = SharedDocument.builder()
-                .tenantId(TenantContext.getRequiredTenantId())
+                .schoolId(SchoolContext.getRequiredSchoolId())
                 .title(request.getTitle().trim())
                 .type(request.getType().trim())
                 .link(request.getLink().trim())
@@ -42,10 +42,10 @@ public class SharedDocumentService {
     }
 
     public void delete(Long id) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         SharedDocument doc = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found"));
-        if (!tenantId.equals(doc.getTenantId())) {
+        if (!schoolId.equals(doc.getSchoolId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found");
         }
         repository.delete(doc);

@@ -1,5 +1,5 @@
 -- Insert sample payment data (only if not already present)
-INSERT IGNORE INTO tb_payments (id, tenant_id, student_name, class_name, amount, currency, method, payment_date, reference, notes) VALUES
+INSERT IGNORE INTO tb_payments (id, school_id, student_name, class_name, amount, currency, method, payment_date, reference, notes) VALUES
 (1, 'gardinia', 'Yasmine El Idrissi', '5ème année', 1500.00, 'MAD', 'card', '2025-07-06', 'REF-2025-07-001', 'Tuition payment for July'),
 (2, 'gardinia', 'Ahmed Bennani', '4ème année', 1200.00, 'MAD', 'transfer', '2025-07-05', 'REF-2025-07-002', 'School fees'),
 (3, 'gardinia', 'Fatima Zahra Mansouri', '3ème année', 1000.00, 'MAD', 'cash', '2025-07-03', 'REF-2025-07-003', 'Monthly tuition'),
@@ -12,7 +12,7 @@ INSERT IGNORE INTO tb_payments (id, tenant_id, student_name, class_name, amount,
 (10, 'gardinia', 'Salim Kasmi', '2ème année', 950.00, 'MAD', 'cash', '2025-06-10', 'REF-2025-06-007', 'Installment payment');
 
 -- Insert sample payment notice data (only if not already present)
-INSERT IGNORE INTO tb_payment_notices (id, tenant_id, invoice_number, invoice_date, due_date, student_name, class_name, total_amount, currency, status, description, paid_date) VALUES
+INSERT IGNORE INTO tb_payment_notices (id, school_id, invoice_number, invoice_date, due_date, student_name, class_name, total_amount, currency, status, description, paid_date) VALUES
 (1, 'gardinia', 'INV-2025-07-001', '2025-07-01', '2025-07-15', 'Yasmine El Idrissi', '5ème année', 1500.00, 'MAD', 'paid', 'July 2025 Tuition', '2025-07-06'),
 (2, 'gardinia', 'INV-2025-07-002', '2025-07-01', '2025-07-15', 'Ahmed Bennani', '4ème année', 1200.00, 'MAD', 'paid', 'July 2025 School Fees', '2025-07-05'),
 (3, 'gardinia', 'INV-2025-07-003', '2025-07-01', '2025-07-20', 'Fatima Zahra Mansouri', '3ème année', 1000.00, 'MAD', 'pending', 'July 2025 Monthly Fees', NULL),
@@ -24,9 +24,8 @@ INSERT IGNORE INTO tb_payment_notices (id, tenant_id, invoice_number, invoice_da
 (9, 'gardinia', 'INV-2025-06-004', '2025-06-10', '2025-06-30', 'Amina Alaoui', '3ème année', 1500.00, 'MAD', 'paid', 'June 2025 Tuition', '2025-06-15'),
 (10, 'gardinia', 'INV-2025-05-001', '2025-05-15', '2025-06-01', 'Salim Kasmi', '2ème année', 950.00, 'MAD', 'overdue', 'May 2025 Fees', NULL);
 
--- Backfill legacy rows created before tenant support.
-UPDATE tb_payments SET tenant_id = 'gardinia' WHERE tenant_id IS NULL OR tenant_id = '';
-UPDATE tb_payment_notices SET tenant_id = 'gardinia' WHERE tenant_id IS NULL OR tenant_id = '';
-UPDATE tb_factures SET tenant_id = 'gardinia' WHERE tenant_id IS NULL OR tenant_id = '';
-
+-- Backfill legacy rows created before school support.
+UPDATE tb_payments SET school_id = 'gardinia' WHERE school_id IS NULL OR school_id = '';
+UPDATE tb_payment_notices SET school_id = 'gardinia' WHERE school_id IS NULL OR school_id = '';
+UPDATE tb_factures SET school_id = 'gardinia' WHERE school_id IS NULL OR school_id = '';
 

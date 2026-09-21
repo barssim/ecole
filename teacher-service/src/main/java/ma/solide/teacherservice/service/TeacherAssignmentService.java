@@ -7,7 +7,7 @@ import java.util.List;
 import ma.solide.teacherservice.dto.TeacherAssignmentRequest;
 import ma.solide.teacherservice.model.TeacherAssignment;
 import ma.solide.teacherservice.repository.TeacherAssignmentRepository;
-import ma.solide.teacherservice.tenant.TenantContext;
+import ma.solide.teacherservice.school.SchoolContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -25,33 +25,33 @@ public class TeacherAssignmentService {
     }
 
     public List<TeacherAssignment> list(String teacherId, String classId) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         boolean hasTeacher = StringUtils.hasText(teacherId);
         boolean hasClass = StringUtils.hasText(classId);
 
         if (hasTeacher && hasClass) {
-            return repository.findAllByTenantIdAndTeacherIdAndClassIdOrderByCreatedAtDesc(
-                    tenantId,
+            return repository.findAllBySchoolIdAndTeacherIdAndClassIdOrderByCreatedAtDesc(
+                    schoolId,
                     teacherId.trim(),
                     classId.trim()
             );
         }
         if (hasTeacher) {
-            return repository.findAllByTenantIdAndTeacherIdOrderByCreatedAtDesc(tenantId, teacherId.trim());
+            return repository.findAllBySchoolIdAndTeacherIdOrderByCreatedAtDesc(schoolId, teacherId.trim());
         }
         if (hasClass) {
-            return repository.findAllByTenantIdAndClassIdOrderByCreatedAtDesc(tenantId, classId.trim());
+            return repository.findAllBySchoolIdAndClassIdOrderByCreatedAtDesc(schoolId, classId.trim());
         }
-        return repository.findAllByTenantIdOrderByCreatedAtDesc(tenantId);
+        return repository.findAllBySchoolIdOrderByCreatedAtDesc(schoolId);
     }
 
     public TeacherAssignment create(TeacherAssignmentRequest request) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         validateRequest(request);
         validateClassAssignment(request);
 
         TeacherAssignment entity = TeacherAssignment.builder()
-                .tenantId(tenantId)
+                .schoolId(schoolId)
                 .teacherId(request.getTeacherId().trim())
                 .classId(request.getClassId().trim())
                 .className(StringUtils.hasText(request.getClassName()) ? request.getClassName().trim() : null)
@@ -68,13 +68,13 @@ public class TeacherAssignmentService {
     }
 
     public TeacherAssignment update(Long id, TeacherAssignmentRequest request) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         validateRequest(request);
         validateClassAssignment(request);
 
         TeacherAssignment entity = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
-        if (!tenantId.equals(entity.getTenantId())) {
+        if (!schoolId.equals(entity.getSchoolId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found");
         }
 
@@ -91,10 +91,10 @@ public class TeacherAssignmentService {
     }
 
     public void delete(Long id) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         TeacherAssignment entity = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
-        if (!tenantId.equals(entity.getTenantId())) {
+        if (!schoolId.equals(entity.getSchoolId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found");
         }
         repository.delete(entity);

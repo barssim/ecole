@@ -10,25 +10,26 @@ import ma.solide.secretaryoffice.model.SchoolClass;
 
 public interface SchoolClassRepository extends JpaRepository<SchoolClass, Integer> {
 
-    List<SchoolClass> findAllByTenantIdOrderByNameAsc(String tenantId);
+    List<SchoolClass> findAllBySchoolIdOrderByNameAsc(String schoolId);
 
     @Query("""
             select distinct c
             from SchoolClass c
             join c.teachers t
-            where c.tenantId = :tenantId
+            where c.schoolId = :schoolId
               and lower(trim(t)) = lower(trim(:teacherName))
             order by c.name asc
             """)
-    List<SchoolClass> findAllByTenantIdAndTeacherNameOrderByNameAsc(
-            @Param("tenantId") String tenantId,
+    List<SchoolClass> findAllBySchoolIdAndTeacherNameOrderByNameAsc(
+            @Param("schoolId") String schoolId,
             @Param("teacherName") String teacherName
     );
 
-    boolean existsByTenantIdAndNameIgnoreCase(String tenantId, String name);
+    boolean existsBySchoolIdAndNameIgnoreCase(String schoolId, String name);
 
-    java.util.Optional<SchoolClass> findByIdAndTenantId(Integer id, String tenantId);
+    java.util.Optional<SchoolClass> findByIdAndSchoolId(Integer id, String schoolId);
 
-    boolean existsByIdAndTenantId(Integer id, String tenantId);
+    boolean existsByIdAndSchoolId(Integer id, String schoolId);
 }
+
 

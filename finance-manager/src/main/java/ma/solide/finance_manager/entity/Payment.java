@@ -11,8 +11,8 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "tenant_id", nullable = false, length = 64)
-    private String tenantId;
+    @Column(name = "school_id", nullable = false, length = 64)
+    private String schoolId;
 
     @Column(nullable = false)
     private String studentName;
@@ -61,12 +61,12 @@ public class Payment {
         this.id = id;
     }
 
-    public String getTenantId() {
-        return tenantId;
+    public String getSchoolId() {
+        return schoolId;
     }
 
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
+    public void setSchoolId(String schoolId) {
+        this.schoolId = schoolId;
     }
 
     public String getStudentName() {
@@ -141,4 +141,3 @@ public class Payment {
         this.notes = notes;
     }
 }
-

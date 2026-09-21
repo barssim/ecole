@@ -246,10 +246,18 @@ services:
     depends_on:
       mysql-secretary-office:
         condition: service_healthy
+      minio:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-secretary-office:3306/secretaryOfficeDB
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      GALLERY_S3_BUCKET: ${GALLERY_S3_BUCKET:-ecole-gallery-files}
+      GALLERY_S3_REGION: ${AWS_REGION:-us-east-1}
+      GALLERY_S3_ENDPOINT: http://minio:9000
+      GALLERY_S3_PRESIGN_ENDPOINT: ${AWS_S3_PRESIGN_ENDPOINT:-http://localhost:9000}
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
     networks:
       - ecole
 

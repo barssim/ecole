@@ -26,8 +26,8 @@ public class StudentExercice {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "tenant_id", nullable = false)
-    private String tenantId;
+    @Column(name = "school_id", nullable = false)
+    private String schoolId;
 
     @Column(name = "student_id", nullable = false)
     private String studentId;
@@ -65,6 +65,7 @@ public class StudentExercice {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 }
+
 
 
 

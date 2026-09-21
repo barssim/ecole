@@ -27,7 +27,7 @@
 
 .finance-title-badge {
   display: inline-block;
-  color: var(--tenant-primary, #667eea);
+  color: var(--school-primary, #667eea);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -129,7 +129,7 @@
 .finance-form select:focus,
 .finance-form textarea:focus {
   outline: none;
-  border-color: var(--tenant-primary, #667eea);
+  border-color: var(--school-primary, #667eea);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.18);
 }
 
@@ -389,7 +389,7 @@
   align-items: center;
   gap: 0.4rem;
   margin-top: 0.75rem;
-  color: var(--tenant-primary, #667eea);
+  color: var(--school-primary, #667eea);
   font-weight: 600;
   text-decoration: none;
 }

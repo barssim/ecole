@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getTenantId } from './tenant';
+import { getSchoolId } from './school';
 
 const readRoleHeader = () => {
   try {
@@ -20,10 +20,10 @@ const readRoleHeader = () => {
 };
 
 axios.interceptors.request.use((config) => {
-  const tenantId = getTenantId();
-  if (tenantId) {
+  const schoolId = getSchoolId();
+  if (schoolId) {
     config.headers = config.headers || {};
-    config.headers['X-Tenant-Id'] = tenantId;
+    config.headers['X-School-Id'] = schoolId;
   }
 
   const roleHeader = readRoleHeader();

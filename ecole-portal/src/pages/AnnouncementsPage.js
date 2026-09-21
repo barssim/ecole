@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import fr from "../locales/fr.json";
 import ar from "../locales/ar.json";
 import en from "../locales/en.json";
-import { getTenantId } from "../tenant";
+import { getSchoolId } from "../school";
 import { hasAnyRole, normalizeRoles } from "../utils/roles";
 import { createApiUrlFor, readJsonResponse } from "../utils/apiClient";
 
@@ -22,7 +22,7 @@ const AnnouncementsPage = ({ language }) => {
   const headers = useMemo(
     () => ({
       "Content-Type": "application/json",
-      "X-Tenant-Id": getTenantId(),
+      "X-School-Id": getSchoolId(),
       "X-User-Roles": rolesHeader,
       "X-User-Name": userName,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),

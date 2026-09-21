@@ -3,7 +3,7 @@ import "../cssFiles/Inscription.css";
 import fr from "../locales/header/fr.json";
 import ar from "../locales/header/ar.json";
 import en from "../locales/header/en.json";
-import { getTenantId } from "../tenant";
+import { getSchoolId } from "../school";
 import { resolveApiBaseUrl } from "../utils/apiBaseUrl";
 import { hasAnyRole, normalizeRoles } from "../utils/roles";
 
@@ -52,7 +52,7 @@ const Inscription = ({ language }) => {
   const [deletingManagedUser, setDeletingManagedUser] = useState(false);
 
   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem("user_roles") || "[]"));
-  const canManageTenantUsers = hasAnyRole(userRoles, ["manager"]);
+  const canManageSchoolUsers = hasAnyRole(userRoles, ["manager"]);
 
   const configuredBase = resolveApiBaseUrl("http://localhost:8082");
   const browserIsLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
@@ -72,7 +72,7 @@ const Inscription = ({ language }) => {
     const token = sessionStorage.getItem("jwt_token");
     const roleHeader = userRoles.join(",");
     const headers = {
-      "X-Tenant-Id": getTenantId(),
+      "X-School-Id": getSchoolId(),
       ...(roleHeader ? { "X-User-Roles": roleHeader } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
@@ -110,7 +110,7 @@ const Inscription = ({ language }) => {
   );
 
   const fetchUsers = async () => {
-    if (!canManageTenantUsers) {
+    if (!canManageSchoolUsers) {
       return;
     }
     setUsersLoading(true);
@@ -142,10 +142,10 @@ const Inscription = ({ language }) => {
   };
 
   useEffect(() => {
-    if (canManageTenantUsers) {
+    if (canManageSchoolUsers) {
       fetchUsers();
     }
-  }, [canManageTenantUsers]);
+  }, [canManageSchoolUsers]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -227,7 +227,7 @@ const Inscription = ({ language }) => {
       setError({});
       resetForm();
       await fetchUsers();
-      if (canManageTenantUsers) {
+      if (canManageSchoolUsers) {
         setShowAddUserForm(false);
       }
     } catch (err) {
@@ -387,9 +387,9 @@ const Inscription = ({ language }) => {
 
   return (
     <div className="signup-container">
-      {!canManageTenantUsers && addUserForm}
+      {!canManageSchoolUsers && addUserForm}
 
-      {canManageTenantUsers && (
+      {canManageSchoolUsers && (
         <div className="signup-form" style={{ marginTop: 24, width: "100%", maxWidth: "1200px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
             <h2>{content.usersTitle || "Users"}</h2>
@@ -406,7 +406,7 @@ const Inscription = ({ language }) => {
               {showAddUserForm ? (content.cancelLabel || "Cancel") : (content.addUserLabel || "Add user")}
             </button>
           </div>
-          <p style={{ marginBottom: 10 }}>{content.usersHint || "You can manage all users in your tenant."}</p>
+          <p style={{ marginBottom: 10 }}>{content.usersHint || "You can manage all users in your school."}</p>
           {usersError && <p className="error-message">{usersError}</p>}
 
           <div style={{ overflowX: "auto" }}>

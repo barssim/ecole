@@ -4,7 +4,7 @@ import java.util.List;
 
 import ma.solide.parentservice.model.ParentPaymentView;
 import ma.solide.parentservice.repository.ParentPaymentRepository;
-import ma.solide.parentservice.tenant.TenantContext;
+import ma.solide.parentservice.school.SchoolContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -18,11 +18,10 @@ public class ParentPaymentService {
     }
 
     public List<ParentPaymentView> list(String studentName) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         if (StringUtils.hasText(studentName)) {
-            return repository.findAllByTenantIdAndStudentNameOrderByPaymentDateDesc(tenantId, studentName.trim());
+            return repository.findAllBySchoolIdAndStudentNameOrderByPaymentDateDesc(schoolId, studentName.trim());
         }
-        return repository.findAllByTenantIdOrderByPaymentDateDesc(tenantId);
+        return repository.findAllBySchoolIdOrderByPaymentDateDesc(schoolId);
     }
 }
-

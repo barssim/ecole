@@ -3,15 +3,15 @@ import fr from "../locales/footer/fr.json";
 import ar from "../locales/footer/ar.json";
 import en from "../locales/footer/en.json";
 
-const Footer = ({ language, tenantCustomization }) => {
+const Footer = ({ language, schoolCustomization }) => {
 	let content;
-  const tenant = tenantCustomization || {};
+  const school = schoolCustomization || {};
   const appVersion = (
     process.env.REACT_APP_RELEASE_VERSION
     || process.env.REACT_APP_APP_VERSION
     || "dev"
   ).trim();
-  const customerVersion = (tenant.customerVersion || "").toLowerCase();
+  const customerVersion = (school.customerVersion || "").toLowerCase();
   let trialIndicatorColor = null;
 
   if (customerVersion.includes("gold")) {
@@ -54,14 +54,14 @@ if (language === "fr") {
              <div className="footer-brand">
                <span className="footer-mark">✦</span>
                <div>
-                 <strong>{tenant.name?.[language] || tenant.name?.["fr"] || "School"}</strong>
+                 <strong>{school.name?.[language] || school.name?.["fr"] || "School"}</strong>
                  <p>{content.overTheTime}</p>
                </div>
              </div>
              <address>
-               <span>{tenant.adresse?.[language] || ""}</span>
-               <span>{tenant.phone ? `Phone: ${tenant.phone}` : ""}</span>
-               <span>{tenant.mail ? `Email: ${tenant.mail}` : ""}</span>
+               <span>{school.adresse?.[language] || ""}</span>
+               <span>{school.phone ? `Phone: ${school.phone}` : ""}</span>
+               <span>{school.mail ? `Email: ${school.mail}` : ""}</span>
              </address>
              <div className="footer-socials">
                <span>Suivez-nous</span>

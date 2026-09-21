@@ -1,33 +1,33 @@
-const TENANT_STORAGE_KEY = 'tenant_id';
-const DEFAULT_TENANT_ID = String(process.env.REACT_APP_DEFAULT_TENANT_ID || 'gardinia').trim().toLowerCase() || 'gardinia';
+const SCHOOL_STORAGE_KEY = 'school_id';
+const DEFAULT_SCHOOL_ID = String(process.env.REACT_APP_DEFAULT_SCHOOL_ID || 'gardinia').trim().toLowerCase() || 'gardinia';
 
-const normalizeTenantId = (tenantId) => String(tenantId || '').trim().toLowerCase();
+const normalizeSchoolId = (schoolId) => String(schoolId || '').trim().toLowerCase();
 
-const isPlaceholderTenant = (tenantId) => normalizeTenantId(tenantId) === 'default';
+const isPlaceholderSchool = (schoolId) => normalizeSchoolId(schoolId) === 'default';
 
-export const resolveTenantFromHost = (host = window.location.hostname) => {
-  const normalizedHost = normalizeTenantId(host);
+export const resolveSchoolFromHost = (host = window.location.hostname) => {
+  const normalizedHost = normalizeSchoolId(host);
   if (!normalizedHost || normalizedHost === 'localhost' || normalizedHost.startsWith('127.')) {
-    return DEFAULT_TENANT_ID;
+    return DEFAULT_SCHOOL_ID;
   }
 
   if (normalizedHost.endsWith('.localhost')) {
     const candidate = normalizedHost.replace(/\.localhost$/, '');
-    return candidate && candidate !== 'www' ? candidate : DEFAULT_TENANT_ID;
+    return candidate && candidate !== 'www' ? candidate : DEFAULT_SCHOOL_ID;
   }
 
   const parts = normalizedHost.split('.');
-  const candidate = parts.length >= 3 ? parts[0] : DEFAULT_TENANT_ID;
-  return candidate && candidate !== 'www' ? candidate : DEFAULT_TENANT_ID;
+  const candidate = parts.length >= 3 ? parts[0] : DEFAULT_SCHOOL_ID;
+  return candidate && candidate !== 'www' ? candidate : DEFAULT_SCHOOL_ID;
 };
 
-export const getTenantId = () => {
-  const stored = normalizeTenantId(localStorage.getItem(TENANT_STORAGE_KEY));
-  const resolved = resolveTenantFromHost();
+export const getSchoolId = () => {
+  const stored = normalizeSchoolId(localStorage.getItem(SCHOOL_STORAGE_KEY));
+  const resolved = resolveSchoolFromHost();
 
   if (resolved) {
     if (stored !== resolved) {
-      localStorage.setItem(TENANT_STORAGE_KEY, resolved);
+      localStorage.setItem(SCHOOL_STORAGE_KEY, resolved);
       localStorage.removeItem('user_roles');
       localStorage.removeItem('LoggedIn');
       localStorage.removeItem('isLoggedIn');
@@ -36,29 +36,29 @@ export const getTenantId = () => {
     return resolved;
   }
 
-  if (stored && !isPlaceholderTenant(stored)) {
+  if (stored && !isPlaceholderSchool(stored)) {
     return stored;
   }
 
-  if (!stored || isPlaceholderTenant(stored)) {
-    localStorage.setItem(TENANT_STORAGE_KEY, DEFAULT_TENANT_ID);
+  if (!stored || isPlaceholderSchool(stored)) {
+    localStorage.setItem(SCHOOL_STORAGE_KEY, DEFAULT_SCHOOL_ID);
   }
-  return DEFAULT_TENANT_ID;
+  return DEFAULT_SCHOOL_ID;
 };
 
-export const setTenantId = (tenantId) => {
-  const normalizedTenant = normalizeTenantId(tenantId);
-  if (!normalizedTenant) {
+export const setSchoolId = (schoolId) => {
+  const normalizedSchool = normalizeSchoolId(schoolId);
+  if (!normalizedSchool) {
     return;
   }
 
-  // `default` is only a historical placeholder; persist a usable tenant value instead.
+  // `default` is only a historical placeholder; persist a usable school value instead.
   localStorage.setItem(
-    TENANT_STORAGE_KEY,
-    isPlaceholderTenant(normalizedTenant) ? resolveTenantFromHost() : normalizedTenant
+    SCHOOL_STORAGE_KEY,
+    isPlaceholderSchool(normalizedSchool) ? resolveSchoolFromHost() : normalizedSchool
   );
 };
 
-export const clearTenantId = () => {
-  localStorage.removeItem(TENANT_STORAGE_KEY);
+export const clearSchoolId = () => {
+  localStorage.removeItem(SCHOOL_STORAGE_KEY);
 };

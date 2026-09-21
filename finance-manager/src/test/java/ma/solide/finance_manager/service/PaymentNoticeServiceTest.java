@@ -3,7 +3,7 @@ package ma.solide.finance_manager.service;
 import ma.solide.finance_manager.dto.PaymentNoticeDTO;
 import ma.solide.finance_manager.entity.PaymentNotice;
 import ma.solide.finance_manager.repository.PaymentNoticeRepository;
-import ma.solide.finance_manager.tenant.TenantContext;
+import ma.solide.finance_manager.school.SchoolContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -36,10 +36,10 @@ class PaymentNoticeServiceTest {
 
     @BeforeEach
     void setUp() {
-        TenantContext.setTenantId("school-a");
+        SchoolContext.setSchoolId("school-a");
         mockNotice = new PaymentNotice("INV-202507-001", LocalDate.now(), 
             LocalDate.now().plusDays(15), "John Doe", "5th Grade", 1500.0, "MAD");
-        mockNotice.setTenantId("school-a");
+        mockNotice.setSchoolId("school-a");
         mockNotice.setId(1);
         
         mockNoticeDTO = new PaymentNoticeDTO(1, "INV-202507-001", LocalDate.now(),
@@ -48,14 +48,14 @@ class PaymentNoticeServiceTest {
 
     @AfterEach
     void tearDown() {
-        TenantContext.clear();
+        SchoolContext.clear();
     }
 
     @Test
     void testGetAllNotices() {
         // Arrange
         List<PaymentNotice> notices = Arrays.asList(mockNotice);
-        when(paymentNoticeRepository.findByTenantId("school-a")).thenReturn(notices);
+        when(paymentNoticeRepository.findBySchoolId("school-a")).thenReturn(notices);
 
         // Act
         List<PaymentNoticeDTO> result = paymentNoticeService.getAllNotices();
@@ -63,13 +63,13 @@ class PaymentNoticeServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(paymentNoticeRepository, times(1)).findByTenantId("school-a");
+        verify(paymentNoticeRepository, times(1)).findBySchoolId("school-a");
     }
 
     @Test
     void testGetNoticeById() {
         // Arrange
-        when(paymentNoticeRepository.findByIdAndTenantId(1, "school-a")).thenReturn(Optional.of(mockNotice));
+        when(paymentNoticeRepository.findByIdAndSchoolId(1, "school-a")).thenReturn(Optional.of(mockNotice));
 
         // Act
         PaymentNoticeDTO result = paymentNoticeService.getNoticeById(1);
@@ -77,13 +77,13 @@ class PaymentNoticeServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals("INV-202507-001", result.getInvoiceNumber());
-        verify(paymentNoticeRepository, times(1)).findByIdAndTenantId(1, "school-a");
+        verify(paymentNoticeRepository, times(1)).findByIdAndSchoolId(1, "school-a");
     }
 
     @Test
     void testGetNoticeByIdNotFound() {
         // Arrange
-        when(paymentNoticeRepository.findByIdAndTenantId(999, "school-a")).thenReturn(Optional.empty());
+        when(paymentNoticeRepository.findByIdAndSchoolId(999, "school-a")).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(ResponseStatusException.class, () -> paymentNoticeService.getNoticeById(999));
@@ -93,7 +93,7 @@ class PaymentNoticeServiceTest {
     void testGetNoticesByStudent() {
         // Arrange
         List<PaymentNotice> notices = Arrays.asList(mockNotice);
-        when(paymentNoticeRepository.findByTenantIdAndStudentName("school-a", "John Doe")).thenReturn(notices);
+        when(paymentNoticeRepository.findBySchoolIdAndStudentName("school-a", "John Doe")).thenReturn(notices);
 
         // Act
         List<PaymentNoticeDTO> result = paymentNoticeService.getNoticesByStudent("John Doe");
@@ -102,13 +102,13 @@ class PaymentNoticeServiceTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("John Doe", result.get(0).getStudentName());
-        verify(paymentNoticeRepository, times(1)).findByTenantIdAndStudentName("school-a", "John Doe");
+        verify(paymentNoticeRepository, times(1)).findBySchoolIdAndStudentName("school-a", "John Doe");
     }
 
     @Test
     void testCreateNoticeSuccess() {
         // Arrange
-        when(paymentNoticeRepository.findByTenantId("school-a")).thenReturn(Arrays.asList());
+        when(paymentNoticeRepository.findBySchoolId("school-a")).thenReturn(Arrays.asList());
         when(paymentNoticeRepository.save(any(PaymentNotice.class)))
                 .thenAnswer(invocation -> {
                     PaymentNotice n = invocation.getArgument(0);
@@ -138,7 +138,7 @@ class PaymentNoticeServiceTest {
     @Test
     void testUpdateNoticeStatusToPaid() {
         // Arrange
-        when(paymentNoticeRepository.findByIdAndTenantId(1, "school-a")).thenReturn(Optional.of(mockNotice));
+        when(paymentNoticeRepository.findByIdAndSchoolId(1, "school-a")).thenReturn(Optional.of(mockNotice));
         // Return the same entity passed to save() so mutations (paidDate) are reflected
         when(paymentNoticeRepository.save(any(PaymentNotice.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -156,7 +156,7 @@ class PaymentNoticeServiceTest {
     @Test
     void testUpdateNoticeStatusWithInvalidStatus() {
         // Arrange
-        when(paymentNoticeRepository.findByIdAndTenantId(1, "school-a")).thenReturn(Optional.of(mockNotice));
+        when(paymentNoticeRepository.findByIdAndSchoolId(1, "school-a")).thenReturn(Optional.of(mockNotice));
 
         // Act & Assert
         assertThrows(ResponseStatusException.class, () -> paymentNoticeService.updateNoticeStatus(1, "invalid"));
@@ -166,7 +166,7 @@ class PaymentNoticeServiceTest {
     void testGetNoticesByStatus() {
         // Arrange
         List<PaymentNotice> notices = Arrays.asList(mockNotice);
-        when(paymentNoticeRepository.findByTenantIdAndStatus("school-a", "pending")).thenReturn(notices);
+        when(paymentNoticeRepository.findBySchoolIdAndStatus("school-a", "pending")).thenReturn(notices);
 
         // Act
         List<PaymentNoticeDTO> result = paymentNoticeService.getNoticesByStatus("pending");
@@ -174,7 +174,6 @@ class PaymentNoticeServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(paymentNoticeRepository, times(1)).findByTenantIdAndStatus("school-a", "pending");
+        verify(paymentNoticeRepository, times(1)).findBySchoolIdAndStatus("school-a", "pending");
     }
 }
-

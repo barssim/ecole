@@ -1,5 +1,5 @@
 INSERT IGNORE INTO teacher_courses
-(id, tenant_id, name, description, teacher_id, uploaded_at)
+(id, school_id, name, description, teacher_id, uploaded_at)
 VALUES
 (1, 'gardinia', 'Mathematik - Bruchrechnung', 'Unterlagen zur Vertiefung von Bruechen und Prozentrechnung.', 'teacher-101', '2026-08-20 08:15:00'),
 (2, 'gardinia', 'Franzoesisch - Textanalyse', 'Methoden zur strukturierten Analyse literarischer Texte.', 'teacher-102', '2026-08-21 09:00:00');
@@ -7,7 +7,7 @@ VALUES
 -- 30 subject assignments for the teacher roster seeded in usermanagement.data.sql
 -- (tb_user, userno 201..230 / teacher_id 'teacher-201'..'teacher-230'), 3 teachers per subject.
 INSERT IGNORE INTO teacher_courses
-(id, tenant_id, name, description, teacher_id, uploaded_at)
+(id, school_id, name, description, teacher_id, uploaded_at)
 VALUES
 (101, 'gardinia', 'Mathématiques', 'Titulaire de la matière Mathématiques - Karim Alami.', 'teacher-201', '2026-08-25 08:00:00'),
 (102, 'gardinia', 'Mathématiques', 'Titulaire de la matière Mathématiques - Salma Benjelloun.', 'teacher-202', '2026-08-25 08:05:00'),
@@ -48,25 +48,25 @@ VALUES
 (3, 2, 'textanalyse-leitfaden.pdf', 'https://cdn.ecole.local/courses/fr-textanalyse-leitfaden.pdf');
 
 INSERT IGNORE INTO teacher_shared_documents
-(id, tenant_id, title, type, link, uploaded_by, uploaded_at)
+(id, school_id, title, type, link, uploaded_by, uploaded_at)
 VALUES
 (1, 'gardinia', 'Jahresplanung 2026/27', 'pdf', 'https://cdn.ecole.local/docs/jahresplanung-2026-27.pdf', 'teacher-101', '2026-08-22 10:30:00'),
 (2, 'gardinia', 'Vorlage Elternbrief', 'docx', 'https://cdn.ecole.local/docs/elternbrief-vorlage.docx', 'teacher-102', '2026-08-22 11:15:00');
 
 INSERT IGNORE INTO teacher_parent_meetings
-(id, tenant_id, title, meeting_date, location, details, created_by, created_at)
+(id, school_id, title, meeting_date, location, details, created_by, created_at)
 VALUES
 (1, 'gardinia', 'Elternsprechstunde 3e A', '2026-09-10', 'Raum C2', 'Einzelgespraeche zu Lernstand und Foerderbedarf.', 'teacher-101', '2026-08-25 16:45:00'),
 (2, 'gardinia', 'Elternabend 3e B', '2026-09-12', 'Saal A1', 'Informationen zu Pruefungsplanung und Hausaufgabenkonzept.', 'teacher-102', '2026-08-26 17:10:00');
 
 INSERT IGNORE INTO teacher_assignments
-(id, tenant_id, teacher_id, class_id, class_name, title, description, attachment_name, attachment_url, due_date, created_by, created_at)
+(id, school_id, teacher_id, class_id, class_name, title, description, attachment_name, attachment_url, due_date, created_by, created_at)
 VALUES
 (1, 'gardinia', 'teacher-101', 'CLS-3A', '3e A', 'Arbeitsblatt Algebra', 'Aufgaben 1-12 bearbeiten und Rechenwege dokumentieren.', 'algebra-worksheet.pdf', 'https://cdn.ecole.local/assignments/algebra-worksheet.pdf', '2026-09-18', 'teacher-101', '2026-09-01 08:00:00'),
 (2, 'gardinia', 'teacher-102', 'CLS-3B', '3e B', 'Textzusammenfassung', 'Kapitel 2 lesen und Zusammenfassung auf 1 Seite schreiben.', NULL, NULL, '2026-09-20', 'teacher-102', '2026-09-01 09:20:00');
 
 INSERT IGNORE INTO tb_professor_attendance
-(id, tenant_id, teacher_id, teacher_name, attendance_date, scheduled_time, check_in_time, status, notes, updated_at)
+(id, school_id, teacher_id, teacher_name, attendance_date, scheduled_time, check_in_time, status, notes, updated_at)
 VALUES
 (1, 'gardinia', 101, 'Mme Benali', '2026-09-19', '08:00:00', '07:55:00', 'present', 'Cours de mathématiques', '2026-09-19 07:55:00'),
 (2, 'gardinia', 102, 'M. Alaoui', '2026-09-19', '08:30:00', '08:40:00', 'late', 'Retard signalé', '2026-09-19 08:40:00'),
@@ -88,14 +88,14 @@ VALUES
 (18, 'gardinia', 228, 'Hafsa Draoui', '2026-09-19', '11:00:00', '11:03:00', 'present', 'Cours d''arts plastiques', '2026-09-19 11:03:00');
 
 INSERT IGNORE INTO teacher_notes
-(id, tenant_id, teacher_id, class_id, class_name, student_name, subject, grade, entry_date)
+(id, school_id, teacher_id, class_id, class_name, student_name, subject, grade, entry_date)
 VALUES
 (1, 'gardinia', 'teacher-101', 'CLS-3A', '3e A', 'Assil Benali', 'Mathematik', 17.50, '2026-08-28'),
 (2, 'gardinia', 'teacher-102', 'CLS-3B', '3e B', 'Barae Idrissi', 'Franzoesisch', 14.75, '2026-08-28');
 
 
 INSERT IGNORE INTO teacher_courses
-(id, tenant_id, name, description, teacher_id, class_id, class_name, uploaded_at)
+(id, school_id, name, description, teacher_id, class_id, class_name, uploaded_at)
 VALUES
 (301, 'gardinia', 'Mathématiques - 3e A', 'Support de cours de Mathématiques pour la classe 3e A, prepare par Karim Alami.', '201', '1', '3e A', '2026-09-08 08:00:00'),
 (302, 'gardinia', 'Français - 3e A', 'Support de cours de Français pour la classe 3e A, prepare par Nadia Ziani.', '204', '1', '3e A', '2026-09-09 09:00:00'),
@@ -263,7 +263,7 @@ VALUES
 (140, 380, 'arts-plastiques-6e-b.pdf', 'https://cdn.ecole.local/courses/arts-plastiques-6e-b.pdf');
 
 INSERT IGNORE INTO teacher_assignments
-(id, tenant_id, teacher_id, class_id, class_name, title, description, attachment_name, attachment_url, due_date, created_by, created_at)
+(id, school_id, teacher_id, class_id, class_name, title, description, attachment_name, attachment_url, due_date, created_by, created_at)
 VALUES
 (21, 'gardinia', '201', '1', '3e A', 'Exercices Mathématiques - 3e A', 'Serie d''exercices de Mathématiques a preparer pour la classe 3e A.', NULL, NULL, '2026-09-22', '201', '2026-09-08 08:30:00'),
 (22, 'gardinia', '204', '1', '3e A', 'Exercices Français - 3e A', 'Serie d''exercices de Français a preparer pour la classe 3e A.', NULL, NULL, '2026-09-23', '204', '2026-09-09 09:30:00'),
@@ -347,7 +347,7 @@ VALUES
 (100, 'gardinia', '229', '8', '6e B', 'Exercices Arts Plastiques - 6e B', 'Serie d''exercices de Arts Plastiques a preparer pour la classe 6e B.', NULL, NULL, '2026-09-30', '229', '2026-09-17 09:30:00');
 
 INSERT IGNORE INTO teacher_notes
-(id, tenant_id, teacher_id, class_id, class_name, student_name, subject, grade, entry_date)
+(id, school_id, teacher_id, class_id, class_name, student_name, subject, grade, entry_date)
 VALUES
 (3, 'gardinia', '201', '1', '3e A', 'Adam El Amrani', 'Mathématiques', 14.80, '2026-09-10'),
 (4, 'gardinia', '210', '1', '3e A', 'Adam El Amrani', 'Anglais', 14.90, '2026-09-10'),

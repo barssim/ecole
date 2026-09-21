@@ -25,8 +25,8 @@ public class SchoolActivity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "tenant_id", nullable = false)
-    private String tenantId;
+    @Column(name = "school_id", nullable = false)
+    private String schoolId;
 
     @Column(nullable = false)
     private String type;
@@ -49,4 +49,3 @@ public class SchoolActivity {
     @Column(name = "created_by")
     private String createdBy;
 }
-

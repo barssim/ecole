@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import fr from '../locales/fr.json';
 import en from '../locales/en.json';
 import ar from '../locales/ar.json';
-import { getTenantId } from '../tenant';
+import { getSchoolId } from '../school';
 import { hasAnyRole, normalizeRoles } from '../utils/roles';
 import { createApiUrlFor } from '../utils/apiClient';
 
@@ -44,7 +44,7 @@ const AttestationsPage = ({ language }) => {
 
   const buildHeaders = useCallback((includeJson = false) => {
     const headers = {
-      'X-Tenant-Id': getTenantId(),
+      'X-School-Id': getSchoolId(),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(rolesHeaderValue ? { 'X-User-Roles': rolesHeaderValue } : {}),
       ...(resolvedUserId ? { 'X-User-Id': String(resolvedUserId) } : {}),

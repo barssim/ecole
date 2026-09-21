@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
     name = "tb_class",
-    uniqueConstraints = @UniqueConstraint(name = "uk_class_tenant_name", columnNames = {"tenant_id", "name"})
+    uniqueConstraints = @UniqueConstraint(name = "uk_class_school_name", columnNames = {"school_id", "name"})
 )
 @Data
 @Builder
@@ -34,8 +34,8 @@ public class SchoolClass {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "tenant_id", nullable = false)
-    private String tenantId;
+    @Column(name = "school_id", nullable = false)
+    private String schoolId;
 
     @Column(nullable = false)
     private String name;
@@ -60,4 +60,5 @@ public class SchoolClass {
     @Builder.Default
     private List<String> teachers = new ArrayList<>();
 }
+
 

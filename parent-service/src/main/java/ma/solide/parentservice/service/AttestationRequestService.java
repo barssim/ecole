@@ -6,7 +6,7 @@ import java.util.List;
 import ma.solide.parentservice.dto.AttestationRequestCreateRequest;
 import ma.solide.parentservice.model.AttestationRequestRecord;
 import ma.solide.parentservice.repository.AttestationRequestRepository;
-import ma.solide.parentservice.tenant.TenantContext;
+import ma.solide.parentservice.school.SchoolContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -22,11 +22,11 @@ public class AttestationRequestService {
     }
 
     public List<AttestationRequestRecord> list(Integer userId) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         if (userId != null) {
-            return repository.findAllByTenantIdAndUserIdOrderByCreatedAtDesc(tenantId, userId);
+            return repository.findAllBySchoolIdAndUserIdOrderByCreatedAtDesc(schoolId, userId);
         }
-        return repository.findAllByTenantIdOrderByCreatedAtDesc(tenantId);
+        return repository.findAllBySchoolIdOrderByCreatedAtDesc(schoolId);
     }
 
     public AttestationRequestRecord create(AttestationRequestCreateRequest request) {
@@ -41,7 +41,7 @@ public class AttestationRequestService {
         }
 
         AttestationRequestRecord record = AttestationRequestRecord.builder()
-                .tenantId(TenantContext.getRequiredTenantId())
+                .schoolId(SchoolContext.getRequiredSchoolId())
                 .userId(request.getUserId())
                 .studentName(request.getStudentName().trim())
                 .className(StringUtils.hasText(request.getClassName()) ? request.getClassName().trim() : null)
@@ -53,4 +53,3 @@ public class AttestationRequestService {
         return repository.save(record);
     }
 }
-

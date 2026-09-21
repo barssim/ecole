@@ -11,7 +11,7 @@ import ma.solide.secretaryoffice.dto.ExamRequestDTO;
 import ma.solide.secretaryoffice.dto.ExamResponseDTO;
 import ma.solide.secretaryoffice.model.Exam;
 import ma.solide.secretaryoffice.repository.ExamRepository;
-import ma.solide.secretaryoffice.tenant.TenantContext;
+import ma.solide.secretaryoffice.school.SchoolContext;
 
 @Service
 public class ExamService {
@@ -23,8 +23,8 @@ public class ExamService {
     }
 
     public List<ExamResponseDTO> getAllExams() {
-        String tenantId = TenantContext.getRequiredTenantId();
-        return examRepository.findAllByTenantIdOrderByDateAscStartTimeAsc(tenantId)
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        return examRepository.findAllBySchoolIdOrderByDateAscStartTimeAsc(schoolId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -35,11 +35,11 @@ public class ExamService {
     }
 
     public ExamResponseDTO createExam(ExamRequestDTO dto) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         validate(dto);
 
         Exam exam = Exam.builder()
-                .tenantId(tenantId)
+                .schoolId(schoolId)
                 .subject(dto.getSubject().trim())
                 .className(dto.getClassName().trim())
                 .date(dto.getDate())
@@ -73,8 +73,8 @@ public class ExamService {
     }
 
     private Exam findEntity(Integer id) {
-        String tenantId = TenantContext.getRequiredTenantId();
-        return examRepository.findByIdAndTenantId(id, tenantId)
+        String schoolId = SchoolContext.getRequiredSchoolId();
+        return examRepository.findByIdAndSchoolId(id, schoolId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam not found with id " + id));
     }
 
@@ -115,4 +115,5 @@ public class ExamService {
                 .build();
     }
 }
+
 

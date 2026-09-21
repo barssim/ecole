@@ -66,6 +66,14 @@ const [showActivites, setShowActivites] = useState(false);
               )}
               <li>
                 <Link
+                  to="/services/gallery"
+                  className="text-xs bg-purple-100 text-purple-800 px-3 py-1 rounded hover:bg-purple-200 inline-block"
+                >
+                  {content.gallery_title || "Galerie"}
+                </Link>
+              </li>
+              <li>
+                <Link
                   to="/services/outings"
                   className="text-xs bg-purple-100 text-purple-800 px-3 py-1 rounded hover:bg-purple-200 inline-block"
                 >

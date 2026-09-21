@@ -8,10 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SchoolActivityRepository extends JpaRepository<SchoolActivity, Integer> {
 
-    List<SchoolActivity> findAllByTenantIdOrderByDateAscIdAsc(String tenantId);
+    List<SchoolActivity> findAllBySchoolIdOrderByDateAscIdAsc(String schoolId);
 
-    List<SchoolActivity> findByTenantIdAndTypeOrderByDateAscIdAsc(String tenantId, String type);
+    List<SchoolActivity> findBySchoolIdAndTypeOrderByDateAscIdAsc(String schoolId, String type);
 
-    Optional<SchoolActivity> findByIdAndTenantId(Integer id, String tenantId);
+    Optional<SchoolActivity> findByIdAndSchoolId(Integer id, String schoolId);
 }
-

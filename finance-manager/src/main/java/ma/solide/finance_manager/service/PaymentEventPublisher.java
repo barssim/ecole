@@ -25,7 +25,7 @@ public class PaymentEventPublisher {
         PaymentReceivedEvent event = new PaymentReceivedEvent(
                 UUID.randomUUID().toString(),
                 payment.getId(),
-                payment.getTenantId(),
+                payment.getSchoolId(),
                 payment.getStudentName(),
                 payment.getStudentEmail(),
                 payment.getAmount(),

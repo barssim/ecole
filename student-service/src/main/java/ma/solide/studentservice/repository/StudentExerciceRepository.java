@@ -7,16 +7,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface StudentExerciceRepository extends JpaRepository<StudentExercice, Long> {
 
-    List<StudentExercice> findAllByTenantIdAndStudentIdOrderByDueDateAscCreatedAtDesc(String tenantId, String studentId);
+    List<StudentExercice> findAllBySchoolIdAndStudentIdOrderByDueDateAscCreatedAtDesc(String schoolId, String studentId);
 
-    List<StudentExercice> findAllByTenantIdOrderByDueDateAscCreatedAtDesc(String tenantId);
+    List<StudentExercice> findAllBySchoolIdOrderByDueDateAscCreatedAtDesc(String schoolId);
 
-    List<StudentExercice> findAllByTenantIdAndStudentIdAndClassIdOrderByDueDateAscCreatedAtDesc(
-            String tenantId,
+    List<StudentExercice> findAllBySchoolIdAndStudentIdAndClassIdOrderByDueDateAscCreatedAtDesc(
+            String schoolId,
             String studentId,
             String classId
     );
 }
+
 
 
 

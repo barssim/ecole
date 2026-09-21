@@ -6,7 +6,7 @@ import java.util.List;
 import ma.solide.studentservice.dto.StudentExerciceRequest;
 import ma.solide.studentservice.model.StudentExercice;
 import ma.solide.studentservice.repository.StudentExerciceRepository;
-import ma.solide.studentservice.tenant.TenantContext;
+import ma.solide.studentservice.school.SchoolContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -24,25 +24,25 @@ public class StudentExerciceService {
     }
 
     public List<StudentExercice> listExercises(String studentId, String classId) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         if (StringUtils.hasText(studentId) && StringUtils.hasText(classId)) {
-            return studentExerciceRepository.findAllByTenantIdAndStudentIdAndClassIdOrderByDueDateAscCreatedAtDesc(
-                    tenantId,
+            return studentExerciceRepository.findAllBySchoolIdAndStudentIdAndClassIdOrderByDueDateAscCreatedAtDesc(
+                    schoolId,
                     studentId.trim(),
                     classId.trim()
             );
         }
         if (StringUtils.hasText(studentId)) {
-            return studentExerciceRepository.findAllByTenantIdAndStudentIdOrderByDueDateAscCreatedAtDesc(
-                    tenantId,
+            return studentExerciceRepository.findAllBySchoolIdAndStudentIdOrderByDueDateAscCreatedAtDesc(
+                    schoolId,
                     studentId.trim()
             );
         }
-        return studentExerciceRepository.findAllByTenantIdOrderByDueDateAscCreatedAtDesc(tenantId);
+        return studentExerciceRepository.findAllBySchoolIdOrderByDueDateAscCreatedAtDesc(schoolId);
     }
 
     public StudentExercice createExercise(StudentExerciceRequest request) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         if (request == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request body is required");
         }
@@ -57,7 +57,7 @@ public class StudentExerciceService {
         }
 
         StudentExercice exercise = StudentExercice.builder()
-                .tenantId(tenantId)
+                .schoolId(schoolId)
                 .studentId(request.getStudentId().trim())
                 .title(request.getTitle().trim())
                 .description(StringUtils.hasText(request.getDescription()) ? request.getDescription().trim() : null)
@@ -76,16 +76,17 @@ public class StudentExerciceService {
     }
 
     public void deleteExercise(Long exerciseId) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         StudentExercice exercise = studentExerciceRepository.findById(exerciseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise not found"));
 
-        if (!tenantId.equals(exercise.getTenantId())) {
+        if (!schoolId.equals(exercise.getSchoolId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise not found");
         }
 
         studentExerciceRepository.delete(exercise);
     }
 }
+
 
 

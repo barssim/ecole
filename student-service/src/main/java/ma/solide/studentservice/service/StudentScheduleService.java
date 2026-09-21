@@ -10,7 +10,7 @@ import ma.solide.studentservice.dto.StudentScheduleDayResponse;
 import ma.solide.studentservice.dto.StudentScheduleRequest;
 import ma.solide.studentservice.model.StudentScheduleEntry;
 import ma.solide.studentservice.repository.StudentScheduleEntryRepository;
-import ma.solide.studentservice.tenant.TenantContext;
+import ma.solide.studentservice.school.SchoolContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -36,15 +36,15 @@ public class StudentScheduleService {
     }
 
     public List<StudentScheduleDayResponse> listSchedule(String studentId) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         List<StudentScheduleEntry> entries;
         if (StringUtils.hasText(studentId)) {
-            entries = studentScheduleEntryRepository.findAllByTenantIdAndStudentIdOrderByDayAscSlotOrderAsc(
-                    tenantId,
+            entries = studentScheduleEntryRepository.findAllBySchoolIdAndStudentIdOrderByDayAscSlotOrderAsc(
+                    schoolId,
                     studentId.trim()
             );
         } else {
-            entries = studentScheduleEntryRepository.findAllByTenantIdOrderByStudentIdAscDayAscSlotOrderAsc(tenantId);
+            entries = studentScheduleEntryRepository.findAllBySchoolIdOrderByStudentIdAscDayAscSlotOrderAsc(schoolId);
         }
 
         entries.sort((left, right) -> {
@@ -68,7 +68,7 @@ public class StudentScheduleService {
     }
 
     public StudentScheduleDayResponse createDayPlan(StudentScheduleRequest request) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         if (request == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request body is required");
         }
@@ -90,7 +90,7 @@ public class StudentScheduleService {
             }
             String slotText = slot.trim();
             studentScheduleEntryRepository.save(StudentScheduleEntry.builder()
-                    .tenantId(tenantId)
+                    .schoolId(schoolId)
                     .studentId(request.getStudentId().trim())
                     .day(request.getDay().trim())
                     .slotOrder(order++)
@@ -107,11 +107,11 @@ public class StudentScheduleService {
     }
 
     public void deleteEntry(Long entryId) {
-        String tenantId = TenantContext.getRequiredTenantId();
+        String schoolId = SchoolContext.getRequiredSchoolId();
         StudentScheduleEntry entry = studentScheduleEntryRepository.findById(entryId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule entry not found"));
 
-        if (!tenantId.equals(entry.getTenantId())) {
+        if (!schoolId.equals(entry.getSchoolId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule entry not found");
         }
 
@@ -125,4 +125,5 @@ public class StudentScheduleService {
         return DAY_ORDER.getOrDefault(dayName.trim().toLowerCase(Locale.ROOT), Integer.MAX_VALUE);
     }
 }
+
 

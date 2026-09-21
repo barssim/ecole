@@ -4,7 +4,7 @@ import java.util.List;
 
 import ma.solide.studentservice.model.StudentScheduleEntry;
 import ma.solide.studentservice.repository.StudentScheduleEntryRepository;
-import ma.solide.studentservice.tenant.TenantContext;
+import ma.solide.studentservice.school.SchoolContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,19 +32,19 @@ class StudentScheduleControllerTest {
 
     @BeforeEach
     void setUp() {
-        TenantContext.setTenantId("gardinia");
+        SchoolContext.setSchoolId("gardinia");
         try {
             studentScheduleEntryRepository.deleteAll();
             studentScheduleEntryRepository.saveAll(List.of(
                     StudentScheduleEntry.builder()
-                            .tenantId("gardinia")
+                            .schoolId("gardinia")
                             .studentId("5")
                             .day("Monday")
                             .slotOrder(1)
                             .slotText("Math - 08:00")
                             .build(),
                     StudentScheduleEntry.builder()
-                            .tenantId("gardinia")
+                            .schoolId("gardinia")
                             .studentId("5")
                             .day("Monday")
                             .slotOrder(2)
@@ -52,16 +52,16 @@ class StudentScheduleControllerTest {
                             .build()
             ));
         } finally {
-            TenantContext.clear();
+            SchoolContext.clear();
         }
     }
 
     @Test
-    void listScheduleReturnsGroupedDaySlotsForTenant() throws Exception {
-        TenantContext.setTenantId("gardinia");
+    void listScheduleReturnsGroupedDaySlotsForSchool() throws Exception {
+        SchoolContext.setSchoolId("gardinia");
         try {
             mockMvc.perform(get("/api/studentschedule")
-                            .header("X-Tenant-Id", "gardinia")
+                            .header("X-School-Id", "gardinia")
                             .param("user", "5")
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
@@ -70,7 +70,8 @@ class StudentScheduleControllerTest {
                     .andExpect(jsonPath("$[0].slots[0]").value("Math - 08:00"))
                     .andExpect(jsonPath("$[0].slots[1]").value("Physics - 10:00"));
         } finally {
-            TenantContext.clear();
+            SchoolContext.clear();
         }
     }
 }
+

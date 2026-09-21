@@ -3,9 +3,9 @@ import { http, HttpResponse } from 'msw';
 
 const BASE_URL = 'http://localhost:8085';
 
-const getTenantId = (request) => (request.headers.get('X-Tenant-Id') || 'gardinia').toLowerCase();
+const getSchoolId = (request) => (request.headers.get('X-School-Id') || 'gardinia').toLowerCase();
 
-const classesByTenant = {
+const classesBySchool = {
   gardinia: [
     { id: 1, name: '3e A', students: ['Yassine', 'Majda', 'Karim'], teachers: ['Mme El Idrissi'] },
     { id: 2, name: '3e B', students: ['Sara', 'Nabil', 'Omar'], teachers: [] },
@@ -17,7 +17,7 @@ const classesByTenant = {
   ],
 };
 
-const teachersByTenant = {
+const teachersBySchool = {
   gardinia: [
     { id: 8, name: 'Mme El Idrissi', username: 'teacher' },
     { id: 9, name: 'M. Bensalah', username: 'teacher2' },
@@ -29,7 +29,7 @@ const teachersByTenant = {
   ],
 };
 
-const classSchedulesByTenant = {
+const classSchedulesBySchool = {
   gardinia: {
     1: [
       { id: 101, classId: 1, day: 'Monday', slotOrder: 1, slotText: 'Math - 08:00' },
@@ -57,7 +57,7 @@ const classSchedulesByTenant = {
   },
 };
 
-const teacherCoursesByTenant = {};
+const teacherCoursesBySchool = {};
 
 const dayOrder = {
   monday: 1,
@@ -91,29 +91,29 @@ const groupScheduleEntries = (entries) => {
   return grouped;
 };
 
-const findStudentClass = (tenantId, studentName) => {
+const findStudentClass = (schoolId, studentName) => {
   const normalized = String(studentName || '').trim().toLowerCase();
   if (!normalized) return null;
-  return (classesByTenant[tenantId] || []).find((schoolClass) =>
+  return (classesBySchool[schoolId] || []).find((schoolClass) =>
     (schoolClass.students || []).some((student) => String(student || '').trim().toLowerCase() === normalized)
   ) || null;
 };
 
-const getClassScheduleStore = (tenantId) => {
-  if (!classSchedulesByTenant[tenantId]) {
-    classSchedulesByTenant[tenantId] = {};
+const getClassScheduleStore = (schoolId) => {
+  if (!classSchedulesBySchool[schoolId]) {
+    classSchedulesBySchool[schoolId] = {};
   }
-  return classSchedulesByTenant[tenantId];
+  return classSchedulesBySchool[schoolId];
 };
 
-const getNextScheduleId = (tenantId) => {
-  const schedules = getClassScheduleStore(tenantId);
+const getNextScheduleId = (schoolId) => {
+  const schedules = getClassScheduleStore(schoolId);
   return Object.values(schedules)
     .flat()
     .reduce((maxId, entry) => Math.max(maxId, Number(entry.id) || 0), 0) + 1;
 };
 
-const examsByTenant = {
+const examsBySchool = {
   gardinia: [
     { id: 1, subject: 'Mathématiques', className: '3e A', date: '2025-07-22', startTime: '09:00', endTime: '11:00', room: 'Salle 101' },
     { id: 2, subject: 'Physique', className: '3e A', date: '2025-07-23', startTime: '13:00', endTime: '15:00', room: 'Salle 202' },
@@ -125,7 +125,7 @@ const examsByTenant = {
   ],
 };
 
-const attestationsByTenant = {
+const attestationsBySchool = {
   gardinia: [
     {
       id: 1,
@@ -194,15 +194,15 @@ const attestationsByTenant = {
   ],
 };
 
-const getAttestationStore = (tenantId) => {
-  if (!attestationsByTenant[tenantId]) {
-    attestationsByTenant[tenantId] = [];
+const getAttestationStore = (schoolId) => {
+  if (!attestationsBySchool[schoolId]) {
+    attestationsBySchool[schoolId] = [];
   }
-  return attestationsByTenant[tenantId];
+  return attestationsBySchool[schoolId];
 };
 
-const getNextAttestationId = (tenantId) =>
-  getAttestationStore(tenantId).reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1;
+const getNextAttestationId = (schoolId) =>
+  getAttestationStore(schoolId).reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1;
 
 export const handlers = [
   // 💳 Handler for a payment notice
@@ -290,27 +290,27 @@ export const handlers = [
 
   // 🧪 Handler for upcoming exams
   http.get(`${BASE_URL}/api/exams`, ({ request }) => {
-    const tenantId = getTenantId(request);
-    return HttpResponse.json(examsByTenant[tenantId] || examsByTenant.gardinia);
+    const schoolId = getSchoolId(request);
+    return HttpResponse.json(examsBySchool[schoolId] || examsBySchool.gardinia);
   }),
 
    // 🧪 Handler for classes
     http.get(`${BASE_URL}/api/classes`, ({ request }) => {
-      const tenantId = getTenantId(request);
-      return HttpResponse.json(classesByTenant[tenantId] || classesByTenant.gardinia);
+      const schoolId = getSchoolId(request);
+      return HttpResponse.json(classesBySchool[schoolId] || classesBySchool.gardinia);
     }),
 
     http.get(`${BASE_URL}/api/users/teachers`, ({ request }) => {
-      const tenantId = getTenantId(request);
-      return HttpResponse.json(teachersByTenant[tenantId] || teachersByTenant.gardinia);
+      const schoolId = getSchoolId(request);
+      return HttpResponse.json(teachersBySchool[schoolId] || teachersBySchool.gardinia);
     }),
 
     http.post(`${BASE_URL}/api/classes/:id/teachers`, async ({ request, params }) => {
-      const tenantId = getTenantId(request);
+      const schoolId = getSchoolId(request);
       const body = await request.json();
       const classId = Number(params.id);
       const teacherName = String(body?.name || '').trim();
-      const classList = classesByTenant[tenantId] || classesByTenant.gardinia;
+      const classList = classesBySchool[schoolId] || classesBySchool.gardinia;
       const schoolClass = classList.find((cls) => cls.id === classId);
 
       if (!schoolClass || !teacherName) {
@@ -326,10 +326,10 @@ export const handlers = [
     }),
 
     http.delete(`${BASE_URL}/api/classes/:id/teachers/:teacherName`, ({ request, params }) => {
-      const tenantId = getTenantId(request);
+      const schoolId = getSchoolId(request);
       const classId = Number(params.id);
       const teacherName = decodeURIComponent(String(params.teacherName || ''));
-      const classList = classesByTenant[tenantId] || classesByTenant.gardinia;
+      const classList = classesBySchool[schoolId] || classesBySchool.gardinia;
       const schoolClass = classList.find((cls) => cls.id === classId);
 
       if (!schoolClass) {
@@ -347,24 +347,24 @@ export const handlers = [
     }),
 
     http.get(`${BASE_URL}/api/classes/:id/schedule`, ({ request, params }) => {
-      const tenantId = getTenantId(request);
+      const schoolId = getSchoolId(request);
       const classId = Number(params.id);
-      const classList = classesByTenant[tenantId] || classesByTenant.gardinia;
+      const classList = classesBySchool[schoolId] || classesBySchool.gardinia;
       const schoolClass = classList.find((cls) => cls.id === classId);
 
       if (!schoolClass) {
         return HttpResponse.json({ message: 'Classe introuvable' }, { status: 404 });
       }
 
-      const classSchedule = (getClassScheduleStore(tenantId)[classId] || []);
+      const classSchedule = (getClassScheduleStore(schoolId)[classId] || []);
       return HttpResponse.json(groupScheduleEntries(classSchedule));
     }),
 
     http.post(`${BASE_URL}/api/classes/:id/schedule`, async ({ request, params }) => {
-      const tenantId = getTenantId(request);
+      const schoolId = getSchoolId(request);
       const classId = Number(params.id);
       const body = await request.json();
-      const classList = classesByTenant[tenantId] || classesByTenant.gardinia;
+      const classList = classesBySchool[schoolId] || classesBySchool.gardinia;
       const schoolClass = classList.find((cls) => cls.id === classId);
       const day = String(body?.day || '').trim();
       const slots = Array.isArray(body?.slots) ? body.slots.map((slot) => String(slot || '').trim()).filter(Boolean) : [];
@@ -379,9 +379,9 @@ export const handlers = [
         return HttpResponse.json({ message: 'at least one slot is required' }, { status: 400 });
       }
 
-      const schedules = getClassScheduleStore(tenantId);
+      const schedules = getClassScheduleStore(schoolId);
       const existing = schedules[classId] || [];
-      const nextId = getNextScheduleId(tenantId);
+      const nextId = getNextScheduleId(schoolId);
       const nextOrder = existing
         .filter((entry) => String(entry.day || '').trim().toLowerCase() === day.toLowerCase())
         .reduce((maxOrder, entry) => Math.max(maxOrder, Number(entry.slotOrder) || 0), 0) + 1;
@@ -398,10 +398,10 @@ export const handlers = [
     }),
 
     http.delete(`${BASE_URL}/api/classes/:id/schedule/:entryId`, ({ request, params }) => {
-      const tenantId = getTenantId(request);
+      const schoolId = getSchoolId(request);
       const classId = Number(params.id);
       const entryId = Number(params.entryId);
-      const schedules = getClassScheduleStore(tenantId);
+      const schedules = getClassScheduleStore(schoolId);
       const classEntries = schedules[classId] || [];
       const nextEntries = classEntries.filter((entry) => entry.id !== entryId);
 
@@ -416,7 +416,7 @@ export const handlers = [
     // 🧪 Handler for teacher courses
     http.get(`${BASE_URL}/api/teachercourses`, ({ request }) => {
     const userId = localStorage.getItem("userId");
-    const tenantId = getTenantId(request);
+    const schoolId = getSchoolId(request);
     const url = new URL(request.url);
     const classId = url.searchParams.get("classId");
     const teachercourses = {
@@ -447,12 +447,12 @@ export const handlers = [
      };
 
      let course = [
-       ...(teacherCoursesByTenant[tenantId] || []).filter((item) => String(item.teacherId) === String(userId)),
+       ...(teacherCoursesBySchool[schoolId] || []).filter((item) => String(item.teacherId) === String(userId)),
        ...(teachercourses[userId] || []),
      ];
 
      if (classId) {
-       course = (teacherCoursesByTenant[tenantId] || []).filter(
+       course = (teacherCoursesBySchool[schoolId] || []).filter(
          (item) => String(item.classId) === String(classId)
        );
      }
@@ -461,10 +461,10 @@ export const handlers = [
    }),
 
    http.get(`${BASE_URL}/api/teacher/classes`, ({ request }) => {
-     const tenantId = getTenantId(request);
+     const schoolId = getSchoolId(request);
      const url = new URL(request.url);
      const teacherName = (url.searchParams.get("teacherName") || "").trim().toLowerCase();
-     const classes = classesByTenant[tenantId] || classesByTenant.gardinia;
+     const classes = classesBySchool[schoolId] || classesBySchool.gardinia;
      if (!teacherName) return HttpResponse.json(classes);
      const assigned = classes.filter((schoolClass) =>
        (schoolClass.teachers || []).some((teacher) => String(teacher).trim().toLowerCase() === teacherName)
@@ -473,27 +473,27 @@ export const handlers = [
    }),
 
    http.post(`${BASE_URL}/api/teachercourses`, async ({ request }) => {
-     const tenantId = getTenantId(request);
+     const schoolId = getSchoolId(request);
      const payload = await request.json();
      if (!payload.name || !payload.teacherId) {
        return HttpResponse.json({ message: 'name and teacherId are required' }, { status: 400 });
      }
-     if (!teacherCoursesByTenant[tenantId]) teacherCoursesByTenant[tenantId] = [];
+     if (!teacherCoursesBySchool[schoolId]) teacherCoursesBySchool[schoolId] = [];
      const course = {
        ...payload,
        id: Date.now(),
        uploadedAt: new Date().toISOString(),
        files: Array.isArray(payload.files) ? payload.files : [],
      };
-     teacherCoursesByTenant[tenantId].unshift(course);
+     teacherCoursesBySchool[schoolId].unshift(course);
      return HttpResponse.json(course, { status: 201 });
    }),
 
    http.delete(`${BASE_URL}/api/teachercourses/:id`, ({ params, request }) => {
-     const tenantId = getTenantId(request);
-     const courses = teacherCoursesByTenant[tenantId] || [];
+     const schoolId = getSchoolId(request);
+     const courses = teacherCoursesBySchool[schoolId] || [];
      const remaining = courses.filter((course) => String(course.id) !== String(params.id));
-     teacherCoursesByTenant[tenantId] = remaining;
+     teacherCoursesBySchool[schoolId] = remaining;
      return new HttpResponse(null, { status: remaining.length === courses.length ? 404 : 204 });
    }),
 
@@ -502,11 +502,11 @@ export const handlers = [
 http.get(`${BASE_URL}/api/studentschedule`, ({ request }) => {
   const userId = localStorage.getItem("userId");
   const studentName = localStorage.getItem("LoggedIn") || localStorage.getItem("userName") || localStorage.getItem("username") || '';
-  const tenantId = getTenantId(request);
+  const schoolId = getSchoolId(request);
 
-  const matchedClass = findStudentClass(tenantId, studentName);
+  const matchedClass = findStudentClass(schoolId, studentName);
   if (matchedClass) {
-    const schedule = getClassScheduleStore(tenantId)[matchedClass.id] || [];
+    const schedule = getClassScheduleStore(schoolId)[matchedClass.id] || [];
     return HttpResponse.json(groupScheduleEntries(schedule));
   }
 
@@ -531,10 +531,10 @@ http.get(`${BASE_URL}/api/studentschedule`, ({ request }) => {
 
  // 🧪 Handler for attestations
    http.get(`${BASE_URL}/api/attestations`, ({ request }) => {
-     const tenantId = getTenantId(request);
+     const schoolId = getSchoolId(request);
      const requestedUserId = request.url.searchParams.get('userId');
      const search = (request.url.searchParams.get('search') || '').toLowerCase();
-     let attestations = [...getAttestationStore(tenantId)];
+     let attestations = [...getAttestationStore(schoolId)];
 
      if (requestedUserId) {
        attestations = attestations.filter((item) => String(item.userId) === requestedUserId);
@@ -549,8 +549,8 @@ http.get(`${BASE_URL}/api/studentschedule`, ({ request }) => {
 
     // 🎓 Handler for production attestations (detailed, user-specific)
     http.get(`${BASE_URL}/api/attestationsproduction`, ({ request }) => {
-      const tenantId = getTenantId(request);
-      return HttpResponse.json(getAttestationStore(tenantId));
+      const schoolId = getSchoolId(request);
+      return HttpResponse.json(getAttestationStore(schoolId));
     }),
 
     // 📋 Handler for student attestation request (POST)
@@ -574,9 +574,9 @@ http.get(`${BASE_URL}/api/studentschedule`, ({ request }) => {
         return new HttpResponse("Type invalide", { status: 400 });
       }
 
-      const tenantId = getTenantId(request);
+      const schoolId = getSchoolId(request);
       const today = new Date().toISOString().split('T')[0];
-      const mockId = getNextAttestationId(tenantId);
+      const mockId = getNextAttestationId(schoolId);
       const reference = `REQ-${today.replace(/-/g,'')}${userId}-${type.substring(0,3).toUpperCase()}`;
 
       const created = {
@@ -596,14 +596,14 @@ http.get(`${BASE_URL}/api/studentschedule`, ({ request }) => {
         reference: reference,
       };
 
-      getAttestationStore(tenantId).unshift(created);
+      getAttestationStore(schoolId).unshift(created);
 
       return HttpResponse.json(created, { status: 201 });
     }),
 
     http.patch(`${BASE_URL}/api/attestations/:id/approve`, ({ request, params }) => {
-      const tenantId = getTenantId(request);
-      const attestation = getAttestationStore(tenantId).find((item) => item.id === Number(params.id));
+      const schoolId = getSchoolId(request);
+      const attestation = getAttestationStore(schoolId).find((item) => item.id === Number(params.id));
       if (!attestation) {
         return new HttpResponse(null, { status: 404 });
       }
@@ -616,8 +616,8 @@ http.get(`${BASE_URL}/api/studentschedule`, ({ request }) => {
     }),
 
     http.patch(`${BASE_URL}/api/attestations/:id/cancel`, ({ request, params }) => {
-      const tenantId = getTenantId(request);
-      const attestation = getAttestationStore(tenantId).find((item) => item.id === Number(params.id));
+      const schoolId = getSchoolId(request);
+      const attestation = getAttestationStore(schoolId).find((item) => item.id === Number(params.id));
       if (!attestation) {
         return new HttpResponse(null, { status: 404 });
       }
@@ -630,8 +630,8 @@ http.get(`${BASE_URL}/api/studentschedule`, ({ request }) => {
     }),
 
     http.delete(`${BASE_URL}/api/attestations/:id`, ({ request, params }) => {
-      const tenantId = getTenantId(request);
-      const store = getAttestationStore(tenantId);
+      const schoolId = getSchoolId(request);
+      const store = getAttestationStore(schoolId);
       const index = store.findIndex((item) => item.id === Number(params.id));
       if (index === -1) {
         return new HttpResponse(null, { status: 404 });

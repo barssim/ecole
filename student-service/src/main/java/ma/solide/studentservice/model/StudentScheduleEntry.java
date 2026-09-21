@@ -23,8 +23,8 @@ public class StudentScheduleEntry {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "tenant_id", nullable = false)
-    private String tenantId;
+    @Column(name = "school_id", nullable = false)
+    private String schoolId;
 
     @Column(name = "student_id", nullable = false)
     private String studentId;
@@ -38,4 +38,5 @@ public class StudentScheduleEntry {
     @Column(name = "slot_text", nullable = false, length = 500)
     private String slotText;
 }
+
 

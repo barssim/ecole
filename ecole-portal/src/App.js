@@ -15,7 +15,7 @@ import fr from "./locales/fr.json";
 import ar from "./locales/ar.json";
 import en from "./locales/en.json";
 import "./App.css";
-import { fetchTenantCustomization, getFallbackCustomization } from './ecoleLoader';
+import { fetchSchoolCustomization, getFallbackCustomization } from './ecoleLoader';
 import SchoolInvoicePreview from './components/SchoolInvoicePreview';
 import Payments from './pages/Payments';
 import ExamProgram  from './pages/ExamProgram';
@@ -45,9 +45,10 @@ import TeacherAttendancePage from './pages/TeacherAttendancePage';
 import TeacherNotesPage from './pages/TeacherNotesPage';
 import OutingPage from './pages/OutingPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
-import TenantCustomizationPage from './pages/TenantCustomizationPage';
+import GalleryPage from './pages/GalleryPage';
+import SchoolCustomizationPage from './pages/SchoolCustomizationPage';
 import TeacherAssignmentsPage from './pages/TeacherAssignmentsPage';
-import { getTenantId } from './tenant';
+import { getSchoolId } from './school';
 import { createApiUrlFor, readJsonResponse } from './utils/apiClient';
 
 
@@ -81,7 +82,7 @@ const mixWithWhite = (color, ratio) => {
   return `rgb(${mixed[0]}, ${mixed[1]}, ${mixed[2]})`;
 };
 
-const AnnouncementsFeedPanel = ({ content, language, tenantCustomization }) => {
+const AnnouncementsFeedPanel = ({ content, language, schoolCustomization }) => {
   const [feed, setFeed] = useState([]);
 
   useEffect(() => {
@@ -90,7 +91,7 @@ const AnnouncementsFeedPanel = ({ content, language, tenantCustomization }) => {
     const userRoles = JSON.parse(localStorage.getItem("user_roles") || "[]");
     const userName = localStorage.getItem("LoggedIn") || "";
     const headers = {
-      "X-Tenant-Id": getTenantId(),
+      "X-School-Id": getSchoolId(),
       "X-User-Roles": userRoles.join(","),
       "X-User-Name": userName,
     };
@@ -127,8 +128,8 @@ const AnnouncementsFeedPanel = ({ content, language, tenantCustomization }) => {
             {[0, 1].flatMap((cycle) => [
               <span className="home-outings-item home-outings-logo" key={`logo-${cycle}`}>
                 <img
-                  src={tenantCustomization?.logo}
-                  alt={tenantCustomization?.name?.[language] || tenantCustomization?.name?.["fr"] || "School"}
+                  src={schoolCustomization?.logo}
+                  alt={schoolCustomization?.name?.[language] || schoolCustomization?.name?.["fr"] || "School"}
                 />
               </span>,
               ...feed.map((activity, index) => (
@@ -148,9 +149,9 @@ const AnnouncementsFeedPanel = ({ content, language, tenantCustomization }) => {
   );
 };
 
-const HomeLanding = ({ content, language, tenantCustomization }) => {
+const HomeLanding = ({ content, language, schoolCustomization }) => {
   const navigate = useNavigate();
-  const schoolName = tenantCustomization.name?.[language] || tenantCustomization.name?.["fr"] || "School";
+  const schoolName = schoolCustomization.name?.[language] || schoolCustomization.name?.["fr"] || "School";
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
 
   return (
@@ -187,18 +188,18 @@ const HomeLanding = ({ content, language, tenantCustomization }) => {
 };
 
 function App() {
-  const tenantId = getTenantId();
+  const schoolId = getSchoolId();
 	const [language, setLanguage] = useState("fr"); // Track current language
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-	const [tenantCustomization, setTenantCustomization] = useState(() => getFallbackCustomization(tenantId));
+	const [schoolCustomization, setSchoolCustomization] = useState(() => getFallbackCustomization(schoolId));
 	let content;
-  const tenantPrimaryColor = normalizeHex(tenantCustomization.primaryColor) || "#007bff";
-  const tenantAccentColor = normalizeHex(tenantCustomization.accentColor) || mixWithWhite(tenantPrimaryColor, 0.35);
-  const tenantSoftColor = normalizeHex(tenantCustomization.softColor) || mixWithWhite(tenantPrimaryColor, 0.7);
-  const tenantThemeStyle = {
-    "--tenant-primary": tenantPrimaryColor,
-    "--tenant-accent": tenantAccentColor,
-    "--tenant-soft": tenantSoftColor,
+  const schoolPrimaryColor = normalizeHex(schoolCustomization.primaryColor) || "#007bff";
+  const schoolAccentColor = normalizeHex(schoolCustomization.accentColor) || mixWithWhite(schoolPrimaryColor, 0.35);
+  const schoolSoftColor = normalizeHex(schoolCustomization.softColor) || mixWithWhite(schoolPrimaryColor, 0.7);
+  const schoolThemeStyle = {
+    "--school-primary": schoolPrimaryColor,
+    "--school-accent": schoolAccentColor,
+    "--school-soft": schoolSoftColor,
   };
 
 if (language === "fr") {
@@ -226,16 +227,16 @@ useEffect(() => {
 
 useEffect(() => {
   let mounted = true;
-  setTenantCustomization(getFallbackCustomization(tenantId));
-  fetchTenantCustomization().then((customization) => {
+  setSchoolCustomization(getFallbackCustomization(schoolId));
+  fetchSchoolCustomization().then((customization) => {
     if (mounted && customization) {
-      setTenantCustomization(customization);
+      setSchoolCustomization(customization);
     }
   });
   return () => {
     mounted = false;
   };
-}, [tenantId]);
+}, [schoolId]);
 
 useEffect(() => {
   const handleResize = () => {
@@ -257,9 +258,9 @@ const AppContent = () => {
 
 
   return (
-    <div className="app-shell" style={tenantThemeStyle}>
+    <div className="app-shell" style={schoolThemeStyle}>
       <div className="app-header-shell">
-        <Header language={language} toggleLanguage={toggleLanguage} tenantCustomization={tenantCustomization}/>
+        <Header language={language} toggleLanguage={toggleLanguage} schoolCustomization={schoolCustomization}/>
       </div>
       <div className="layout-controls">
         <button
@@ -285,12 +286,12 @@ const AppContent = () => {
                    <HomeLanding
                      content={content}
                      language={language}
-                     tenantCustomization={tenantCustomization}
+                     schoolCustomization={schoolCustomization}
                    />
                  ) : (
                    <div className="hero-title" style={{ textAlign: "center" }}>
-                     <h1 style={{ color: "var(--tenant-primary, #007bff)" }}>{content.whatWeDo}{tenantCustomization.name?.[language] || tenantCustomization.name?.["fr"]}</h1>
-                     <h4 style={{ color: "var(--tenant-accent, #00bbff)" }}>{content.whatYouFind}</h4>
+                     <h1 style={{ color: "var(--school-primary, #007bff)" }}>{content.whatWeDo}{schoolCustomization.name?.[language] || schoolCustomization.name?.["fr"]}</h1>
+                     <h4 style={{ color: "var(--school-accent, #00bbff)" }}>{content.whatYouFind}</h4>
                    </div>
                  )}
                   <div className="routes-wrapper">
@@ -309,9 +310,10 @@ const AppContent = () => {
                       <Route path="/administration/parties" element={<PartiesPage language={language} />} />
                       <Route path="/administration/meetings" element={<MeetingPage language={language} />} />
                       <Route path="/administration/attestations" element={<AttestationsPage language={language} />} />
-                      <Route path="/administration/customization" element={<TenantCustomizationPage language={language} />} />
+                      <Route path="/administration/customization" element={<SchoolCustomizationPage language={language} />} />
                       <Route path="/services/outings" element={<OutingPage language={language} />} />
                       <Route path="/services/announcements" element={<AnnouncementsPage language={language} />} />
+                      <Route path="/services/gallery" element={<GalleryPage language={language} />} />
                       <Route path="/services/parties" element={<PartiesPage language={language} />} />
                       <Route path="/services/meetings" element={<MeetingPage language={language} />} />
                       <Route path="/enseignement/parent-meetings" element={<ParentMeetingPage language={language} toggleLanguage={toggleLanguage} />} />
@@ -328,7 +330,7 @@ const AppContent = () => {
                       <Route path="/services/bibliotheque/reglement" element={<Rules />} />
 				      <Route path="/login" element={<Login language={language} toggleLanguage={toggleLanguage} />} />
 				      <Route path="/logout" element={<Logout language={language} toggleLanguage={toggleLanguage} />} />
-				      <Route path="/about" element={<About language={language} toggleLanguage={toggleLanguage} tenantCustomization={tenantCustomization} />} />
+				      <Route path="/about" element={<About language={language} toggleLanguage={toggleLanguage} schoolCustomization={schoolCustomization} />} />
 				      <Route path="/inscription" element={<Inscription language={language} toggleLanguage={toggleLanguage} />} />
 				      <Route path="/contact" element={<Contact language={language} toggleLanguage={toggleLanguage} />} />
               <Route path="/profile" element={<ProfilePage language={language} />} />
@@ -344,17 +346,17 @@ const AppContent = () => {
 
         <aside className="right-panel">
           <div className="right-panel-art">
-            <img src={tenantCustomization.image} alt={tenantCustomization.name?.[language] || "School"} />
+            <img src={schoolCustomization.image} alt={schoolCustomization.name?.[language] || "School"} />
           </div>
           <div className="right-panel-content">
             <span className="panel-heading-mark">✦</span>
-            <h2>{tenantCustomization.name?.[language] || tenantCustomization.name?.["fr"] || "School"}</h2>
+            <h2>{schoolCustomization.name?.[language] || schoolCustomization.name?.["fr"] || "School"}</h2>
             <div className="portal-status"><span /> {content.overTheTime}</div>
           </div>
-          <AnnouncementsFeedPanel content={content} language={language} tenantCustomization={tenantCustomization} />
+          <AnnouncementsFeedPanel content={content} language={language} schoolCustomization={schoolCustomization} />
         </aside>
 			</div>
-      <Footer language={language} tenantCustomization={tenantCustomization} />
+      <Footer language={language} schoolCustomization={schoolCustomization} />
     </div>
 	);
 };

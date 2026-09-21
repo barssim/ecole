@@ -1,14 +1,14 @@
-﻿import { getTenantId } from "./tenant";
+﻿import { getSchoolId } from "./school";
 
 const customizationMap = {
   gardinia: () => require("./customizations/gardinia").default,
   qods: () => require("./customizations/qods").default,
 };
 
-const resolveCustomizationLoader = (tenantId) => customizationMap[tenantId] || customizationMap.qods;
+const resolveCustomizationLoader = (schoolId) => customizationMap[schoolId] || customizationMap.qods;
 
-export const getFallbackCustomization = (tenantId = getTenantId()) => {
-  const loadCustomization = resolveCustomizationLoader(tenantId);
+export const getFallbackCustomization = (schoolId = getSchoolId()) => {
+  const loadCustomization = resolveCustomizationLoader(schoolId);
   return loadCustomization();
 };
 
@@ -31,17 +31,17 @@ const mergeCustomization = (fallback, remote) => {
   };
 };
 
-export const fetchTenantCustomization = async () => {
-  const tenantId = getTenantId();
-  const fallback = getFallbackCustomization(tenantId);
+export const fetchSchoolCustomization = async () => {
+  const schoolId = getSchoolId();
+  const fallback = getFallbackCustomization(schoolId);
   const token = sessionStorage.getItem("jwt_token");
-  const requestUrl = '/api/tenant-customization';
+  const requestUrl = '/api/school-customization';
 
   try {
     const response = await fetch(requestUrl, {
       headers: {
         "Content-Type": "application/json",
-        "X-Tenant-Id": tenantId,
+        "X-School-Id": schoolId,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });

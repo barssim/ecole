@@ -25,8 +25,8 @@ public class ParentPaymentView {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "tenant_id", nullable = false)
-    private String tenantId;
+    @Column(name = "school_id", nullable = false)
+    private String schoolId;
 
     @Column(name = "student_name", nullable = false)
     private String studentName;
@@ -52,4 +52,3 @@ public class ParentPaymentView {
     @Column(length = 2000)
     private String notes;
 }
-
