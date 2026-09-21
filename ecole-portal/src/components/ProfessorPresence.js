@@ -14,10 +14,48 @@ const ProfessorPresence = ({ language }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [teachers, setTeachers] = useState([]);
+  const [teachersLoading, setTeachersLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [saveSuccess, setSaveSuccess] = useState('');
+  const [form, setForm] = useState({
+    teacherName: '',
+    attendanceDate: today,
+    scheduledTime: '08:00',
+    status: 'present',
+    notes: '',
+  });
+
   const apiUrlFor = createApiUrlFor('http://localhost:8085');
   const token = sessionStorage.getItem('jwt_token');
   const userRoles = JSON.parse(localStorage.getItem('user_roles') || '[]');
   const rolesHeader = userRoles.join(',');
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      setTeachersLoading(true);
+      try {
+        const response = await fetch(apiUrlFor('/users/teachers'), {
+          headers: {
+            'X-Tenant-Id': getTenantId(),
+            'X-User-Roles': rolesHeader,
+          },
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        setTeachers(Array.isArray(data) ? data : []);
+      } catch {
+        setTeachers([]);
+      } finally {
+        setTeachersLoading(false);
+      }
+    };
+    fetchTeachers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const fetchPresence = async () => {
@@ -44,7 +82,51 @@ const ProfessorPresence = ({ language }) => {
     };
 
     fetchPresence();
-  }, [selectedDate, token, rolesHeader, content.presence_error]);
+  }, [selectedDate, token, rolesHeader, content.presence_error, refreshKey]);
+
+  const handleAddAttendance = async (event) => {
+    event.preventDefault();
+    setSaveError('');
+    setSaveSuccess('');
+
+    if (!form.teacherName) {
+      setSaveError(content.presence_teacherRequired || 'Veuillez sélectionner un enseignant.');
+      return;
+    }
+
+    const selectedTeacher = teachers.find((t) => t.name === form.teacherName);
+
+    try {
+      setSaving(true);
+      const response = await fetch(apiUrlFor('/presence/professors'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': getTenantId(),
+          'X-User-Roles': rolesHeader,
+        },
+        body: JSON.stringify({
+          teacherId: selectedTeacher?.id ? Number(selectedTeacher.id) : undefined,
+          teacherName: form.teacherName,
+          attendanceDate: form.attendanceDate,
+          scheduledTime: form.scheduledTime,
+          status: form.status,
+          notes: form.notes,
+        }),
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      setForm({ teacherName: '', attendanceDate: selectedDate, scheduledTime: '08:00', status: 'present', notes: '' });
+      setShowAddForm(false);
+      setSaveSuccess(content.presence_addSuccess || 'Présence enregistrée avec succès.');
+      setRefreshKey((k) => k + 1);
+    } catch {
+      setSaveError(content.presence_addError || "Impossible d'enregistrer la présence.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const presentCount = presenceList.filter((item) => item.status === 'present').length;
   const lateCount = presenceList.filter((item) => item.status === 'late').length;
@@ -65,6 +147,111 @@ const ProfessorPresence = ({ language }) => {
       <h2 className="text-2xl font-bold mb-4 text-blue-800">
         {content.presence_title} – {selectedDate}
       </h2>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+        <button
+          type="button"
+          onClick={() => { setShowAddForm((prev) => !prev); setSaveError(''); setSaveSuccess(''); }}
+          style={{
+            background: '#2563eb',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 8,
+            padding: '8px 16px',
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          {showAddForm ? (content.presence_cancel || 'Annuler') : `+ ${content.presence_addAttendance || 'Ajouter une présence'}`}
+        </button>
+      </div>
+
+      {saveError && <div style={{ color: '#dc2626', background: '#fde8e8', border: '1px solid #fca5a5', borderRadius: 8, padding: '8px 12px' }}>{saveError}</div>}
+      {saveSuccess && <div style={{ color: '#065f46', background: '#d1fae5', border: '1px solid #6ee7b7', borderRadius: 8, padding: '8px 12px' }}>{saveSuccess}</div>}
+
+      {showAddForm && (
+        <form
+          onSubmit={handleAddAttendance}
+          style={{ display: 'grid', gap: 12, background: '#fff', padding: 16, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}
+        >
+          <div>
+            <label>{content.presence_name || 'Enseignant'}</label>
+            <select
+              value={form.teacherName}
+              onChange={(e) => setForm((prev) => ({ ...prev, teacherName: e.target.value }))}
+              style={{ width: '100%' }}
+              disabled={teachersLoading}
+              required
+            >
+              <option value="">{teachersLoading ? '…' : (content.classes_selectTeacherPlaceholder || 'Sélectionner un enseignant')}</option>
+              {teachers.map((t) => (
+                <option key={t.id || t.name} value={t.name}>{t.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label>{content.payment_date || 'Date'}</label>
+            <input
+              type="date"
+              value={form.attendanceDate}
+              onChange={(e) => setForm((prev) => ({ ...prev, attendanceDate: e.target.value }))}
+              style={{ width: '100%' }}
+              required
+            />
+          </div>
+
+          <div>
+            <label>{content.presence_scheduled || 'Heure prévue'}</label>
+            <input
+              type="time"
+              value={form.scheduledTime}
+              onChange={(e) => setForm((prev) => ({ ...prev, scheduledTime: e.target.value }))}
+              style={{ width: '100%' }}
+              required
+            />
+          </div>
+
+          <div>
+            <label>{content.presence_status || 'Statut'}</label>
+            <select
+              value={form.status}
+              onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))}
+              style={{ width: '100%' }}
+            >
+              <option value="present">{content.presence_status_present || 'Présent'}</option>
+              <option value="late">{content.presence_status_late || 'En retard'}</option>
+              <option value="absent">{content.presence_status_absent || 'Absent'}</option>
+            </select>
+          </div>
+
+          <div>
+            <label>{content.presence_notes || 'Notes'}</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
+              rows={3}
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={saving}
+            style={{
+              background: '#16a34a',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              padding: '10px 16px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            {saving ? (content.loading || 'Enregistrement...') : (content.presence_save || 'Enregistrer')}
+          </button>
+        </form>
+      )}
 
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
         <label style={{ display: 'grid', gap: 4 }}>

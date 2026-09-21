@@ -6,6 +6,7 @@ import { getTenantId } from '../tenant';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { normalizeRoles } from '../utils/roles';
 import '../cssFiles/Inscription.css';
+import '../cssFiles/TeacherPages.css';
 
 const TeacherNotesPage = ({ language }) => {
   const content = language === 'fr' ? fr : language === 'en' ? en : ar;
@@ -37,6 +38,7 @@ const TeacherNotesPage = ({ language }) => {
   const [newEntry, setNewEntry] = useState({ studentName: '', subject: '', grade: '' });
   const [selectedSavedEntryId, setSelectedSavedEntryId] = useState('');
   const [managedEntry, setManagedEntry] = useState({ subject: '', grade: '' });
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const apiUrlFor = (path) => (useRelativeApi ? `/api${path}` : `${effectiveBase}/api${path}`);
 
@@ -291,6 +293,7 @@ const TeacherNotesPage = ({ language }) => {
 
   const selectForEdit = (id) => {
     setSelectedSavedEntryId(String(id));
+    setShowAddForm(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -319,47 +322,24 @@ const TeacherNotesPage = ({ language }) => {
   );
 
   return (
-    <div style={{ maxWidth: 820, margin: '0 auto', width: '100%', display: 'grid', gap: 20 }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      <h2>{content.grades_title || 'Saisie des notes'}</h2>
+    <div className="teacher-page" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <div className="teacher-header">
+        <div>
+          <span className="teacher-title-badge">📊 Notes</span>
+          <h2 className="teacher-title">{content.grades_title || 'Saisie des notes'}</h2>
+        </div>
+        <button
+          type="button"
+          className="teacher-btn"
+          onClick={() => { setShowAddForm((prev) => !prev); setSelectedSavedEntryId(''); }}
+        >
+          {showAddForm ? (content.notes_cancel || 'Annuler') : `+ ${content.notes_addTitle || 'Ajouter une note'}`}
+        </button>
+      </div>
       {error && <div className="error-message">{error}</div>}
       {message && <div className="success-message">{message}</div>}
 
-      {savedEntries.length > 0 && (
-        <div>
-          <h3>{content.notes_savedTitle || 'Notes enregistrées'}{selectedClass ? ` — ${selectedClass.name}` : ''}</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: 'rgb(219, 234, 254)' }}>
-                  <th style={th}>{content.notes_date || 'Date'}</th>
-                  <th style={th}>{content.notes_class || 'Classe'}</th>
-                  <th style={th}>{content.notes_studentName || 'Élève'}</th>
-                  <th style={th}>{content.notes_subject || 'Matière'}</th>
-                  <th style={th}>{content.notes_grade || 'Note'}</th>
-                  <th style={th}>{content.notes_actions || 'Actions'}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {savedEntries.map((entry, i) => (
-                  <tr key={entry.id || i} style={{ background: String(entry.id) === String(selectedSavedEntryId) ? '#bfdbfe' : i % 2 === 0 ? '#f0f9ff' : '#fff' }}>
-                    <td style={td}>{entry.date}</td>
-                    <td style={td}>{entry.className}</td>
-                    <td style={td}>{entry.studentName}</td>
-                    <td style={td}>{entry.subject}</td>
-                    <td style={td}><strong>{entry.grade} / 20</strong></td>
-                    <td style={{ ...td, whiteSpace: 'nowrap' }}>
-                      <button type="button" className="signup-button" style={{ padding: '6px 14px', width: 'auto' }} onClick={() => selectForEdit(entry.id)}>
-                        {content.notes_edit || 'Modifier'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
+      {showAddForm && (
       <form onSubmit={handleAddEntry} className="signup-form" style={{ maxWidth: '100%', width: '100%' }}>
         <h3 style={{ marginTop: 0, marginBottom: 15 }}>{content.notes_addTitle || 'Ajouter une note'}</h3>
 
@@ -428,8 +408,9 @@ const TeacherNotesPage = ({ language }) => {
           {content.notes_save || 'Enregistrer la note'}
         </button>
       </form>
+      )}
 
-      {savedEntries.length > 0 && (
+      {selectedSavedEntryId && (
         <form onSubmit={handleUpdateEntry} className="signup-form" style={{ maxWidth: '100%', width: '100%' }}>
           <h3 style={{ marginTop: 0, marginBottom: 15 }}>{content.notes_manageTitle || 'Modifier / Supprimer une note'}</h3>
 
@@ -475,11 +456,51 @@ const TeacherNotesPage = ({ language }) => {
           </div>
         </form>
       )}
+
+      {savedEntries.length > 0 && (
+        <div className="teacher-card">
+          <h3>{content.notes_savedTitle || 'Notes enregistrées'}{selectedClass ? ` — ${selectedClass.name}` : ''}</h3>
+          <div className="teacher-table-wrapper">
+            <table className="teacher-table">
+              <thead>
+                <tr>
+                  <th>{content.notes_date || 'Date'}</th>
+                  <th>{content.notes_class || 'Classe'}</th>
+                  <th>{content.notes_studentName || 'Élève'}</th>
+                  <th>{content.notes_subject || 'Matière'}</th>
+                  <th>{content.notes_grade || 'Note'}</th>
+                  <th>{content.notes_actions || 'Actions'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {savedEntries.map((entry, i) => (
+                  <tr key={entry.id || i} style={{ background: String(entry.id) === String(selectedSavedEntryId) ? '#bfdbfe' : undefined }}>
+                    <td style={td}>{entry.date}</td>
+                    <td style={td}>{entry.className}</td>
+                    <td style={td}>{entry.studentName}</td>
+                    <td style={td}>{entry.subject}</td>
+                    <td style={td}><strong>{entry.grade} / 20</strong></td>
+                    <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                      <button
+                        type="button"
+                        onClick={() => selectForEdit(entry.id)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1d4ed8', fontSize: 16 }}
+                        title={content.notes_edit || 'Modifier'}
+                      >
+                        ✏️
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-const th = { padding: '8px 12px', textAlign: 'left', fontWeight: 600 };
 const td = { padding: '8px 12px' };
 
 export default TeacherNotesPage;

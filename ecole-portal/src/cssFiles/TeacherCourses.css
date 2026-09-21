@@ -3,7 +3,7 @@
 .tc-container {
   max-width: 900px;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: 24px 16px 48px;
 }
 
 .tc-header {
@@ -13,12 +13,36 @@
   margin-bottom: 20px;
   flex-wrap: wrap;
   gap: 12px;
+  background: linear-gradient(135deg, var(--tenant-primary, #007bff) 0%, var(--tenant-accent, #5b21b6) 100%);
+  border-radius: 16px;
+  padding: 20px 24px;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(20, 33, 61, 0.15);
+}
+
+.tc-title-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
 }
 
 .tc-title {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   margin: 0;
-  color: var(--tenant-primary, #007bff);
+  color: #fff;
+  font-weight: 700;
+}
+
+.tc-header-count {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 /* Buttons */
@@ -182,9 +206,15 @@
 .tc-course-card {
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 18px 20px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.tc-course-card:hover {
+  box-shadow: 0 6px 18px rgba(20, 33, 61, 0.1);
+  transform: translateY(-1px);
 }
 
 .tc-course-card-header {

@@ -6,6 +6,7 @@ import { getTenantId } from '../tenant';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { normalizeRoles } from '../utils/roles';
 import '../cssFiles/Inscription.css';
+import '../cssFiles/TeacherPages.css';
 
 const isPdfFile = (file) => {
   if (!file) return false;
@@ -70,6 +71,7 @@ const TeacherAssignmentsPage = ({ language }) => {
   };
 
   const [readingFile, setReadingFile] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const handleReadAttachment = async (assignment) => {
     if (!assignment?.attachmentUrl) return;
@@ -251,6 +253,7 @@ const TeacherAssignmentsPage = ({ language }) => {
       setNewAssignment({ title: '', description: '', dueDate: '' });
       setNewAttachmentFile(null);
       setCreateFileInputKey((value) => value + 1);
+      setShowAddForm(false);
       setMessage(content.assignment_createSuccess || 'Assignment created successfully.');
     } catch (err) {
       setError(err.message || content.assignment_createError || 'Could not create assignment.');
@@ -371,97 +374,27 @@ const TeacherAssignmentsPage = ({ language }) => {
 
   return (
     <div
-      style={{ maxWidth: 900, margin: '0 auto', width: '100%', display: 'grid', gap: 20 }}
+      className="teacher-page"
       dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
-      <h2>{content.assignment_title || 'Assignments'}</h2>
+      <div className="teacher-header">
+        <div>
+          <span className="teacher-title-badge">📝 Devoirs</span>
+          <h2 className="teacher-title">{content.assignment_title || 'Assignments'}</h2>
+        </div>
+        <button
+          type="button"
+          className="teacher-btn"
+          onClick={() => { setShowAddForm((prev) => !prev); setEditingId(''); }}
+        >
+          {showAddForm ? (content.notes_cancel || 'Cancel') : `+ ${content.assignment_new || 'New Assignment'}`}
+        </button>
+      </div>
 
       {error && <div className="error-message">{error}</div>}
       {message && <div className="success-message">{message}</div>}
 
-      {assignments.length > 0 ? (
-        <div>
-          <h3>{content.assignment_list || 'Assignments'}</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: 'rgb(219, 234, 254)' }}>
-                  <th style={th}>{content.assignment_title || 'Title'}</th>
-                  <th style={th}>{content.assignment_description || 'Description'}</th>
-                  <th style={th}>{content.assignment_dueDate || 'Due Date'}</th>
-                  <th style={th}>{content.notes_class || 'Class'}</th>
-                  <th style={th}>{content.assignment_attachment || 'Attachment'}</th>
-                  <th style={th}>{content.notes_actions || 'Actions'}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {assignments.map((assignment, i) => (
-                  <tr
-                    key={assignment.id || i}
-                    style={{
-                      background:
-                        String(assignment.id) === String(editingId)
-                          ? '#bfdbfe'
-                          : isOverdue(assignment.dueDate)
-                            ? '#fee2e2'
-                            : i % 2 === 0
-                              ? '#f0f9ff'
-                              : '#fff',
-                    }}
-                  >
-                    <td style={td}><strong>{assignment.title}</strong></td>
-                    <td style={td}>
-                      <span style={{ fontSize: '0.9em', color: '#666' }}>
-                        {assignment.description
-                          ? assignment.description.substring(0, 50) + (assignment.description.length > 50 ? '...' : '')
-                          : '—'}
-                      </span>
-                    </td>
-                    <td style={td}>
-                      <span style={{ color: isOverdue(assignment.dueDate) ? '#dc2626' : '#000' }}>
-                        {formatDate(assignment.dueDate)}
-                      </span>
-                    </td>
-                    <td style={td}>{assignment.className || '—'}</td>
-                    <td style={td}>
-                      {assignment.attachmentUrl ? (
-                        <button
-                          type="button"
-                          className="signup-button"
-                          style={{ padding: '4px 10px', width: 'auto', fontSize: '0.85em' }}
-                          onClick={() => handleReadAttachment(assignment)}
-                          disabled={readingFile === assignment.attachmentUrl}
-                        >
-                          {readingFile === assignment.attachmentUrl
-                            ? (content.assignment_opening || 'Ouverture...')
-                            : (content.assignment_read || 'Lire')}
-                        </button>
-                      ) : '—'}
-                    </td>
-                    <td style={{ ...td, whiteSpace: 'nowrap' }}>
-                      <button
-                        type="button"
-                        className="signup-button"
-                        style={{ padding: '6px 12px', width: 'auto', fontSize: '0.9em' }}
-                        onClick={() => setEditingId(String(assignment.id))}
-                      >
-                        {content.notes_edit || 'Edit'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : (
-        selectedClassId && (
-          <div style={{ padding: '20px', background: '#f0f9ff', borderRadius: '8px', textAlign: 'center', color: '#666' }}>
-            {content.assignment_noAssignments || 'No assignments yet. Create one above!'}
-          </div>
-        )
-      )}
-
+      {showAddForm && (
       <form onSubmit={handleCreateAssignment} className="signup-form" style={{ maxWidth: '100%', width: '100%' }}>
         <h3 style={{ marginTop: 0, marginBottom: 15 }}>{content.assignment_new || 'New Assignment'}</h3>
 
@@ -534,8 +467,9 @@ const TeacherAssignmentsPage = ({ language }) => {
           {createSubmitting ? (content.loading || 'Loading...') : (content.assignment_create || 'Create Assignment')}
         </button>
       </form>
+      )}
 
-      {assignments.length > 0 && (
+      {editingId && (
         <form onSubmit={handleUpdateAssignment} className="signup-form" style={{ maxWidth: '100%', width: '100%' }}>
           <h3 style={{ marginTop: 0, marginBottom: 15 }}>{content.assignment_manage || 'Manage Assignment'}</h3>
 
@@ -641,11 +575,91 @@ const TeacherAssignmentsPage = ({ language }) => {
           )}
         </form>
       )}
+
+      {assignments.length > 0 ? (
+        <div className="teacher-card">
+          <h3>{content.assignment_list || 'Assignments'}</h3>
+          <div className="teacher-table-wrapper">
+            <table className="teacher-table">
+              <thead>
+                <tr>
+                  <th>{content.assignment_title || 'Title'}</th>
+                  <th>{content.assignment_description || 'Description'}</th>
+                  <th>{content.assignment_dueDate || 'Due Date'}</th>
+                  <th>{content.notes_class || 'Class'}</th>
+                  <th>{content.assignment_attachment || 'Attachment'}</th>
+                  <th>{content.notes_actions || 'Actions'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assignments.map((assignment, i) => (
+                  <tr
+                    key={assignment.id || i}
+                    style={{
+                      background:
+                        String(assignment.id) === String(editingId)
+                          ? '#bfdbfe'
+                          : isOverdue(assignment.dueDate)
+                            ? '#fee2e2'
+                            : undefined,
+                    }}
+                  >
+                    <td style={td}><strong>{assignment.title}</strong></td>
+                    <td style={td}>
+                      <span style={{ fontSize: '0.9em', color: '#666' }}>
+                        {assignment.description
+                          ? assignment.description.substring(0, 50) + (assignment.description.length > 50 ? '...' : '')
+                          : '—'}
+                      </span>
+                    </td>
+                    <td style={td}>
+                      <span style={{ color: isOverdue(assignment.dueDate) ? '#dc2626' : '#000' }}>
+                        {formatDate(assignment.dueDate)}
+                      </span>
+                    </td>
+                    <td style={td}>{assignment.className || '—'}</td>
+                    <td style={td}>
+                      {assignment.attachmentUrl ? (
+                        <button
+                          type="button"
+                          className="signup-button"
+                          style={{ padding: '4px 10px', width: 'auto', fontSize: '0.85em' }}
+                          onClick={() => handleReadAttachment(assignment)}
+                          disabled={readingFile === assignment.attachmentUrl}
+                        >
+                          {readingFile === assignment.attachmentUrl
+                            ? (content.assignment_opening || 'Ouverture...')
+                            : (content.assignment_read || 'Lire')}
+                        </button>
+                      ) : '—'}
+                    </td>
+                    <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                      <button
+                        type="button"
+                        onClick={() => { setEditingId(String(assignment.id)); setShowAddForm(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1d4ed8', fontSize: 16 }}
+                        title={content.notes_edit || 'Edit'}
+                      >
+                        ✏️
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        selectedClassId && (
+          <div className="teacher-empty">
+            {content.assignment_noAssignments || 'No assignments yet. Create one above!'}
+          </div>
+        )
+      )}
     </div>
   );
 };
 
-const th = { padding: '8px 12px', textAlign: 'left', fontWeight: 600 };
 const td = { padding: '8px 12px' };
 
 export default TeacherAssignmentsPage;

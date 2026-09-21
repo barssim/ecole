@@ -65,6 +65,7 @@ const TeacherCourses = ({ language }) => {
   const [classes, setClasses] = useState([]);
   const [classesLoading, setClassesLoading] = useState(true);
   const [selectedClassId, setSelectedClassId] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const persistLocalUploads = (items) => {
     if (!userId) return;
@@ -285,6 +286,7 @@ const TeacherCourses = ({ language }) => {
       setCourseDescription("");
       setCourseFile(null);
       setSelectedClassId("");
+      setShowAddForm(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch {
         setError(content.course_error || "Erreur lors de l'envoi du fichier de cours.");
@@ -391,66 +393,23 @@ const TeacherCourses = ({ language }) => {
   return (
     <div className="tc-container">
       <div className="tc-header">
-        <h2 className="tc-title">📚 Mes cours</h2>
-        <div style={{ color: "#6b7280", fontSize: 14 }}>
-          {mergedCourses.length} {mergedCourses.length > 1 ? "cours" : "cours"}
+        <div>
+          <span className="tc-title-badge">📚 Cours</span>
+          <h2 className="tc-title">Mes cours</h2>
         </div>
+        <button
+          type="button"
+          className="tc-btn tc-btn-success"
+          onClick={() => setShowAddForm((prev) => !prev)}
+        >
+          {showAddForm ? "Annuler" : "+ Créer un cours"}
+        </button>
       </div>
 
       {error && <div className="tc-alert tc-alert-error">{error}</div>}
       {success && <div className="tc-alert tc-alert-success">{success}</div>}
 
-      {loading ? (
-        <p className="tc-loading">Chargement des cours...</p>
-      ) : mergedCourses.length === 0 ? (
-        <div className="tc-empty">
-          <p>📭 Aucun cours téléversé.</p>
-          <p>Créez votre premier cours ci-dessus.</p>
-        </div>
-      ) : (
-        <div className="tc-course-list">
-          {mergedCourses.map((course) => (
-            <div className="tc-course-card" key={course.id}>
-              <div className="tc-course-card-header">
-                <div>
-                  <h3 className="tc-course-name">{course.name}</h3>
-                  {course.description && <p className="tc-course-desc">{course.description}</p>}
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-                    <span style={{ background: "#e0f2fe", color: "#075985", borderRadius: 999, padding: "2px 10px", fontSize: 12, fontWeight: 600 }}>
-                      {course.localOnly || String(course.id).startsWith("local-")
-                        ? (content.course_uploaded_badge || "Téléchargé")
-                        : (content.course_synced_badge || "Synchronisé")}
-                    </span>
-                    {course.uploadedAt && (
-                      <span style={{ background: "#f3f4f6", color: "#374151", borderRadius: 999, padding: "2px 10px", fontSize: 12 }}>
-                        {new Date(course.uploadedAt).toLocaleString()}
-                      </span>
-                    )}
-                    {course.className && (
-                      <span style={{ background: "#ede9fe", color: "#5b21b6", borderRadius: 999, padding: "2px 10px", fontSize: 12, fontWeight: 600 }}>
-                        🏫 {course.className}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="tc-course-actions">
-                  <button
-                    className="tc-btn tc-btn-danger"
-                    onClick={() => handleDeleteCourse(course)}
-                    disabled={deletingCourseId === course.id}
-                    title="Supprimer"
-                  >
-                    {deletingCourseId === course.id ? "..." : "🗑"}
-                  </button>
-                </div>
-              </div>
-
-              {renderFiles(course)}
-            </div>
-          ))}
-        </div>
-      )}
-
+      {showAddForm && (
       <form className="tc-add-form" onSubmit={handleUploadCourse}>
         <h3>{content.course_create_title || "➕ Créer un cours"}</h3>
         <div className="tc-form-group">
@@ -518,6 +477,58 @@ const TeacherCourses = ({ language }) => {
           </button>
         </div>
       </form>
+      )}
+
+      {loading ? (
+        <p className="tc-loading">Chargement des cours...</p>
+      ) : mergedCourses.length === 0 ? (
+        <div className="tc-empty">
+          <p>📭 Aucun cours téléversé.</p>
+          <p>Créez votre premier cours ci-dessus.</p>
+        </div>
+      ) : (
+        <div className="tc-course-list">
+          {mergedCourses.map((course) => (
+            <div className="tc-course-card" key={course.id}>
+              <div className="tc-course-card-header">
+                <div>
+                  <h3 className="tc-course-name">{course.name}</h3>
+                  {course.description && <p className="tc-course-desc">{course.description}</p>}
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+                    <span style={{ background: "#e0f2fe", color: "#075985", borderRadius: 999, padding: "2px 10px", fontSize: 12, fontWeight: 600 }}>
+                      {course.localOnly || String(course.id).startsWith("local-")
+                        ? (content.course_uploaded_badge || "Téléchargé")
+                        : (content.course_synced_badge || "Synchronisé")}
+                    </span>
+                    {course.uploadedAt && (
+                      <span style={{ background: "#f3f4f6", color: "#374151", borderRadius: 999, padding: "2px 10px", fontSize: 12 }}>
+                        {new Date(course.uploadedAt).toLocaleString()}
+                      </span>
+                    )}
+                    {course.className && (
+                      <span style={{ background: "#ede9fe", color: "#5b21b6", borderRadius: 999, padding: "2px 10px", fontSize: 12, fontWeight: 600 }}>
+                        🏫 {course.className}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="tc-course-actions">
+                  <button
+                    className="tc-btn tc-btn-danger"
+                    onClick={() => handleDeleteCourse(course)}
+                    disabled={deletingCourseId === course.id}
+                    title="Supprimer"
+                  >
+                    {deletingCourseId === course.id ? "..." : "🗑"}
+                  </button>
+                </div>
+              </div>
+
+              {renderFiles(course)}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

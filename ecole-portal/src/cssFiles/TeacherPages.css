@@ -1,0 +1,262 @@
+/* Shared design system for teacher pages:
+   /enseignant/cours, /enseignant/devoirs, /enseignant/notes, /enseignant/attendance */
+
+.teacher-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.teacher-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: linear-gradient(135deg, var(--tenant-primary, #007bff) 0%, var(--tenant-accent, #5b21b6) 100%);
+  border-radius: 16px;
+  padding: 20px 24px;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(20, 33, 61, 0.15);
+}
+
+.teacher-title-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.teacher-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.teacher-header-meta {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+/* Cards */
+.teacher-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: 0 2px 10px rgba(20, 33, 61, 0.05);
+}
+
+.teacher-card h3 {
+  margin: 0 0 14px;
+  font-size: 1.05rem;
+  color: #14213d;
+}
+
+/* Alerts */
+.teacher-alert,
+.teacher-page .error-message,
+.teacher-page .success-message {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  margin: 0;
+  font-weight: 500;
+  animation: teacher-alert-in 0.18s ease-out;
+}
+
+.teacher-alert-error,
+.teacher-page .error-message {
+  background: #fde8e8;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.teacher-alert-success,
+.teacher-page .success-message {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+@keyframes teacher-alert-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Forms (restyle shared signup-form/form-group when used within a teacher page) */
+.teacher-page .signup-form,
+.teacher-form {
+  width: 100%;
+  max-width: 100%;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: 0 2px 10px rgba(20, 33, 61, 0.05);
+  box-sizing: border-box;
+  display: grid;
+  gap: 14px;
+}
+
+.teacher-page .form-group,
+.teacher-form-group {
+  margin-bottom: 0;
+}
+
+.teacher-page .form-group label,
+.teacher-form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #4b5568;
+}
+
+.teacher-page .form-group input,
+.teacher-page .form-group select,
+.teacher-page .form-group textarea,
+.teacher-form-group input,
+.teacher-form-group select,
+.teacher-form-group textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid #dbe2ea;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.teacher-page .form-group input:focus,
+.teacher-page .form-group select:focus,
+.teacher-page .form-group textarea:focus,
+.teacher-form-group input:focus,
+.teacher-form-group select:focus,
+.teacher-form-group textarea:focus {
+  outline: none;
+  border-color: var(--tenant-primary, #007bff);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+}
+
+.teacher-page .signup-button,
+.teacher-btn {
+  width: auto;
+  padding: 9px 18px;
+  background: var(--tenant-primary, #007bff);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.teacher-page .signup-button:hover:not(:disabled),
+.teacher-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.teacher-page .signup-button:disabled,
+.teacher-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.teacher-btn-outline {
+  background: transparent;
+  border: 1.5px solid #dbe2ea;
+  color: #4b5568;
+}
+
+.teacher-btn-danger {
+  background: #dc3545;
+}
+
+.teacher-btn-sm {
+  padding: 6px 12px;
+  font-size: 0.82rem;
+}
+
+/* Tables */
+.teacher-table-wrapper {
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 10px rgba(20, 33, 61, 0.05);
+}
+
+.teacher-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 0.92rem;
+}
+
+.teacher-table thead tr {
+  background: linear-gradient(135deg, rgba(0, 123, 255, 0.12), rgba(91, 33, 182, 0.1));
+}
+
+.teacher-table th {
+  text-align: left;
+  padding: 12px 14px;
+  font-weight: 700;
+  color: #14213d;
+  white-space: nowrap;
+}
+
+.teacher-table td {
+  padding: 11px 14px;
+  border-top: 1px solid #f0f2f5;
+  vertical-align: middle;
+}
+
+.teacher-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.teacher-status-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* Empty / loading states */
+.teacher-empty,
+.teacher-loading {
+  text-align: center;
+  padding: 32px 16px;
+  color: #6b7280;
+  background: #f9fafb;
+  border-radius: 14px;
+  border: 1px dashed #d1d5db;
+}
+
+@media (max-width: 640px) {
+  .teacher-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

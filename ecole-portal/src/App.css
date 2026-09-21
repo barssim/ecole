@@ -949,14 +949,14 @@
   gap: 1.25rem;
   white-space: normal;
   width: 100%;
-  animation: home-outings-scroll 45s linear infinite;
+  animation: home-outings-scroll 12s linear infinite;
 }
 
-.home-outings-item {
+.home-outings-track .home-outings-item {
   display: block;
   width: 100%;
-  color: #dc2626;
-  font-size: 2.7rem;
+  color: #dc0000;
+  font-size: 1 rem;
   font-weight: 700;
   line-height: 1.4;
 }
