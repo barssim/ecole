@@ -436,7 +436,7 @@ const PaymentsPage = ({ language }) => {
       <section className="all-invoices-section">
         <h2>{content?.payment_allInvoices || 'Toutes les Factures Générées'}</h2>
         {allNotices && allNotices.length > 0 ? (
-          <div style={{ overflowX: 'auto' }}>
+          <div className="payment-table-wrapper payment-invoices-table-wrapper">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead style={{ background: 'rgb(219, 234, 254)', color: '#1e3a8a' }}>
                 <tr>
@@ -490,7 +490,7 @@ const PaymentsPage = ({ language }) => {
       <section className="payment-history-section">
         <h2>{content?.payment_paymentHistory || 'Historique des Paiements'}</h2>
         {payments && payments.length > 0 ? (
-          <div className="payment-table-wrapper">
+          <div className="payment-table-wrapper payment-history-table-wrapper">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead style={{ background: 'rgb(219, 234, 254)', color: '#1e3a8a' }}>
                 <tr>
@@ -526,8 +526,6 @@ const th = { padding: '8px 12px', textAlign: 'left', fontWeight: 600 };
 const td = { padding: '8px 12px' };
 
 export default PaymentsPage;
-
-
 
 
 

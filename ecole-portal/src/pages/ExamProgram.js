@@ -208,7 +208,7 @@ const ExamProgram = ({ language }) => {
       ) : exams.length === 0 ? (
         <p style={{ color: "#6b7280" }}>{content.exam_program_empty}</p>
       ) : (
-        <div style={{ overflowX: "auto" }}>
+        <div className="dynamic-table-wrapper">
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
             <thead style={{ background: "rgb(219, 234, 254)", color: "#1e3a8a" }}>
               <tr>

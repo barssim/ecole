@@ -37,6 +37,20 @@ public class User {
 	String email;
 	String adresse;
 	String password;
+
+	@Column(name = "cgu_accepted")
+	boolean cguAccepted;
+
+	@Column(name = "cgu_version", length = 32)
+	String cguVersion;
+
+	@Column(name = "cgu_accepted_at")
+	java.time.Instant cguAcceptedAt;
+
+	@Column(name = "cgu_delivered_by_admin")
+	boolean cguDeliveredByAdmin;
+
+	@Column(name = "cgu_delivered_at")
+	java.time.Instant cguDeliveredAt;
 	
 }
-

@@ -256,6 +256,17 @@
   overflow-x: auto;
 }
 
+.payment-invoices-table-wrapper {
+  max-height: calc(100vh - 18rem);
+  overflow: auto;
+}
+
+.payment-invoices-table-wrapper thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
 .payment-table {
   width: 100%;
   border-collapse: collapse;
@@ -398,4 +409,3 @@
     font-size: 0.85rem;
   }
 }
-

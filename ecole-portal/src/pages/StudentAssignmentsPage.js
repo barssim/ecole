@@ -162,7 +162,7 @@ const StudentAssignmentsPage = ({ language }) => {
           <p>📭 {notice || content.assignment_noAssignments || "Aucun devoir disponible."}</p>
         </div>
       ) : (
-        <div className="tc-course-list">
+        <div className="tc-course-list student-records-scroll">
           {assignments.map((assignment) => (
             <div className="tc-course-card" key={assignment.id}>
               <div className="tc-course-card-header">

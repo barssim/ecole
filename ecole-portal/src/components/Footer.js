@@ -73,6 +73,12 @@ if (language === "fr") {
            </div>
            <div className="footer-bottom">
              <p className="legal-notice">{renderLegalNotice()}</p>
+             <a className="footer-privacy-link" href="/politique-confidentialite">
+               Politique de confidentialité
+             </a>
+             <a className="footer-privacy-link" href="/cgu">
+               Conditions générales d'utilisation
+             </a>
              <p>{`Version: ${appVersion}`}</p>
            </div>
             {trialIndicatorColor ? (

@@ -287,7 +287,7 @@ const PostInvoice = ({ language }) => {
         {loadingFactures && <p className="finance-loading">Chargement...</p>}
         {!loadingFactures && factures.length === 0 && <p className="finance-empty">Aucune facture enregistrée.</p>}
         {!loadingFactures && factures.length > 0 && (
-          <div className="finance-table-wrapper">
+          <div className="finance-table-wrapper finance-invoices-table-wrapper">
             <table className="finance-table">
               <thead>
                 <tr>

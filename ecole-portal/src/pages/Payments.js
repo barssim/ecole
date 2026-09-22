@@ -509,7 +509,7 @@ const Payments = ({ language }) => {
       {loading ? (
         <p className="finance-loading">Loading payments...</p>
       ) : payments.length > 0 ? (
-        <div className="finance-table-wrapper">
+        <div className="finance-table-wrapper finance-payments-table-wrapper">
           <table className="finance-table">
             <thead>
               <tr>

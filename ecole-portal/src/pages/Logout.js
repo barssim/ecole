@@ -8,6 +8,9 @@ const Logout = () => {
     localStorage.removeItem("user_roles");
     localStorage.removeItem("civilite");
     localStorage.removeItem("firstname");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("cgu_pending");
+    sessionStorage.removeItem("cgu_pending_user_id");
 
     // Optional: Show message briefly before redirect
     const timer = setTimeout(() => {

@@ -303,7 +303,7 @@ const OutingPage = ({ language }) => {
       ) : activities.length === 0 ? (
         <div className="activity-empty">{content.no_data || "No outings yet."}</div>
       ) : (
-        <ul className="activity-list">
+        <ul className="activity-list services-records-scroll">
           {activities.map((activity) => (
             <li
               key={activity.id}

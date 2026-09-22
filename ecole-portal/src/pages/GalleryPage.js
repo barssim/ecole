@@ -315,7 +315,7 @@ const GalleryPage = ({ language }) => {
         ) : albums.length === 0 ? (
           <div className="activity-empty">{content.gallery_no_albums || "Aucun album pour le moment."}</div>
         ) : (
-          <div className="gallery-album-grid">
+          <div className="gallery-album-grid services-records-scroll">
             {albums.map((album) => (
               <div key={album.id} className="gallery-album-card" onClick={() => openAlbum(album)}>
                 <div className="gallery-album-cover">
@@ -403,7 +403,7 @@ const GalleryPage = ({ language }) => {
           ) : photos.length === 0 ? (
             <div className="activity-empty">{content.gallery_no_photos || "Aucune photo dans cet album."}</div>
           ) : (
-            <div className="gallery-photo-grid">
+            <div className="gallery-photo-grid services-records-scroll">
               {photos.map((photo) => (
                 <div key={photo.id} className="gallery-photo-card">
                   <AuthImage

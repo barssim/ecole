@@ -176,7 +176,7 @@ const StudentCoursesPage = ({ language }) => {
           <p>📭 {notice || "Aucun cours disponible."}</p>
         </div>
       ) : (
-        <div className="tc-course-list">
+        <div className="tc-course-list student-records-scroll">
           {courses.map((course) => (
             <div className="tc-course-card" key={course.id}>
               <div className="tc-course-card-header">

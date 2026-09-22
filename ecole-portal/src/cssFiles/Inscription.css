@@ -159,7 +159,18 @@
 .inscription-users-hint {
   color: #68758d;
   font-size: 0.9rem;
+  margin: 0 0 0.35rem;
+}
+
+.inscription-users-count {
+  color: #475569;
+  font-size: 0.9rem;
   margin: 0 0 1rem;
+}
+
+.inscription-users-limit {
+  color: #68758d;
+  font-size: 0.85rem;
 }
 
 .inscription-users-card {
@@ -167,8 +178,9 @@
 }
 
 .inscription-table-wrapper {
-  overflow-x: auto;
+  overflow: auto;
   max-width: 100%;
+  max-height: calc(100vh - 18rem);
   border: 1px solid var(--home-line, #e7ebf2);
   border-radius: 12px;
 }
@@ -178,36 +190,33 @@
   min-width: 0;
   table-layout: auto;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  background: #fff;
+  font-size: 14px;
 }
 
 .inscription-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   text-align: left;
-  padding: 0.75rem 1rem;
-  background: #f8fafc;
-  color: #475569;
-  font-weight: 700;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  border-bottom: 1.5px solid var(--home-line, #e7ebf2);
-  white-space: nowrap;
+  padding: 8px 12px;
+  background: rgb(219, 234, 254);
+  color: #1e3a8a;
+  font-weight: 600;
 }
 
 .inscription-table tbody td {
-  padding: 0.7rem 1rem;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 8px 12px;
   color: #334155;
   vertical-align: middle;
-  word-break: break-word;
 }
 
-.inscription-table tbody tr:last-child td {
-  border-bottom: none;
+.inscription-table tbody tr:nth-child(odd) {
+  background: #f0f9ff;
 }
 
 .inscription-table tbody tr:hover {
-  background: #f8fafc;
+  background: #e0f2fe;
 }
 
 .inscription-table tbody tr.is-selected {
@@ -426,4 +435,3 @@
   font-style: italic;
   margin-top: 10px !important;
 }
-

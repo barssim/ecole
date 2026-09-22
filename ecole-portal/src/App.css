@@ -2,6 +2,35 @@
 	display: flex;
 }
 
+.legal-page {
+  max-width: 900px;
+  margin: 0 auto 2rem;
+  padding: 2rem clamp(1rem, 4vw, 3rem);
+  background: #fff;
+  color: #263247;
+  line-height: 1.65;
+}
+
+.legal-page h1 {
+  color: var(--school-primary, #007bff);
+  margin-top: 0;
+}
+
+.legal-page h2 {
+  color: var(--school-primary, #007bff);
+  margin-top: 1.75rem;
+}
+
+.legal-page-meta {
+  color: #68758d;
+  font-size: 0.9rem;
+}
+
+.footer-privacy-link {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .header-welcome {
   color: #68758d;
   font-size: 0.78rem;
@@ -446,22 +475,21 @@
   width: min(1440px, calc(100% - 2rem));
   margin: 0 auto;
   padding: 1rem 0 1.5rem;
-  align-items: start;
+  align-items: stretch;
 }
 
-.left-panel, .right-panel {
+.left-panel, .right-panel, .center-content {
   background: rgba(255, 255, 255, 0.82);
   padding: 1rem;
   border-radius: 8px;
   border: 1px solid var(--home-line, #e7ebf2);
   box-shadow: 0 12px 30px rgba(20, 33, 61, 0.06);
+  box-sizing: border-box;
 }
 
 .center-content {
   min-width: 0;
-  padding: 1rem;
   max-width: 100%;
-  box-sizing: border-box;
   background: rgb(205, 226, 252);
   border-radius: 18px;
   box-shadow: 0 12px 30px rgba(20, 33, 61, 0.05);
@@ -1693,7 +1721,7 @@ body {
 }
 
 .attestation-table-wrap {
-  overflow-x: auto;
+  overflow: auto;
   background: #fff;
   border: 1px solid var(--home-line, #e7ebf2);
   border-radius: 14px;
@@ -1770,6 +1798,63 @@ body {
   margin: 0 auto;
   padding: 2rem 1.25rem 3rem;
   box-sizing: border-box;
+}
+
+.classes-table-wrapper,
+.presence-table-wrapper {
+  max-width: 100%;
+  max-height: 20rem;
+  overflow: auto;
+  border: 1px solid var(--home-line, #e7ebf2);
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(20, 33, 61, 0.06);
+}
+
+.classes-table-wrapper table,
+.presence-table-wrapper table {
+  min-width: 100%;
+}
+
+.classes-table-wrapper thead,
+.presence-table-wrapper thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* Keep data tables within one viewport while leaving the remaining rows scrollable. */
+.classes-table-wrapper,
+.presence-table-wrapper,
+.inscription-table-wrapper,
+.teacher-table-wrapper,
+.finance-table-wrapper,
+.payment-table-wrapper,
+.attestation-table-wrap,
+.dynamic-table-wrapper {
+  max-height: calc(100vh - 18rem);
+  overflow: auto;
+}
+
+.dynamic-table-wrapper {
+  max-width: 100%;
+  border: 1px solid var(--home-line, #e7ebf2);
+  border-radius: 14px;
+}
+
+.dynamic-table-wrapper thead,
+.attestation-table-wrap thead,
+.payment-table-wrapper thead,
+.finance-table-wrapper thead,
+.teacher-table-wrapper thead,
+.inscription-table-wrapper thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.student-schedule-scroll {
+  max-height: calc(100vh - 18rem);
+  overflow: auto;
 }
 
 .activity-header {
@@ -1923,6 +2008,13 @@ body {
   padding: 0;
   display: grid;
   gap: 1rem;
+}
+
+.services-records-scroll {
+  max-height: calc(100vh - 18rem);
+  overflow: auto;
+  padding-right: 0.4rem;
+  align-content: start;
 }
 
 .activity-item {

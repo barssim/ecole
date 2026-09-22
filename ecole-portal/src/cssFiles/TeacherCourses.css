@@ -203,6 +203,18 @@
   gap: 16px;
 }
 
+.tc-course-list-scroll {
+  max-height: calc(100vh - 18rem);
+  overflow: auto;
+  padding: 0.25rem 0.5rem 0.5rem 0.25rem;
+}
+
+.student-records-scroll {
+  max-height: calc(100vh - 18rem);
+  overflow: auto;
+  padding: 0.25rem 0.5rem 0.5rem 0.25rem;
+}
+
 .tc-course-card {
   background: #fff;
   border: 1px solid #e5e7eb;

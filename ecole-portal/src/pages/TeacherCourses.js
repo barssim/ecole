@@ -487,7 +487,7 @@ const TeacherCourses = ({ language }) => {
           <p>Créez votre premier cours ci-dessus.</p>
         </div>
       ) : (
-        <div className="tc-course-list">
+        <div className="tc-course-list tc-course-list-scroll">
           {mergedCourses.map((course) => (
             <div className="tc-course-card" key={course.id}>
               <div className="tc-course-card-header">

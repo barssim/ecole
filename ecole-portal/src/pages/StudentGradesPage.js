@@ -137,7 +137,7 @@ const StudentGradesPage = ({ language }) => {
               {content.grades_average || "Moyenne"}: {average} / 20
             </div>
           )}
-          <div className="tc-course-list">
+          <div className="tc-course-list student-records-scroll">
             {grades.map((entry) => (
               <div className="tc-course-card" key={entry.id}>
                 <div className="tc-course-card-header">

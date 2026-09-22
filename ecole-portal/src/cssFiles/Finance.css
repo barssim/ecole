@@ -205,6 +205,21 @@
   border: 1px solid #e7ebf2;
 }
 
+.finance-invoices-table-wrapper,
+.finance-payments-table-wrapper {
+  max-height: calc(100vh - 18rem);
+  overflow: auto;
+}
+
+.finance-invoices-table-wrapper thead,
+.finance-payments-table-wrapper thead,
+.payment-invoices-table-wrapper thead,
+.teacher-assignments-table-wrapper thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
 .finance-table {
   width: 100%;
   border-collapse: collapse;

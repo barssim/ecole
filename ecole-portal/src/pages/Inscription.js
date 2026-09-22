@@ -16,8 +16,9 @@ const roleOptions = [
   { value: "secretary", labelKey: "roleSecretary", fallback: "Secretary" },
   { value: "finance", labelKey: "roleFinance", fallback: "Finance" },
 ];
+const CGU_VERSION = "1.0";
 
-const Inscription = ({ language }) => {
+const Inscription = ({ language, schoolCustomization }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
 
   const [formData, setFormData] = useState({
@@ -34,6 +35,8 @@ const Inscription = ({ language }) => {
   const [error, setError] = useState({});
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [cguAccepted, setCguAccepted] = useState(false);
+  const [cguDeliveredByAdmin, setCguDeliveredByAdmin] = useState(false);
 
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -116,7 +119,10 @@ const Inscription = ({ language }) => {
     setUsersLoading(true);
     setUsersError("");
     try {
-      const response = await fetch(apiUrlFor("/users"), { headers: buildHeaders() });
+      const response = await fetch(apiUrlFor("/users"), {
+        cache: "no-store",
+        headers: { ...buildHeaders(), "Cache-Control": "no-cache" },
+      });
       if (!response.ok) {
         let backendMessage = "";
         try {
@@ -172,6 +178,12 @@ const Inscription = ({ language }) => {
     if (!confirmPassword) errors.confirmPassword = content.confirmPasswordRequired;
     else if (password !== confirmPassword) errors.confirmPassword = content.passwordMismatch;
     if (!role) errors.role = content.roleRequired;
+    if (!canManageSchoolUsers && !cguAccepted) {
+      errors.cguAccepted = "Vous devez accepter les CGU pour créer votre compte.";
+    }
+    if (canManageSchoolUsers && !cguDeliveredByAdmin) {
+      errors.cguDeliveredByAdmin = "Vous devez confirmer la remise des CGU au nouvel utilisateur.";
+    }
 
     return errors;
   };
@@ -187,6 +199,8 @@ const Inscription = ({ language }) => {
       confirmPassword: "",
       role: "student",
     });
+    setCguAccepted(false);
+    setCguDeliveredByAdmin(false);
   };
 
   const handleSubmit = async (e) => {
@@ -213,6 +227,11 @@ const Inscription = ({ language }) => {
           adresse,
           password,
           roles: [role],
+          cguAccepted: !canManageSchoolUsers,
+          cguVersion: !canManageSchoolUsers ? CGU_VERSION : undefined,
+          cguAcceptedAt: !canManageSchoolUsers ? new Date().toISOString() : undefined,
+          cguDeliveredByAdmin: canManageSchoolUsers,
+          cguDeliveredAt: canManageSchoolUsers ? new Date().toISOString() : undefined,
         }),
       });
 
@@ -316,7 +335,7 @@ const Inscription = ({ language }) => {
   };
 
   const addUserForm = (
-    <form onSubmit={handleSubmit} className={canManageSchoolUsers ? "activity-form" : "signup-form"}>
+    <form onSubmit={handleSubmit} className={canManageSchoolUsers ? "activity-form inscription-edit-form inscription-add-form" : "signup-form"}>
         {!canManageSchoolUsers && <h2>{content.userManagementTitle || "User management"}</h2>}
         {error.general && <p className={canManageSchoolUsers ? "activity-message activity-message-error" : "error-message"}>{error.general}</p>}
         {success && <p className={canManageSchoolUsers ? "activity-message activity-message-success" : "success-message"}>{success}</p>}
@@ -384,6 +403,53 @@ const Inscription = ({ language }) => {
           {error.confirmPassword && <p className="field-error">{error.confirmPassword}</p>}
         </div>
 
+        {!canManageSchoolUsers && (
+          <div className="form-group cgu-acceptance">
+            <label htmlFor="cguAccepted">
+              <input
+                type="checkbox"
+                id="cguAccepted"
+                name="cguAccepted"
+                checked={cguAccepted}
+                onChange={(event) => {
+                  setCguAccepted(event.target.checked);
+                  setError((current) => ({ ...current, cguAccepted: "" }));
+                }}
+                required
+              />{" "}
+              J'accepte les{" "}
+              <a href="/cgu" target="_blank" rel="noopener noreferrer">
+                Conditions générales d'utilisation (CGU)
+              </a>
+            </label>
+            {error.cguAccepted && <p className="field-error">{error.cguAccepted}</p>}
+          </div>
+        )}
+        {canManageSchoolUsers && (
+          <div className="form-group cgu-acceptance">
+            <label htmlFor="cguDeliveredByAdmin">
+              <input
+                type="checkbox"
+                id="cguDeliveredByAdmin"
+                name="cguDeliveredByAdmin"
+                checked={cguDeliveredByAdmin}
+                onChange={(event) => {
+                  setCguDeliveredByAdmin(event.target.checked);
+                  setError((current) => ({ ...current, cguDeliveredByAdmin: "" }));
+                }}
+                required
+              />{" "}
+              Je confirme avoir remis les{" "}
+              <a href="/cgu" target="_blank" rel="noopener noreferrer">
+                CGU
+              </a>{" "}
+              au nouvel utilisateur. Cette case ne vaut pas acceptation des CGU
+              par celui-ci.
+            </label>
+            {error.cguDeliveredByAdmin && <p className="field-error">{error.cguDeliveredByAdmin}</p>}
+          </div>
+        )}
+
         <button type="submit" className={canManageSchoolUsers ? "activity-form-submit" : "signup-button"} disabled={loading}>
           {loading ? content.loading : (content.addUserLabel || "Add user")}
         </button>
@@ -421,7 +487,7 @@ const Inscription = ({ language }) => {
       </div>
 
       {showAddUserForm && (
-        <div className="activity-card">
+        <div className="activity-card inscription-edit-card inscription-add-card">
           <h3>{content.addUserLabel || "Add user"}</h3>
           {addUserForm}
         </div>
@@ -481,6 +547,12 @@ const Inscription = ({ language }) => {
 
       <div className="activity-card inscription-users-card">
         <p className="inscription-users-hint">{content.usersHint || "You can manage all users in your school."}</p>
+        <p className="inscription-users-count">
+          {(content.usersCountSummary || "Users: {count}. Maximum for the {version} plan: {max}.")
+            .replace("{count}", String(users.length))
+            .replace("{version}", schoolCustomization?.customerVersion || "")
+            .replace("{max}", String(schoolCustomization?.maxUsers || ""))}
+        </p>
         {usersError && <p className="activity-message activity-message-error">{usersError}</p>}
 
         {usersLoading ? (

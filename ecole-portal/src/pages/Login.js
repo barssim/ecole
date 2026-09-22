@@ -156,6 +156,7 @@ const Login = ({language}) => {
 				throw new Error('No authentication token received from server');
 			}
 
+			setSchoolId(resolveSchoolFromLoginResponse(token, user, response.data?.schoolId));
 			sessionStorage.setItem('jwt_token', token);
 			localStorage.setItem("isLoggedIn", "true");
 
@@ -177,17 +178,30 @@ const Login = ({language}) => {
 				localStorage.removeItem("firstname");
 			}
 
+			const requiresCguAcceptance = user
+				&& user.cguAccepted === false
+				&& user.cguDeliveredByAdmin === true;
+			if (requiresCguAcceptance) {
+				localStorage.setItem("cgu_pending", "true");
+			} else {
+				localStorage.removeItem("cgu_pending");
+			}
+
 			const resolvedUserId = resolveUserIdFromLoginResponse(token, user);
 			if (resolvedUserId !== null) {
 				localStorage.setItem("userId", String(resolvedUserId));
+				if (requiresCguAcceptance) {
+					sessionStorage.setItem("cgu_pending_user_id", String(resolvedUserId));
+				} else {
+					sessionStorage.removeItem("cgu_pending_user_id");
+				}
 			}
 
 			const userRoles = resolveRolesFromLoginResponse(token, user);
 			localStorage.setItem("user_roles", JSON.stringify(userRoles));
-			setSchoolId(resolveSchoolFromLoginResponse(token, user, response.data?.schoolId));
 
 			console.log('Login successful! Stored roles:', userRoles);
-			window.location.href = "/";
+			window.location.href = requiresCguAcceptance ? "/cgu-acceptance" : "/";
 		} catch (error) {
 			console.error('Login error:', error);
 			console.error('Error code:', error.code);

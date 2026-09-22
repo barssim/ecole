@@ -241,8 +241,8 @@ const ClassesPage = ({ language }) => {
         </form>
       )}
 
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+      <div className="classes-table-wrapper">
+        <table className="classes-table">
           <thead style={{ background: 'rgb(219, 234, 254)', color: '#1e3a8a' }}>
             <tr>
               <th style={th}>{content.classes_title}</th>

@@ -47,6 +47,8 @@
   "usersTitle": "المستخدمون",
   "userManagementTitle": "إضافة مستخدم",
   "usersHint": "بصفتك مديرًا، يمكنك إدارة جميع مستخدمي مدرستك.",
+  "usersCountLabel": "إجمالي المستخدمين",
+  "usersCountSummary": "عدد المستخدمين: {count}. الحد الأقصى لإصدار {version} هو: {max}.",
   "actionsLabel": "الإجراءات",
   "manageLabel": "إدارة",
   "manageSelectedUserTitle": "إدارة المستخدم المحدد",

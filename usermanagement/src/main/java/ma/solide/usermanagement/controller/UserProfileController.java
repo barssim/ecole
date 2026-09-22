@@ -16,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 import java.util.List;
+import java.time.Instant;
 
 @RestController
 @RequestMapping("/api/users")
@@ -72,6 +73,18 @@ public class UserProfileController {
         return ResponseEntity.ok(Map.of("message", "Password updated successfully"));
     }
 
+    @PatchMapping("/{id}/cgu-acceptance")
+    public ResponseEntity<UserProfileDTO> acceptCgu(
+            @PathVariable Integer id,
+            @RequestBody Map<String, String> request) {
+        String version = request == null ? null : request.get("version");
+        if (version == null || version.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CGU version is required");
+        }
+        User user = userService.acceptCgu(id, version.trim(), Instant.now());
+        return ResponseEntity.ok(UserProfileDTO.fromUser(user));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<UserProfileDTO> updateUserByManager(
             @PathVariable Integer id,
@@ -105,4 +118,3 @@ public class UserProfileController {
         }
     }
 }
-

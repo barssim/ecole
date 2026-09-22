@@ -11,6 +11,9 @@ import Login from './pages/Login';
 import Logout from './pages/Logout';
 import Inscription from './pages/Inscription';
 import Contact from './pages/Contact';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfUse from './pages/TermsOfUse';
+import CguAcceptance from './pages/CguAcceptance';
 import fr from "./locales/fr.json";
 import ar from "./locales/ar.json";
 import en from "./locales/en.json";
@@ -56,6 +59,9 @@ import { createApiUrlFor, readJsonResponse } from './utils/apiClient';
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const token = sessionStorage.getItem("jwt_token");
+  if (localStorage.getItem("cgu_pending") === "true") {
+    return <Navigate to="/cgu-acceptance" replace />;
+  }
   const roles = JSON.parse(localStorage.getItem("user_roles") || "[]");
   const isAuthorized = allowedRoles.some(role => roles.includes(role));
   if (!token) return <Navigate to="/login" replace />;
@@ -255,6 +261,11 @@ const AppContent = () => {
   const location = useLocation();
   const path = (location.pathname || "").toLowerCase();
   const isHomePage = path === "/" || path === "/home";
+  const cguPending = localStorage.getItem("cgu_pending") === "true";
+
+  if (cguPending && path !== "/cgu-acceptance" && path !== "/cgu" && path !== "/login" && path !== "/logout") {
+    return <Navigate to="/cgu-acceptance" replace />;
+  }
 
 
   return (
@@ -331,8 +342,11 @@ const AppContent = () => {
 				      <Route path="/login" element={<Login language={language} toggleLanguage={toggleLanguage} />} />
 				      <Route path="/logout" element={<Logout language={language} toggleLanguage={toggleLanguage} />} />
 				      <Route path="/about" element={<About language={language} toggleLanguage={toggleLanguage} schoolCustomization={schoolCustomization} />} />
-				      <Route path="/inscription" element={<Inscription language={language} toggleLanguage={toggleLanguage} />} />
+				      <Route path="/inscription" element={<Inscription language={language} toggleLanguage={toggleLanguage} schoolCustomization={schoolCustomization} />} />
 				      <Route path="/contact" element={<Contact language={language} toggleLanguage={toggleLanguage} />} />
+				      <Route path="/politique-confidentialite" element={<PrivacyPolicy language={language} schoolCustomization={schoolCustomization} />} />
+				      <Route path="/cgu" element={<TermsOfUse language={language} />} />
+				      <Route path="/cgu-acceptance" element={<CguAcceptance />} />
               <Route path="/profile" element={<ProfilePage language={language} />} />
               <Route path="/parents/attestation_demand" element={<AttestationsPage language={language} />} />
 				      <Route path="/students/schedule" element={<StudentSchedulePage language={language} toggleLanguage={toggleLanguage} />} />

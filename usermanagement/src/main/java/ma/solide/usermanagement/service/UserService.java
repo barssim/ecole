@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Arrays;
 import java.util.stream.Collectors;
+import java.time.Instant;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -155,6 +156,14 @@ public class UserService {
 
 		user.setPassword(newPassword);
 		userRepository.save(user);
+	}
+
+	public User acceptCgu(Integer userNo, String version, Instant acceptedAt) {
+		User user = getUserOrThrow(userNo);
+		user.setCguAccepted(true);
+		user.setCguVersion(version);
+		user.setCguAcceptedAt(acceptedAt);
+		return userRepository.save(user);
 	}
 
 	public User updateUserByManager(Integer userNo, String civilite, String surname, String firstname, String email, String adresse, String role) {

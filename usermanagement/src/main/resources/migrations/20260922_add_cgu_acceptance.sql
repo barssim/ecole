@@ -1,0 +1,6 @@
+ALTER TABLE tb_user
+    ADD COLUMN cgu_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN cgu_version VARCHAR(32) NULL,
+    ADD COLUMN cgu_accepted_at TIMESTAMP NULL,
+    ADD COLUMN cgu_delivered_by_admin BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN cgu_delivered_at TIMESTAMP NULL;

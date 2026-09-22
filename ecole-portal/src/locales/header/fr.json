@@ -47,6 +47,8 @@
   "usersTitle": "Utilisateurs",
   "userManagementTitle": "Ajouter un utilisateur",
   "usersHint": "En tant que manager, vous pouvez gérer tous les utilisateurs de votre école.",
+  "usersCountLabel": "Nombre d'utilisateurs",
+  "usersCountSummary": "Nombre d'utilisateurs : {count}. Maximum pour la version {version} : {max}.",
   "actionsLabel": "Actions",
   "manageLabel": "Gérer",
   "manageSelectedUserTitle": "Gérer l'utilisateur sélectionné",

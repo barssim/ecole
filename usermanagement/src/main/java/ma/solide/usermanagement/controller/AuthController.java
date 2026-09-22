@@ -56,6 +56,9 @@ public class AuthController {
             roleString = "student"; // Default role is now 'student' if none provided
         }
 
+        boolean cguAccepted = Boolean.TRUE.equals(userDTO.getCguAccepted());
+        boolean cguDeliveredByAdmin = Boolean.TRUE.equals(userDTO.getCguDeliveredByAdmin()) || !cguAccepted;
+
         User user = User.builder()
                 .civilite(userDTO.getCivilite())
                 .surname(userDTO.getSurname())
@@ -64,6 +67,13 @@ public class AuthController {
                 .adresse(userDTO.getAdresse())
                 .password(userDTO.getPassword())
                 .role(roleString)  // Store roles as CSV string
+                .cguAccepted(cguAccepted)
+                .cguVersion(userDTO.getCguVersion())
+                .cguAcceptedAt(userDTO.getCguAcceptedAt())
+                .cguDeliveredByAdmin(cguDeliveredByAdmin)
+                .cguDeliveredAt(cguDeliveredByAdmin
+                        ? (userDTO.getCguDeliveredAt() != null ? userDTO.getCguDeliveredAt() : java.time.Instant.now())
+                        : null)
                 .build();
 
         User createdUser = userService.createUser(user);
@@ -103,6 +113,9 @@ public class AuthController {
         private final String email;
         private final String schoolId;
         private final java.util.List<String> roles;
+        private final boolean cguAccepted;
+        private final String cguVersion;
+        private final boolean cguDeliveredByAdmin;
 
         public UserResponse(User user) {
             this.id = user.getUserno();
@@ -115,6 +128,9 @@ public class AuthController {
             this.roles = user.getRole() != null ? 
                 java.util.Arrays.asList(user.getRole().split(",")) : 
                 java.util.Collections.emptyList();
+            this.cguAccepted = user.isCguAccepted();
+            this.cguVersion = user.getCguVersion();
+            this.cguDeliveredByAdmin = user.isCguDeliveredByAdmin();
         }
 
         public Integer getId() {
@@ -143,6 +159,18 @@ public class AuthController {
 
         public java.util.List<String> getRoles() {
             return roles;
+        }
+
+        public boolean isCguAccepted() {
+            return cguAccepted;
+        }
+
+        public String getCguVersion() {
+            return cguVersion;
+        }
+
+        public boolean isCguDeliveredByAdmin() {
+            return cguDeliveredByAdmin;
         }
     }
 }

@@ -15,5 +15,10 @@ public class UserDTO {
 	String adresse;
 	String password;
 	List<String> roles;  // Accept roles as a list from the frontend
+	Boolean cguAccepted;
+	String cguVersion;
+	java.time.Instant cguAcceptedAt;
+	Boolean cguDeliveredByAdmin;
+	java.time.Instant cguDeliveredAt;
 
 }

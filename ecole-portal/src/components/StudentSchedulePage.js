@@ -110,7 +110,7 @@ const StudentSchedulePage = ({ language }) => {
       ) : schedule.length === 0 ? (
         <p className="italic text-gray-500">{content.schedule_noData}</p>
       ) : (
-        <div className="flex gap-4 overflow-x-auto py-2">
+        <div className="student-schedule-scroll flex gap-4 overflow-x-auto py-2">
           {schedule.map((dayPlan, index) => (
             <div
               key={index}

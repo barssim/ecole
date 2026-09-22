@@ -78,8 +78,10 @@ public class SchoolCustomizationService {
     private Map<String, Object> enrichWithCustomerVersion(String schoolId, Map<String, Object> customization) {
         Map<String, Object> enrichedCustomization = new HashMap<>(customization);
         long userCount = userRepository.countBySchoolId(schoolId);
+        String customerVersion = resolveEffectiveVersion(schoolId, customization, userCount);
         enrichedCustomization.put("userCount", userCount);
-        enrichedCustomization.put("customerVersion", resolveEffectiveVersion(schoolId, customization, userCount));
+        enrichedCustomization.put("customerVersion", customerVersion);
+        enrichedCustomization.put("maxUsers", customerVersionPolicy.resolveMaxUsers(customerVersion));
         return enrichedCustomization;
     }
 
@@ -127,4 +129,3 @@ public class SchoolCustomizationService {
         }
     }
 }
-

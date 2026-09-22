@@ -579,7 +579,7 @@ const TeacherAssignmentsPage = ({ language }) => {
       {assignments.length > 0 ? (
         <div className="teacher-card">
           <h3>{content.assignment_list || 'Assignments'}</h3>
-          <div className="teacher-table-wrapper">
+          <div className="teacher-table-wrapper teacher-assignments-table-wrapper">
             <table className="teacher-table">
               <thead>
                 <tr>
@@ -663,4 +663,3 @@ const TeacherAssignmentsPage = ({ language }) => {
 const td = { padding: '8px 12px' };
 
 export default TeacherAssignmentsPage;
-

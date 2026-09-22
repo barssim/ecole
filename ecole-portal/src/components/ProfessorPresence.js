@@ -282,6 +282,7 @@ const ProfessorPresence = ({ language }) => {
       ) : presenceList.length === 0 ? (
         <p className="text-gray-500">{content.presence_empty}</p>
       ) : (
+       <div className="presence-table-wrapper">
        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
          <thead style={{ background: 'rgb(219, 234, 254)', color: '#1e3a8a' }}>
            <tr>
@@ -334,6 +335,7 @@ const ProfessorPresence = ({ language }) => {
            ))}
          </tbody>
        </table>
+       </div>
 
       )}
     </div>

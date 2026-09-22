@@ -230,7 +230,7 @@ const AnnouncementsPage = ({ language }) => {
       ) : announcements.length === 0 ? (
         <div className="activity-empty">{content.no_data || "No announcements yet."}</div>
       ) : (
-        <ul className="activity-list">
+        <ul className="activity-list services-records-scroll">
           {announcements.map((announcement) => (
             <li
               key={announcement.id}

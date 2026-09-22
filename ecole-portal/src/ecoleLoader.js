@@ -3,6 +3,7 @@
 const customizationMap = {
   gardinia: () => require("./customizations/gardinia").default,
   qods: () => require("./customizations/qods").default,
+  muster: () => require("./customizations/muster").default,
 };
 
 const resolveCustomizationLoader = (schoolId) => customizationMap[schoolId] || customizationMap.qods;
