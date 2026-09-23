@@ -1,9 +1,12 @@
 package ma.solide.usermanagement.util;
 
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -20,8 +23,9 @@ public class JwtUtil {
     @Value("${jwt.expiration:3600000}")
     private long expirationTime;
 
-    public String generateToken(String username, String schoolId, String roleCsv) {
+    public String generateToken(Integer userId, String username, String schoolId, String roleCsv) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("user_id", userId);
         claims.put("school_id", schoolId);
         claims.put("roles", parseRoles(roleCsv));
 
@@ -30,7 +34,19 @@ public class JwtUtil {
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-				.signWith(SignatureAlgorithm.HS256, secretKey).compact();
+				.signWith(signingKey()).compact();
+    }
+
+    public Claims parseAndValidate(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(signingKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    private Key signingKey() {
+        return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
     private List<String> parseRoles(String roleCsv) {

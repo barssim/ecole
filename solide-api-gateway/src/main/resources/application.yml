@@ -2,6 +2,9 @@
   port: 8085
   address: 0.0.0.0
 
+jwt:
+  secret: ${JWT_SECRET:239487234972394e98er023r934o9342oi4uew0923w8734928374}
+
 spring:
   profiles:
     active: prod   # change to production
@@ -15,23 +18,15 @@ spring:
       globalcors:
         corsConfigurations:
           '[/**]':
-            # Exact origins (no wildcard – required when allowCredentials is true)
+            # Production origins only. Keep this list explicit to prevent
+            # arbitrary subdomains from gaining browser access to the API.
             allowedOrigins:
-              - "http://v95566.1blu.de"
               - "https://v95566.1blu.de"
-              - "http://qods.mysolide.com"
               - "https://qods.mysolide.com"
-              - "http://gardinia.mysolide.com"
               - "https://gardinia.mysolide.com"
-            # Pattern-based fallback (covers sub-domains / CI environments)
-            allowedOriginPatterns:
-              - "http://*.1blu.de"
-              - "https://*.1blu.de"
-              - "http://*.mysolide.com"
-              - "https://*.mysolide.com"
-              - "http://*.localhost:*"
-              - "http://localhost:*"
-              - "http://127.0.0.1:*"
+              - "http://gardinia.localhost:3000"
+              - "http://qods.localhost:3000"
+              - "http://muster.localhost:3000"
             allowedMethods:
               - GET
               - POST
@@ -40,11 +35,14 @@ spring:
               - DELETE
               - OPTIONS
             allowedHeaders:
-              - "*"
+              - Authorization
+              - Content-Type
+              - Accept
+              - X-School-Id
             exposedHeaders:
               - "Content-Disposition"
               - "X-School-Id"
-            allowCredentials: true
+            allowCredentials: false
 
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST

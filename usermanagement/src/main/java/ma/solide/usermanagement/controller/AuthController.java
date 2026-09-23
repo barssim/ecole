@@ -29,13 +29,12 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody LoginRequest loginRequest) {
-        // Mock authentication logic (replace with database/user service in production)
-        if (userService.existsBySurnameAndPassword(loginRequest.getUsername(), loginRequest.getPassword())) {
-            User user = userService.findBySurnameAndPassword(loginRequest.getUsername(), loginRequest.getPassword());
-            String token = jwtUtil.generateToken(loginRequest.getUsername(), user.getSchoolId(), user.getRole());
+        User user = userService.authenticate(loginRequest.getUsername(), loginRequest.getPassword());
+        if (user != null) {
+            String token = jwtUtil.generateToken(user.getUserno(), loginRequest.getUsername(), user.getSchoolId(), user.getRole());
             return ResponseEntity.ok(new AuthResponse(token, user));
-        } else
-            return ResponseEntity.status(401).body("Invalid username or password");
+        }
+        return ResponseEntity.status(401).body("Invalid username or password");
     }
 
     @PostMapping("/register")
@@ -80,7 +79,7 @@ public class AuthController {
         
         // Return response with user and roles
         return new ResponseEntity<>(new AuthResponse(
-                jwtUtil.generateToken(createdUser.getSurname(), createdUser.getSchoolId(), createdUser.getRole()),
+                jwtUtil.generateToken(createdUser.getUserno(), createdUser.getSurname(), createdUser.getSchoolId(), createdUser.getRole()),
                 createdUser),
                 HttpStatus.CREATED);
     }

@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -57,6 +58,7 @@ class StudentScheduleControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "STUDENT")
     void listScheduleReturnsGroupedDaySlotsForSchool() throws Exception {
         SchoolContext.setSchoolId("gardinia");
         try {
@@ -74,4 +76,3 @@ class StudentScheduleControllerTest {
         }
     }
 }
-

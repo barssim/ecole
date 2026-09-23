@@ -8,9 +8,11 @@ import ma.solide.usermanagement.model.User;
 import ma.solide.usermanagement.model.UserProfileDTO;
 import ma.solide.usermanagement.model.UserProfileUpdateRequest;
 import ma.solide.usermanagement.service.UserService;
-import ma.solide.usermanagement.util.RoleHeaderAuthorization;
+import ma.solide.usermanagement.security.JwtPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -29,14 +31,16 @@ public class UserProfileController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserProfileDTO>> getUsers(
-            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
-        ensureManagerRole(userRolesHeader);
+    public ResponseEntity<List<UserProfileDTO>> getUsers() {
         return ResponseEntity.ok(userService.findAllUserProfiles());
     }
 
     @GetMapping("/{id}/profile")
-    public ResponseEntity<UserProfileDTO> getProfile(@PathVariable Integer id) {
+    public ResponseEntity<UserProfileDTO> getProfile(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal JwtPrincipal principal,
+            Authentication authentication) {
+        ensureSelfOrManager(id, principal, authentication);
         User user = userService.getUserOrThrow(id);
         return ResponseEntity.ok(UserProfileDTO.fromUser(user));
     }
@@ -54,7 +58,10 @@ public class UserProfileController {
     @PutMapping("/{id}/profile")
     public ResponseEntity<UserProfileDTO> updateProfile(
             @PathVariable Integer id,
+            @AuthenticationPrincipal JwtPrincipal principal,
+            Authentication authentication,
             @RequestBody UserProfileUpdateRequest request) {
+        ensureSelfOrManager(id, principal, authentication);
         User user = userService.updateProfile(
                 id,
                 request.getFirstname(),
@@ -68,7 +75,10 @@ public class UserProfileController {
     @PatchMapping("/{id}/password")
     public ResponseEntity<Map<String, String>> changePassword(
             @PathVariable Integer id,
+            @AuthenticationPrincipal JwtPrincipal principal,
+            Authentication authentication,
             @RequestBody PasswordChangeRequest request) {
+        ensureSelfOrManager(id, principal, authentication);
         userService.changePassword(id, request.getCurrentPassword(), request.getNewPassword());
         return ResponseEntity.ok(Map.of("message", "Password updated successfully"));
     }
@@ -76,7 +86,10 @@ public class UserProfileController {
     @PatchMapping("/{id}/cgu-acceptance")
     public ResponseEntity<UserProfileDTO> acceptCgu(
             @PathVariable Integer id,
+            @AuthenticationPrincipal JwtPrincipal principal,
+            Authentication authentication,
             @RequestBody Map<String, String> request) {
+        ensureSelfOrManager(id, principal, authentication);
         String version = request == null ? null : request.get("version");
         if (version == null || version.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CGU version is required");
@@ -88,9 +101,7 @@ public class UserProfileController {
     @PutMapping("/{id}")
     public ResponseEntity<UserProfileDTO> updateUserByManager(
             @PathVariable Integer id,
-            @RequestBody ManagerUserUpdateRequest request,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
-        ensureManagerRole(userRolesHeader);
+            @RequestBody ManagerUserUpdateRequest request) {
         User updated = userService.updateUserByManager(
                 id,
                 request.getCivilite(),
@@ -104,17 +115,16 @@ public class UserProfileController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUserByManager(
-            @PathVariable Integer id,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRolesHeader) {
-        ensureManagerRole(userRolesHeader);
+    public ResponseEntity<Void> deleteUserByManager(@PathVariable Integer id) {
         userService.deleteUserByManager(id);
         return ResponseEntity.noContent().build();
     }
 
-    private void ensureManagerRole(String userRolesHeader) {
-        if (!RoleHeaderAuthorization.hasAnyRole(userRolesHeader, "manager")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only manager role can manage school users");
+    private void ensureSelfOrManager(Integer requestedUserId, JwtPrincipal principal, Authentication authentication) {
+        boolean manager = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_MANAGER".equals(authority.getAuthority()));
+        if (!manager && (principal == null || !requestedUserId.equals(principal.userId()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Users may only access their own account");
         }
     }
 }

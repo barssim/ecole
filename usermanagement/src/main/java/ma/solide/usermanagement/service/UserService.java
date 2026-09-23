@@ -9,6 +9,7 @@ import java.time.Instant;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import ma.solide.usermanagement.model.TeacherSummaryDTO;
 import ma.solide.usermanagement.model.StudentSummaryDTO;
@@ -25,16 +26,19 @@ public class UserService {
 	private final SchoolCustomizationService schoolCustomizationService;
 	private final CustomerVersionPolicy customerVersionPolicy;
 	private final WelcomeEmailService welcomeEmailService;
+	private final PasswordEncoder passwordEncoder;
 
 	public UserService(
 			UserRepository userRepository,
 			SchoolCustomizationService schoolCustomizationService,
 			CustomerVersionPolicy customerVersionPolicy,
-			WelcomeEmailService welcomeEmailService) {
+			WelcomeEmailService welcomeEmailService,
+			PasswordEncoder passwordEncoder) {
 		this.userRepository = userRepository;
 		this.schoolCustomizationService = schoolCustomizationService;
 		this.customerVersionPolicy = customerVersionPolicy;
 		this.welcomeEmailService = welcomeEmailService;
+		this.passwordEncoder = passwordEncoder;
 	}
 
 	public Optional<User> getUser(Integer userNo) {
@@ -45,20 +49,16 @@ public class UserService {
 		return userRepository.findBySchoolIdAndUserno(schoolId, userNo);
 	}
 
-	public boolean existsBySurnameAndPassword(String username, String password)
-	{
+	public User authenticate(String username, String password) {
+		if (username == null || username.isBlank() || password == null) {
+			return null;
+		}
 		String schoolId = SchoolContext.getRequiredSchoolId();
-		return userRepository.existsBySchoolIdAndSurnameAndPassword(schoolId, username, password);
-		
-	}
-
-	public User findBySurnameAndPassword(String surname, String password) {
-		String schoolId = SchoolContext.getRequiredSchoolId();
-		// Several accounts may share the same surname (e.g. siblings), so we must
-		// disambiguate using surname + password rather than a singular surname lookup,
-		// which would blow up with an IncorrectResultSizeDataAccessException.
-		List<User> matches = userRepository.findAllBySchoolIdAndSurnameAndPassword(schoolId, surname, password);
-		return matches.isEmpty() ? null : matches.get(0);
+		return userRepository.findAllBySchoolIdAndSurname(schoolId, username).stream()
+				.filter(user -> passwordMatches(password, user.getPassword()))
+				.findFirst()
+				.map(user -> upgradeLegacyPassword(user, password))
+				.orElse(null);
 	}
 
 	public List<User> findAllUsers() {
@@ -92,6 +92,7 @@ public class UserService {
 		String schoolId = SchoolContext.getRequiredSchoolId();
 		enforceSchoolUserLimit(schoolId);
 		user.setSchoolId(schoolId);
+		user.setPassword(passwordEncoder.encode(user.getPassword()));
 		User savedUser = userRepository.save(user); // Inserts or updates the user
 		welcomeEmailService.sendWelcomeEmail(savedUser);
 		return savedUser;
@@ -150,12 +151,33 @@ public class UserService {
 		if (newPassword.length() < 6) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be at least 6 characters");
 		}
-		if (!currentPassword.equals(user.getPassword())) {
+		if (!passwordMatches(currentPassword, user.getPassword())) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
 		}
 
-		user.setPassword(newPassword);
+		user.setPassword(passwordEncoder.encode(newPassword));
 		userRepository.save(user);
+	}
+
+	private boolean passwordMatches(String rawPassword, String storedPassword) {
+		if (storedPassword == null) {
+			return false;
+		}
+		if (storedPassword.startsWith("$2a$")
+				|| storedPassword.startsWith("$2b$")
+				|| storedPassword.startsWith("$2y$")) {
+			return passwordEncoder.matches(rawPassword, storedPassword);
+		}
+		return storedPassword.equals(rawPassword);
+	}
+
+	private User upgradeLegacyPassword(User user, String rawPassword) {
+		String storedPassword = user.getPassword();
+		if (storedPassword != null && !storedPassword.startsWith("$2")) {
+			user.setPassword(passwordEncoder.encode(rawPassword));
+			return userRepository.save(user);
+		}
+		return user;
 	}
 
 	public User acceptCgu(Integer userNo, String version, Instant acceptedAt) {
