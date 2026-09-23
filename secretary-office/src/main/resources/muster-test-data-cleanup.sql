@@ -1,0 +1,10 @@
+DELETE FROM tb_gallery_photo WHERE school_id = 'muster';
+DELETE FROM tb_gallery_album WHERE school_id = 'muster';
+DELETE FROM class_schedule_entries WHERE school_id = 'muster';
+DELETE FROM tb_professor_attendance WHERE school_id = 'muster';
+DELETE FROM tb_exam WHERE school_id = 'muster';
+DELETE FROM tb_activity WHERE school_id = 'muster';
+DELETE FROM tb_attestation WHERE school_id = 'muster';
+DELETE FROM tb_class_student WHERE class_id IN (SELECT id FROM tb_class WHERE school_id = 'muster');
+DELETE FROM tb_class_teacher WHERE class_id IN (SELECT id FROM tb_class WHERE school_id = 'muster');
+DELETE FROM tb_class WHERE school_id = 'muster';

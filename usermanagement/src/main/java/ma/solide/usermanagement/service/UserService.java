@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import ma.solide.usermanagement.model.TeacherSummaryDTO;
 import ma.solide.usermanagement.model.StudentSummaryDTO;
 import ma.solide.usermanagement.model.User;
+import ma.solide.usermanagement.model.UserNames;
 import ma.solide.usermanagement.model.UserProfileDTO;
 import ma.solide.usermanagement.repository.UserRepository;
 import ma.solide.usermanagement.school.SchoolContext;
@@ -253,24 +254,24 @@ public class UserService {
 	}
 
 	private TeacherSummaryDTO toTeacherSummary(User user) {
-		String firstName = user.getFirstname() == null ? "" : user.getFirstname().trim();
+		var localizedNames = UserNames.fullNames(user);
 		String lastName = user.getSurname() == null ? "" : user.getSurname().trim();
-		String fullName = (firstName + " " + lastName).trim();
+		String fullName = localizedNames.get("en");
 		if (fullName.isEmpty()) {
 			fullName = lastName.isEmpty() ? "Teacher #" + user.getUserno() : lastName;
 		}
 
-		return new TeacherSummaryDTO(user.getUserno(), fullName, lastName);
+		return new TeacherSummaryDTO(user.getUserno(), fullName, localizedNames, lastName);
 	}
 
 	private StudentSummaryDTO toStudentSummary(User user) {
-		String firstName = user.getFirstname() == null ? "" : user.getFirstname().trim();
+		var localizedNames = UserNames.fullNames(user);
 		String lastName = user.getSurname() == null ? "" : user.getSurname().trim();
-		String fullName = (firstName + " " + lastName).trim();
+		String fullName = localizedNames.get("en");
 		if (fullName.isEmpty()) {
 			fullName = lastName.isEmpty() ? "Student #" + user.getUserno() : lastName;
 		}
 
-		return new StudentSummaryDTO(user.getUserno(), fullName, lastName, user.getEmail());
+		return new StudentSummaryDTO(user.getUserno(), fullName, localizedNames, lastName, user.getEmail());
 	}
 }

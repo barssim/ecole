@@ -6,9 +6,14 @@
 	<groupId>ma.solide</groupId>
 	<artifactId>solide_api_gateway</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>solide_api_gateway</name>
 	<description>serves as the entry point to our microservices architecture</description>
+
+	<!-- This is a standalone reactive Spring Cloud Gateway application (runs via
+	     `java -jar`, embedded Netty server). It must NOT be packaged as a WAR:
+	     WAR packaging expects a servlet container / web.xml, which conflicts with
+	     the reactive (WebFlux) runtime this gateway relies on. -->
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -23,14 +28,14 @@
 	</properties>
 
 	<dependencies>
-		<!-- Spring Boot Starter for Gateway -->
+		<!-- Spring Boot Starter for Gateway (reactive / WebFlux + Netty).
+		     Do NOT add spring-boot-starter-web here: it pulls in Tomcat + Spring MVC,
+		     which forces the app into servlet mode and breaks Spring Cloud Gateway's
+		     reactive CORS preflight handling (OPTIONS requests end up being routed
+		     downstream instead of being answered directly by the gateway). -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-gateway</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>

@@ -19,16 +19,16 @@ const muster = {
     },
   },
   adresse: {
-    en: "12 Musterstrasse, Berlin",
-    fr: "12 Rue Muster, Berlin",
+    en: "12 Avenue muster, Rabat",
+    fr: "12 Rue muster, Rabat",
     ar: "12 شارع موستر، برلين",
   },
-  phone: "+49 30 1234567",
+  phone: "+212 30 1234567",
   mail: "contact@muster-school.de",
-  customerVersion: "silver",
-  primaryColor: "#7c3aed",
-  accentColor: "#a855f7",
-  softColor: "#f3e8ff",
+  customerVersion: "testversion",
+    primaryColor: "#00bbe0",
+    accentColor: "#00bbe0",
+    softColor: "#e1f2fa",
   footerText: "© 2025 Muster School. All rights reserved.",
 };
 

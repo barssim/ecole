@@ -69,6 +69,7 @@ services:
       AWS_S3_PRESIGN_ENDPOINT: ${AWS_S3_PRESIGN_ENDPOINT:-http://localhost:9000}
       AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
       AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      MUSTER_TEST_DATA_ENABLED: ${MUSTER_TEST_DATA_ENABLED:-false}
     networks:
       - ecole
 
@@ -168,6 +169,7 @@ services:
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED: "false"
       WELCOME_EMAIL_FROM: ${WELCOME_EMAIL_FROM:-noreply@ecole-portal.local}
       WELCOME_EMAIL_ENABLED: ${WELCOME_EMAIL_ENABLED:-true}
+      MUSTER_TEST_DATA_ENABLED: ${MUSTER_TEST_DATA_ENABLED:-false}
     networks:
       - ecole
 
@@ -212,6 +214,7 @@ services:
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      MUSTER_TEST_DATA_ENABLED: ${MUSTER_TEST_DATA_ENABLED:-false}
     networks:
       - ecole
 
@@ -269,6 +272,7 @@ services:
       GALLERY_S3_PRESIGN_ENDPOINT: ${AWS_S3_PRESIGN_ENDPOINT:-http://localhost:9000}
       AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
       AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      MUSTER_TEST_DATA_ENABLED: ${MUSTER_TEST_DATA_ENABLED:-false}
     networks:
       - ecole
 
@@ -284,6 +288,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-student:3306/studentDB
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      MUSTER_TEST_DATA_ENABLED: ${MUSTER_TEST_DATA_ENABLED:-false}
     networks:
       - ecole
 
@@ -299,6 +304,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-parent:3306/parentDB
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      MUSTER_TEST_DATA_ENABLED: ${MUSTER_TEST_DATA_ENABLED:-false}
     networks:
       - ecole
 

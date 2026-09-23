@@ -14,6 +14,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 	List<User> findBySchoolId(String schoolId);
 	long countBySchoolId(String schoolId);
 	List<User> findAllBySchoolIdAndSurname(String schoolId, String username);
+	List<User> findAllBySchoolIdAndEmailIn(String schoolId, List<String> emails);
 	Optional<User> findBySchoolIdAndUserno(String schoolId, Integer id);
 
 }

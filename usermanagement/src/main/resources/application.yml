@@ -48,6 +48,10 @@ welcome:
     from: ${WELCOME_EMAIL_FROM:noreply@ecole-portal.local}
     enabled: ${WELCOME_EMAIL_ENABLED:true}
 
+muster:
+  test-data:
+    enabled: ${MUSTER_TEST_DATA_ENABLED:false}
+
 management:
   endpoints:
     web:

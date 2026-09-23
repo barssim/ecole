@@ -3,12 +3,14 @@ package ma.solide.usermanagement.model;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class UserProfileDTO {
     private Integer id;
     private String username;
     private String civilite;
     private String firstname;
+    private Map<String, String> firstnames;
     private String email;
     private String adresse;
     private List<String> roles;
@@ -19,6 +21,7 @@ public class UserProfileDTO {
         dto.setUsername(user.getSurname());
         dto.setCivilite(user.getCivilite());
         dto.setFirstname(user.getFirstname());
+        dto.setFirstnames(UserNames.firstnames(user));
         dto.setEmail(user.getEmail());
         dto.setAdresse(user.getAdresse());
         dto.setRoles(user.getRole() != null && !user.getRole().isBlank()
@@ -59,6 +62,14 @@ public class UserProfileDTO {
         this.firstname = firstname;
     }
 
+    public Map<String, String> getFirstnames() {
+        return firstnames;
+    }
+
+    public void setFirstnames(Map<String, String> firstnames) {
+        this.firstnames = firstnames;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -83,4 +94,3 @@ public class UserProfileDTO {
         this.roles = roles;
     }
 }
-

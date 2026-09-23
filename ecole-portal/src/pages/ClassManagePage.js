@@ -6,6 +6,8 @@ import ar from "../locales/ar.json";
 import { getSchoolId } from '../school';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { normalizeRoles, hasAnyRole } from '../utils/roles';
+import { getLocalizedUserName, localizeStoredUserName } from '../utils/localizedUserName';
+import '../cssFiles/ClassManagePage.css';
 
 const ClassManagePage = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
@@ -38,6 +40,7 @@ const ClassManagePage = ({ language }) => {
   const [deletingClass, setDeletingClass] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
+  const [activeSection, setActiveSection] = useState(null);
 
   const userRoles = normalizeRoles(JSON.parse(localStorage.getItem('user_roles') || '[]'));
   const canManageClasses = hasAnyRole(userRoles, ['admin', 'manager', 'secretary']);
@@ -423,12 +426,12 @@ const ClassManagePage = ({ language }) => {
   }, [id]);
 
   useEffect(() => {
-    if (cls?.id && canManageClasses) {
+    if (cls?.id && canManageClasses && activeSection === 'schedule') {
       loadClassSchedule(cls.id);
-    } else {
+    } else if (!cls?.id || !canManageClasses) {
       setSchedule([]);
     }
-  }, [cls?.id, canManageClasses]);
+  }, [cls?.id, canManageClasses, activeSection]);
 
   // ── Render ────────────────────────────────────────────────────
   if (loading) {
@@ -466,72 +469,110 @@ const ClassManagePage = ({ language }) => {
   );
 
   const getTranslatedDay = (dayKey) => content[`schedule_${String(dayKey || '').toLowerCase()}`] || dayKey;
+  const toggleSection = (section) => {
+    setActiveSection((current) => current === section ? null : section);
+    setAddingStudent(false);
+    setAddingTeacher(false);
+    clearMessages();
+  };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <main className="class-manage-page" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <Link to="/administration/classes" className="text-indigo-600 hover:underline text-sm">
-          ← {content.classes_backToList || 'Back to class list'}
+      <div className="class-manage-toolbar">
+        <Link to="/administration/classes" className="class-manage-back">
+          <span aria-hidden="true">{language === 'ar' ? '→' : '←'}</span>
+          {content.classes_backToList || 'Back to class list'}
         </Link>
         <button
           onClick={handleDeleteClass}
           disabled={deletingClass}
-          className="text-xs bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200 disabled:opacity-50"
+          className="class-manage-button class-manage-button-danger"
         >
+          <span aria-hidden="true">🗑</span>
           {deletingClass ? '...' : (content.classes_removeClass || 'Delete class')}
         </button>
       </div>
 
       {/* Class name */}
-      <div className="bg-white rounded shadow p-4 border border-gray-200 space-y-3">
-        <div className="flex items-center gap-3 flex-wrap">
+      <section className="class-manage-hero">
+        <div className="class-manage-hero-main">
+          <div className="class-manage-icon" aria-hidden="true">🏫</div>
+          <div className="class-manage-title-area">
+            <span className="class-manage-eyebrow">{content.classes_manageClassButton || 'Manage class'}</span>
           {editingName ? (
-            <>
+            <div className="class-manage-inline-form">
               <input
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') handleCancelEditName(); }}
-                className="border rounded px-3 py-2 text-sm flex-1"
+                className="class-manage-input class-manage-name-input"
                 autoFocus
                 disabled={savingName}
               />
-              <button onClick={handleSaveName} disabled={savingName} className="text-xs bg-green-100 text-green-800 px-3 py-1 rounded hover:bg-green-200 disabled:opacity-50">
+              <button onClick={handleSaveName} disabled={savingName} className="class-manage-button class-manage-button-primary">
                 {savingName ? '...' : (content.classes_editSave || 'Save')}
               </button>
-              <button onClick={handleCancelEditName} disabled={savingName} className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded hover:bg-gray-200">
+              <button onClick={handleCancelEditName} disabled={savingName} className="class-manage-button class-manage-button-muted">
                 {content.classes_editCancel || 'Cancel'}
               </button>
-            </>
+            </div>
           ) : (
-            <>
-              <h2 className="text-2xl font-bold">🏫 {cls.name}</h2>
-              <button onClick={handleStartEditName} className="text-xs bg-yellow-100 text-yellow-800 px-3 py-1 rounded hover:bg-yellow-200">
+            <div className="class-manage-title-row">
+              <h1>{cls.name}</h1>
+              <button onClick={handleStartEditName} className="class-manage-button class-manage-button-ghost">
+                <span aria-hidden="true">✎</span>
                 {content.classes_editClass || 'Rename'}
               </button>
-            </>
+            </div>
           )}
+          </div>
         </div>
-        {submitError && <p className="text-sm text-red-600">{submitError}</p>}
-        {submitSuccess && <p className="text-sm text-green-600">{submitSuccess}</p>}
-      </div>
+        <div className="class-manage-stats">
+          <div className="class-manage-stat">
+            <strong>{cls.students.length}</strong>
+            <span>{content.students || 'Students'}</span>
+          </div>
+          <div className="class-manage-stat">
+            <strong>{(cls.teachers || []).length}</strong>
+            <span>{content.classes_teachers || 'Teachers'}</span>
+          </div>
+          <div className="class-manage-stat">
+            <strong>{activeSection === 'schedule' ? schedule.length : '—'}</strong>
+            <span>{content.classes_scheduleDayLabel || 'Days'}</span>
+          </div>
+        </div>
+        {submitError && <p className="class-manage-alert class-manage-alert-error">{submitError}</p>}
+        {submitSuccess && <p className="class-manage-alert class-manage-alert-success">{submitSuccess}</p>}
+      </section>
 
+      <div className="class-manage-people-grid">
       {/* Students */}
-      <div className="bg-white rounded shadow p-4 border border-gray-200 space-y-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <h3 className="font-semibold text-gray-700">
-            👥 {content.students || 'Students'} ({cls.students.length} / 15)
-          </h3>
-          {!addingStudent && !studentsLoading && unassignedStudents.length > 0 && (
+      <section className={`class-manage-card ${activeSection === 'students' ? 'is-open' : ''}`}>
+        <div className="class-manage-card-header">
+          <button
+            type="button"
+            className="class-manage-section-toggle"
+            onClick={() => toggleSection('students')}
+            aria-expanded={activeSection === 'students'}
+          >
+            <span className="class-manage-card-icon class-manage-card-icon-students">👥</span>
+            <span className="class-manage-section-title">
+              <strong>{content.students || 'Students'}</strong>
+              <small>{cls.students.length} / 15</small>
+            </span>
+            <span className="class-manage-chevron" aria-hidden="true">⌄</span>
+          </button>
+          {activeSection === 'students' && !addingStudent && !studentsLoading && unassignedStudents.length > 0 && (
             cls.students.length >= 15 ? (
-              <span className="text-xs bg-gray-100 text-gray-500 px-3 py-1 rounded font-semibold">
+              <span className="class-manage-badge">
                 ✓ {content.classes_classFull || 'Classe complète (15/15)'}
               </span>
             ) : (
               <button
                 onClick={() => { setAddingStudent(true); setSelectedStudentName(''); clearMessages(); }}
-                className="text-xs bg-indigo-100 text-indigo-800 px-3 py-1 rounded hover:bg-indigo-200"
+                className="class-manage-button class-manage-button-primary"
               >
                 {content.classes_addStudent || '+ Add Student'}
               </button>
@@ -539,31 +580,33 @@ const ClassManagePage = ({ language }) => {
           )}
         </div>
 
+        {activeSection === 'students' && (
+          <div className="class-manage-section-content">
         {addingStudent && (
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="class-manage-add-form">
             <select
               value={selectedStudentName}
               onChange={(e) => setSelectedStudentName(e.target.value)}
-              className="border rounded px-3 py-1 text-sm flex-1"
+              className="class-manage-input"
               disabled={savingStudent || studentsLoading}
               autoFocus
             >
               <option value="">{content.classes_selectStudentPlaceholder || 'Select student...'}</option>
               {unassignedStudents.map((s) => (
-                <option key={s.id || s.name} value={s.name}>{s.name}</option>
+                <option key={s.id || s.name} value={s.name}>{getLocalizedUserName(s, language)}</option>
               ))}
             </select>
             <button
               onClick={handleSaveStudent}
               disabled={savingStudent || !selectedStudentName}
-              className="text-xs bg-green-100 text-green-800 px-3 py-1 rounded hover:bg-green-200 disabled:opacity-50"
+              className="class-manage-button class-manage-button-primary"
             >
               {savingStudent ? '...' : (content.classes_studentSave || 'Add')}
             </button>
             <button
               onClick={() => { setAddingStudent(false); setSelectedStudentName(''); }}
               disabled={savingStudent}
-              className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded hover:bg-gray-200"
+              className="class-manage-button class-manage-button-muted"
             >
               {content.classes_editCancel || 'Cancel'}
             </button>
@@ -571,19 +614,20 @@ const ClassManagePage = ({ language }) => {
         )}
 
         {cls.students.length > 0 ? (
-          <ul className="divide-y divide-gray-100 mt-2">
+          <ul className="class-manage-person-list">
             {cls.students.map((student, i) => (
-              <li key={i} className="flex items-center justify-between py-2 text-sm">
-                <span className="flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold">
-                    {i + 1}
+              <li key={student}>
+                <span className="class-manage-person">
+                  <span className="class-manage-avatar">{localizeStoredUserName(student, allStudents, language).charAt(0)}</span>
+                  <span>
+                    <strong>{localizeStoredUserName(student, allStudents, language)}</strong>
+                    <small>#{String(i + 1).padStart(2, '0')}</small>
                   </span>
-                  {student}
                 </span>
                 <button
                   onClick={() => handleRemoveStudent(student)}
                   disabled={removingStudent === student}
-                  className="text-red-400 hover:text-red-600 text-xs disabled:opacity-50"
+                  className="class-manage-remove"
                   title={content.classes_removeStudentTooltip || 'Remove student'}
                 >
                   {removingStudent === student ? '...' : '✕'}
@@ -592,50 +636,64 @@ const ClassManagePage = ({ language }) => {
             ))}
           </ul>
         ) : (
-          <p className="italic text-gray-400 text-sm">{content.classes_noStudents || 'No students in this class.'}</p>
+          <p className="class-manage-empty">{content.classes_noStudents || 'No students in this class.'}</p>
         )}
-      </div>
+          </div>
+        )}
+      </section>
 
       {/* Teachers */}
-      <div className="bg-white rounded shadow p-4 border border-gray-200 space-y-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <h3 className="font-semibold text-gray-700">
-            🎓 {content.classes_teachers || 'Teachers'} ({(cls.teachers || []).length})
-          </h3>
-          {!addingTeacher && unassignedTeachers.length > 0 && !teachersLoading && (
+      <section className={`class-manage-card ${activeSection === 'teachers' ? 'is-open' : ''}`}>
+        <div className="class-manage-card-header">
+          <button
+            type="button"
+            className="class-manage-section-toggle"
+            onClick={() => toggleSection('teachers')}
+            aria-expanded={activeSection === 'teachers'}
+          >
+            <span className="class-manage-card-icon class-manage-card-icon-teachers">🎓</span>
+            <span className="class-manage-section-title">
+              <strong>{content.classes_teachers || 'Teachers'}</strong>
+              <small>{(cls.teachers || []).length}</small>
+            </span>
+            <span className="class-manage-chevron" aria-hidden="true">⌄</span>
+          </button>
+          {activeSection === 'teachers' && !addingTeacher && unassignedTeachers.length > 0 && !teachersLoading && (
             <button
               onClick={() => { setAddingTeacher(true); setSelectedTeacherName(''); clearMessages(); }}
-              className="text-xs bg-indigo-100 text-indigo-800 px-3 py-1 rounded hover:bg-indigo-200"
+              className="class-manage-button class-manage-button-primary"
             >
               {content.classes_assignTeacher || '+ Assign Teacher'}
             </button>
           )}
         </div>
 
+        {activeSection === 'teachers' && (
+          <div className="class-manage-section-content">
         {addingTeacher && (
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="class-manage-add-form">
             <select
               value={selectedTeacherName}
               onChange={(e) => setSelectedTeacherName(e.target.value)}
-              className="border rounded px-3 py-1 text-sm flex-1"
+              className="class-manage-input"
               disabled={savingTeacher}
             >
               <option value="">{content.classes_selectTeacherPlaceholder || 'Select teacher...'}</option>
               {unassignedTeachers.map((t) => (
-                <option key={t.id || t.name} value={t.name}>{t.name}</option>
+                <option key={t.id || t.name} value={t.name}>{getLocalizedUserName(t, language)}</option>
               ))}
             </select>
             <button
               onClick={handleSaveTeacher}
               disabled={savingTeacher || !selectedTeacherName}
-              className="text-xs bg-green-100 text-green-800 px-3 py-1 rounded hover:bg-green-200 disabled:opacity-50"
+              className="class-manage-button class-manage-button-primary"
             >
               {savingTeacher ? '...' : (content.classes_teacherSave || 'Assign')}
             </button>
             <button
               onClick={() => { setAddingTeacher(false); setSelectedTeacherName(''); }}
               disabled={savingTeacher}
-              className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded hover:bg-gray-200"
+              className="class-manage-button class-manage-button-muted"
             >
               {content.classes_editCancel || 'Cancel'}
             </button>
@@ -643,19 +701,20 @@ const ClassManagePage = ({ language }) => {
         )}
 
         {(cls.teachers || []).length > 0 ? (
-          <ul className="divide-y divide-gray-100 mt-2">
+          <ul className="class-manage-person-list">
             {(cls.teachers || []).map((teacher, i) => (
-              <li key={i} className="flex items-center justify-between py-2 text-sm">
-                <span className="flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
-                    {i + 1}
+              <li key={teacher}>
+                <span className="class-manage-person">
+                  <span className="class-manage-avatar class-manage-avatar-teacher">{localizeStoredUserName(teacher, teachers, language).charAt(0)}</span>
+                  <span>
+                    <strong>{localizeStoredUserName(teacher, teachers, language)}</strong>
+                    <small>#{String(i + 1).padStart(2, '0')}</small>
                   </span>
-                  {teacher}
                 </span>
                 <button
                   onClick={() => handleRemoveTeacher(teacher)}
                   disabled={removingTeacher === teacher}
-                  className="text-red-400 hover:text-red-600 text-xs disabled:opacity-50"
+                  className="class-manage-remove"
                   title={content.classes_removeTeacherTooltip || 'Remove teacher'}
                 >
                   {removingTeacher === teacher ? '...' : '✕'}
@@ -664,21 +723,33 @@ const ClassManagePage = ({ language }) => {
             ))}
           </ul>
         ) : (
-          <p className="italic text-gray-400 text-sm">{content.classes_noTeachers || 'No teacher assigned.'}</p>
+          <p className="class-manage-empty">{content.classes_noTeachers || 'No teacher assigned.'}</p>
         )}
+          </div>
+        )}
+      </section>
       </div>
 
       {/* Timetable */}
-      <div className="bg-white rounded shadow p-4 border border-gray-200 space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <h3 className="font-semibold text-gray-700">
-            📆 {content.classes_scheduleTitle || 'Class timetable'}
-          </h3>
-          <p className="text-xs text-gray-500">
-            {content.classes_scheduleHint || 'Create one day at a time; each line becomes one slot.'}
-          </p>
+      <section className={`class-manage-card class-manage-schedule-card ${activeSection === 'schedule' ? 'is-open' : ''}`}>
+        <div className="class-manage-card-header class-manage-schedule-header">
+          <button
+            type="button"
+            className="class-manage-section-toggle"
+            onClick={() => toggleSection('schedule')}
+            aria-expanded={activeSection === 'schedule'}
+          >
+            <span className="class-manage-card-icon class-manage-card-icon-schedule">📆</span>
+            <span className="class-manage-section-title">
+              <strong>{content.classes_scheduleTitle || 'Class timetable'}</strong>
+              <small>{content.classes_scheduleHint || 'Create one day at a time; each line becomes one slot.'}</small>
+            </span>
+            <span className="class-manage-chevron" aria-hidden="true">⌄</span>
+          </button>
         </div>
 
+        {activeSection === 'schedule' && (
+          <div className="class-manage-section-content">
         {scheduleError && <p className="text-sm text-red-600">{scheduleError}</p>}
         {scheduleSuccess && <p className="text-sm text-green-600">{scheduleSuccess}</p>}
 
@@ -724,7 +795,7 @@ const ClassManagePage = ({ language }) => {
         {scheduleLoading ? (
           <p className="italic text-gray-500 text-sm">{content.loading || 'Loading...'}</p>
         ) : schedule.length > 0 ? (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="class-manage-schedule-grid">
             {schedule.map((dayPlan, index) => {
               const entries = Array.isArray(dayPlan.entries) && dayPlan.entries.length > 0
                 ? dayPlan.entries
@@ -736,15 +807,16 @@ const ClassManagePage = ({ language }) => {
                   }));
 
               return (
-                <div key={`${dayPlan.day}-${index}`} className="rounded border border-gray-200 bg-gray-50 p-3 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <h4 className="font-semibold text-gray-700">{getTranslatedDay(dayPlan.day)}</h4>
-                    <span className="text-xs text-gray-500">{entries.length} slot{entries.length > 1 ? 's' : ''}</span>
+                <div key={`${dayPlan.day}-${index}`} className="class-manage-day">
+                  <div className="class-manage-day-header">
+                    <h4>{getTranslatedDay(dayPlan.day)}</h4>
+                    <span>{entries.length} slot{entries.length > 1 ? 's' : ''}</span>
                   </div>
-                  <ul className="space-y-2">
+                  <ul className="class-manage-slot-list">
                     {entries.map((entry) => (
-                      <li key={entry.id || `${dayPlan.day}-${entry.slotOrder}`} className="flex items-center justify-between gap-2 text-sm bg-white rounded px-3 py-2 border border-gray-100">
-                        <span>{entry.slotOrder}. {entry.slotText}</span>
+                      <li key={entry.id || `${dayPlan.day}-${entry.slotOrder}`}>
+                        <span className="class-manage-slot-order">{entry.slotOrder}</span>
+                        <span className="class-manage-slot-text">{entry.slotText}</span>
                         {!entry.readOnly && (
                           <button
                             type="button"
@@ -766,10 +838,11 @@ const ClassManagePage = ({ language }) => {
         ) : (
           <p className="italic text-gray-400 text-sm">{content.classes_scheduleNoData || 'No timetable defined for this class yet.'}</p>
         )}
-      </div>
-    </div>
+          </div>
+        )}
+      </section>
+    </main>
   );
 };
 
 export default ClassManagePage;
-

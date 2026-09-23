@@ -5,6 +5,7 @@ import ar from '../locales/ar.json';
 import { getSchoolId } from '../school';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { normalizeRoles } from '../utils/roles';
+import { getLocalizedUserName, localizeStoredUserName } from '../utils/localizedUserName';
 import '../cssFiles/Inscription.css';
 import '../cssFiles/TeacherPages.css';
 
@@ -32,6 +33,7 @@ const TeacherNotesPage = ({ language }) => {
   const [classesLoading, setClassesLoading] = useState(true);
   const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedClassStudents, setSelectedClassStudents] = useState([]);
+  const [studentUsers, setStudentUsers] = useState([]);
   const [subjectOptions, setSubjectOptions] = useState([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -55,10 +57,24 @@ const TeacherNotesPage = ({ language }) => {
   const extractStudentName = (student) => {
     if (typeof student === 'string') return student;
     if (!student || typeof student !== 'object') return '';
-    return student.name || student.username || `${student.firstname || ''} ${student.surname || ''}`.trim();
+    return getLocalizedUserName(student, language);
   };
 
   const selectedClass = classes.find((cls) => String(cls.id) === String(selectedClassId));
+
+  useEffect(() => {
+    const fetchStudentUsers = async () => {
+      try {
+        const response = await fetch(apiUrlFor('/users/students'), { headers: buildHeaders() });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        setStudentUsers(Array.isArray(data) ? data : []);
+      } catch {
+        setStudentUsers([]);
+      }
+    };
+    fetchStudentUsers();
+  }, []);
 
   const refreshNotes = async () => {
     if (!currentUserId) {
@@ -384,7 +400,9 @@ const TeacherNotesPage = ({ language }) => {
                 : (content.notes_noClassStudents || 'Aucun élève trouvé pour cette classe.')) + ' —'}
             </option>
             {selectedClassStudents.map((student) => (
-              <option key={student} value={student}>{student}</option>
+              <option key={student} value={student}>
+                {localizeStoredUserName(student, studentUsers, language)}
+              </option>
             ))}
           </select>
         </div>
@@ -477,7 +495,7 @@ const TeacherNotesPage = ({ language }) => {
                   <tr key={entry.id || i} style={{ background: String(entry.id) === String(selectedSavedEntryId) ? '#bfdbfe' : undefined }}>
                     <td style={td}>{entry.date}</td>
                     <td style={td}>{entry.className}</td>
-                    <td style={td}>{entry.studentName}</td>
+                    <td style={td}>{localizeStoredUserName(entry.studentName, studentUsers, language)}</td>
                     <td style={td}>{entry.subject}</td>
                     <td style={td}><strong>{entry.grade} / 20</strong></td>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>

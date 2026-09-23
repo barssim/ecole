@@ -7,6 +7,7 @@ import { getSchoolId } from '../school';
 import { hasAnyRole, normalizeRoles } from '../utils/roles';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { getFallbackCustomization } from '../ecoleLoader';
+import { getLocalizedUserName, localizeStoredUserName } from '../utils/localizedUserName';
 import '../cssFiles/Finance.css';
 
 const Payments = ({ language }) => {
@@ -268,6 +269,7 @@ const Payments = ({ language }) => {
       const students = Array.isArray(response.data) ? response.data : [];
       const mappedStudents = students
         .map((student) => ({
+          ...student,
           name: student?.name || student?.username || '',
           email: student?.email || ''
         }))
@@ -449,7 +451,9 @@ const Payments = ({ language }) => {
               <select name="studentName" value={formData.studentName} onChange={handleInputChange} required>
                 <option value=""></option>
                 {studentOptions.map((student) => (
-                  <option key={`${student.name}-${student.email || 'no-email'}`} value={student.name}>{student.name}</option>
+                  <option key={`${student.name}-${student.email || 'no-email'}`} value={student.name}>
+                    {getLocalizedUserName(student, language)}
+                  </option>
                 ))}
               </select>
               <select name="className" value={formData.className} onChange={handleInputChange}>
@@ -527,7 +531,7 @@ const Payments = ({ language }) => {
               {payments.map((payment) => (
                 <tr key={payment.id}>
                   <td>{payment.paymentDate || '-'}</td>
-                  <td>{payment.studentName}</td>
+                  <td>{localizeStoredUserName(payment.studentName, studentOptions, language)}</td>
                   <td>{payment.className || '-'}</td>
                   <td>{extractServiceFromNotes(payment.notes) || '-'}</td>
                   <td className="finance-amount">{payment.amount} {payment.currency}</td>

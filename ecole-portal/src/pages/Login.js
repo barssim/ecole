@@ -6,6 +6,7 @@ import ar from "../locales/header/ar.json";
 import en from "../locales/header/en.json";
 import { resolveSchoolFromHost, setSchoolId } from "../school";
 import { resolveApiBaseUrl } from "../utils/apiBaseUrl";
+import { getLocalizedFirstName } from "../utils/localizedUserName";
 
 const decodeJwtPayload = (token) => {
 	try {
@@ -172,8 +173,9 @@ const Login = ({language}) => {
 				localStorage.removeItem("civilite");
 			}
 
-			if (user && user.firstname) {
-				localStorage.setItem("firstname", user.firstname);
+			const localizedFirstName = getLocalizedFirstName(user, language);
+			if (localizedFirstName) {
+				localStorage.setItem("firstname", localizedFirstName);
 			} else {
 				localStorage.removeItem("firstname");
 			}

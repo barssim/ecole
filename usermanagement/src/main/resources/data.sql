@@ -5,10 +5,6 @@ INSERT IGNORE INTO tb_school (school_id, school_name, school_email) VALUES
 ('amana', 'Amana', 'noreply_amana@example.com'),
 ('muster', 'Muster', 'noreply_muster@example.com');
 
--- Muster school: manager account + mocked customization for demo purposes
-INSERT IGNORE INTO tb_user (userno, surname, firstname, email, adresse, password, role, school_id) VALUES
-(701, 'admin', 'Muster', 'admin@muster-school.com', 'Muster Street 1', 'Muster83#', 'manager', 'muster');
-
 INSERT IGNORE INTO tb_school_customization (school_id, customization_json) VALUES
 ('muster', '{"name":{"en":"Muster School","fr":"Ecole Muster","ar":"مدرسة موستر"},"logo":"/logos/muster.svg","image":"/images/muster.svg","about":{"title":{"en":"About Muster School","fr":"A propos de Ecole Muster","ar":"حول مدرسة موستر"},"description":{"en":"Muster School is a demo institution used to showcase the platform features with realistic mocked data.","fr":"Ecole Muster est un etablissement de demonstration utilise pour illustrer les fonctionnalites de la plateforme avec des donnees fictives realistes.","ar":"مدرسة موستر هي مؤسسة تجريبية تستخدم لعرض ميزات المنصة ببيانات وهمية واقعية."}},"adresse":{"en":"12 Musterstrasse, Berlin","fr":"12 Rue Muster, Berlin","ar":"12 شارع موستر، برلين"},"phone":"+49 30 1234567","mail":"contact@muster-school.de","primaryColor":"#7c3aed","accentColor":"#a855f7","softColor":"#f3e8ff","customerVersion":"silver","footerText":"(c) 2025 Muster School. All rights reserved."}');
 

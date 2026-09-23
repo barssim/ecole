@@ -6,6 +6,7 @@ import '../cssFiles/PaymentsPage.css';
 import { getSchoolId } from '../school';
 import { hasAnyRole, normalizeRoles } from '../utils/roles';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
+import { getLocalizedUserName, localizeStoredUserName } from '../utils/localizedUserName';
 
 const PaymentsPage = ({ language }) => {
   const content = language === 'fr' ? fr : language === 'en' ? en : ar;
@@ -67,12 +68,7 @@ const PaymentsPage = ({ language }) => {
       }
 
       const students = await response.json();
-      const names = Array.from(new Set(
-        (Array.isArray(students) ? students : [])
-          .map((student) => student?.name || student?.username || '')
-          .filter(Boolean)
-      ));
-      setStudentOptions(names);
+      setStudentOptions(Array.isArray(students) ? students : []);
     } catch (err) {
       console.error('Error fetching student list:', err);
       setStudentOptions([]);
@@ -329,8 +325,10 @@ const PaymentsPage = ({ language }) => {
               required
             >
               <option value="">{content?.payment_studentName || 'Élève'}</option>
-              {studentOptions.map((name) => (
-                <option key={name} value={name}>{name}</option>
+              {studentOptions.map((student) => (
+                <option key={student.id || student.name} value={student.name}>
+                  {getLocalizedUserName(student, language)}
+                </option>
               ))}
             </select>
             <select
@@ -395,7 +393,7 @@ const PaymentsPage = ({ language }) => {
             <div className="invoice-details">
               <div className="detail-row">
                 <label>{content?.payment_studentName || 'Élève'}:</label>
-                <span>{paymentNotice.studentName}</span>
+                <span>{localizeStoredUserName(paymentNotice.studentName, studentOptions, language)}</span>
               </div>
               <div className="detail-row">
                 <label>{content?.payment_class || 'Classe'}:</label>
@@ -454,7 +452,7 @@ const PaymentsPage = ({ language }) => {
                 {allNotices.map((notice, index) => (
                   <tr key={notice.id} style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}>
                     <td style={td}><strong>{notice.invoiceNumber}</strong></td>
-                    <td style={td}>{notice.studentName}</td>
+                    <td style={td}>{localizeStoredUserName(notice.studentName, studentOptions, language)}</td>
                     <td style={td}>{notice.className}</td>
                     <td style={td}>{formatDate(notice.invoiceDate)}</td>
                     <td style={td}>{formatDate(notice.dueDate)}</td>
@@ -505,7 +503,7 @@ const PaymentsPage = ({ language }) => {
                 {payments.map((payment, index) => (
                   <tr key={payment.id} style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}>
                     <td style={td}>{formatDate(payment.paymentDate)}</td>
-                    <td style={td}>{payment.studentName}</td>
+                    <td style={td}>{localizeStoredUserName(payment.studentName, studentOptions, language)}</td>
                     <td style={td}>{payment.amount.toFixed(2)} {payment.currency}</td>
                     <td style={td}>{payment.method}</td>
                     <td style={td}>{payment.reference || '-'}</td>
@@ -526,6 +524,3 @@ const th = { padding: '8px 12px', textAlign: 'left', fontWeight: 600 };
 const td = { padding: '8px 12px' };
 
 export default PaymentsPage;
-
-
-

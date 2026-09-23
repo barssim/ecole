@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { getLocalizedFirstName } from '../utils/localizedUserName';
 import fr from '../locales/fr.json';
 import ar from '../locales/ar.json';
 import en from '../locales/en.json';
@@ -50,7 +51,7 @@ const ProfilePage = ({ language = 'fr' }) => {
       );
       setProfile(data);
       setProfileForm({
-        firstname: data?.firstname || '',
+        firstname: getLocalizedFirstName(data, language),
         username: data?.username || '',
         email: data?.email || '',
         adresse: data?.adresse || '',
@@ -84,7 +85,7 @@ const ProfilePage = ({ language = 'fr' }) => {
         : { ...(profile || {}), ...profileForm };
       setProfile(updatedProfile);
       setProfileForm({
-        firstname: updatedProfile.firstname || '',
+        firstname: getLocalizedFirstName(updatedProfile, language),
         username: updatedProfile.username || '',
         email: updatedProfile.email || '',
         adresse: updatedProfile.adresse || '',
@@ -208,4 +209,3 @@ const ProfilePage = ({ language = 'fr' }) => {
 };
 
 export default ProfilePage;
-

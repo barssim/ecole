@@ -111,7 +111,7 @@ public class JwtAuthorizationGlobalFilter implements GlobalFilter, Ordered {
         return path.startsWith("/actuator/")
                 || (HttpMethod.POST.equals(method) && path.equals("/api/auth/login"))
                 || (HttpMethod.GET.equals(method) && path.equals("/api/school-customization"))
-                || (HttpMethod.GET.equals(method) && matches(path, "/api/activities", "/api/gallery/**"));
+                || (HttpMethod.GET.equals(method) && matches(path, "/api/gallery/**"));
     }
 
     private Set<String> allowedRoles(HttpMethod method, String path) {
@@ -150,7 +150,9 @@ public class JwtAuthorizationGlobalFilter implements GlobalFilter, Ordered {
                     : roles("manager", "admin", "secretary");
         }
         if (path.startsWith("/api/activities")) {
-            return roles("manager", "admin", "secretary");
+            return method.equals(HttpMethod.GET)
+                    ? roles()
+                    : roles("manager", "admin", "secretary");
         }
         if (path.startsWith("/api/gallery")) {
             return method.equals(HttpMethod.GET) ? roles() : roles("manager", "admin");

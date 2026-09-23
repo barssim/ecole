@@ -4,6 +4,7 @@ import en from "../locales/en.json";
 import ar from "../locales/ar.json";
 import { getSchoolId } from "../school";
 import { createApiUrlFor, readJsonResponse } from "../utils/apiClient";
+import { getLocalizedUserName, localizeStoredUserName } from "../utils/localizedUserName";
 
 const ProfessorPresence = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
@@ -185,7 +186,7 @@ const ProfessorPresence = ({ language }) => {
             >
               <option value="">{teachersLoading ? '…' : (content.classes_selectTeacherPlaceholder || 'Sélectionner un enseignant')}</option>
               {teachers.map((t) => (
-                <option key={t.id || t.name} value={t.name}>{t.name}</option>
+                <option key={t.id || t.name} value={t.name}>{getLocalizedUserName(t, language)}</option>
               ))}
             </select>
           </div>
@@ -300,7 +301,7 @@ const ProfessorPresence = ({ language }) => {
                key={index}
                 style={{ background: index % 2 === 0 ? '#f0f9ff' : '#fff' }}
              >
-                <td style={td}>{prof.teacherName}</td>
+                <td style={td}>{localizeStoredUserName(prof.teacherName, teachers, language)}</td>
                 <td style={td}>{prof.attendanceDate}</td>
                 <td style={td}>{prof.scheduledTime}</td>
                 <td style={td}>

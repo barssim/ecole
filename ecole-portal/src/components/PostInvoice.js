@@ -4,6 +4,7 @@ import { getSchoolId } from '../school';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { hasAnyRole, normalizeRoles } from '../utils/roles';
 import { getFallbackCustomization } from '../ecoleLoader';
+import { localizeStoredUserName } from '../utils/localizedUserName';
 import '../cssFiles/Finance.css';
 
 const PostInvoice = ({ language }) => {
@@ -20,6 +21,7 @@ const PostInvoice = ({ language }) => {
   const [items, setItems] = useState([{ description: '', amount: '' }]);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [factures, setFactures] = useState([]);
+  const [students, setStudents] = useState([]);
   const [loadingFactures, setLoadingFactures] = useState(false);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -80,9 +82,11 @@ const PostInvoice = ({ language }) => {
       setError(null);
 
       const url = useRelativeApi ? '/api/factures' : `${baseUrl}/api/factures`;
-      const response = await fetch(url, {
-        headers: buildHeaders(),
-      });
+      const studentsUrl = useRelativeApi ? '/api/users/students' : `${baseUrl}/api/users/students`;
+      const [response, studentsResponse] = await Promise.all([
+        fetch(url, { headers: buildHeaders() }),
+        fetch(studentsUrl, { headers: buildHeaders() }),
+      ]);
 
       if (!response.ok) {
         throw new Error('Erreur lors du chargement des factures');
@@ -90,6 +94,10 @@ const PostInvoice = ({ language }) => {
 
       const data = await response.json();
       setFactures(Array.isArray(data) ? data : []);
+      if (studentsResponse.ok) {
+        const studentData = await studentsResponse.json();
+        setStudents(Array.isArray(studentData) ? studentData : []);
+      }
     } catch (err) {
       setError(err.message || 'Erreur inconnue');
     } finally {
@@ -302,7 +310,7 @@ const PostInvoice = ({ language }) => {
                 {factures.map((facture) => (
                   <tr key={facture.id}>
                     <td><strong>{facture.invoiceNumber}</strong></td>
-                    <td>{facture.studentName}</td>
+                    <td>{localizeStoredUserName(facture.studentName, students, language)}</td>
                     <td>{facture.className}</td>
                     <td>{formatDate(facture.generatedDate)}</td>
                     <td className="finance-amount">{Number(facture.totalAmount || 0).toFixed(2)} {facture.currency || 'MAD'}</td>

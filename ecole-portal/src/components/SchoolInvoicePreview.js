@@ -6,6 +6,7 @@ import en from "../locales/en.json";
 import { getSchoolId } from '../school';
 import { normalizeRoles } from '../utils/roles';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
+import { localizeStoredUserName } from '../utils/localizedUserName';
 import '../cssFiles/Finance.css';
 
 const SchoolInvoicePreview =  ({language}) => {
@@ -19,6 +20,7 @@ const SchoolInvoicePreview =  ({language}) => {
                                content = ar;
                              };
   const [notices, setNotices] = useState([]);
+  const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const configuredBase = resolveApiBaseUrl('http://localhost:8085');
@@ -33,8 +35,18 @@ const SchoolInvoicePreview =  ({language}) => {
   useEffect(() => {
     const apiBase = effectiveBase.endsWith('/api') ? effectiveBase : `${effectiveBase}/api`;
     const apiUrl = useRelativeApi ? '/api/paymentNotices' : `${apiBase}/paymentNotices`;
+    const studentsUrl = useRelativeApi ? '/api/users/students' : `${apiBase}/users/students`;
 
     setLoading(true);
+    axios.get(studentsUrl, {
+      headers: {
+        'X-School-Id': getSchoolId(),
+        ...(userRoles.length > 0 ? { 'X-User-Roles': userRoles.join(',') } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      }
+    }).then((response) => setStudents(Array.isArray(response.data) ? response.data : []))
+      .catch(() => setStudents([]));
+
     axios.get(apiUrl, {
       headers: {
         'X-School-Id': getSchoolId(),
@@ -92,7 +104,7 @@ const SchoolInvoicePreview =  ({language}) => {
               {notices.map((notice) => (
                 <tr key={notice.id}>
                   <td><strong>{notice.invoiceNumber}</strong></td>
-                  <td>{notice.studentName}</td>
+                  <td>{localizeStoredUserName(notice.studentName, students, language)}</td>
                   <td>{notice.className}</td>
                   <td>{notice.invoiceDate}</td>
                   <td>{notice.dueDate}</td>

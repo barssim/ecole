@@ -6,6 +6,7 @@ import en from "../locales/header/en.json";
 import { getSchoolId } from "../school";
 import { resolveApiBaseUrl } from "../utils/apiBaseUrl";
 import { hasAnyRole, normalizeRoles } from "../utils/roles";
+import { getLocalizedFirstName } from "../utils/localizedUserName";
 
 const roleOptions = [
   { value: "student", labelKey: "roleStudent", fallback: "Student" },
@@ -268,7 +269,7 @@ const Inscription = ({ language, schoolCustomization }) => {
     setEditingUser({
       civilite: user.civilite || "Monsieur",
       surname: user.username || "",
-      firstname: user.firstname || "",
+      firstname: getLocalizedFirstName(user, language),
       email: user.email || "",
       adresse: user.adresse || "",
       role: firstRole || "student",
@@ -580,7 +581,7 @@ const Inscription = ({ language, schoolCustomization }) => {
                     <tr key={user.id} className={selectedUserId === user.id ? "is-selected" : ""}>
                       <td>{civiliteAbbrev}</td>
                       <td>{user.username}</td>
-                      <td>{user.firstname}</td>
+                      <td>{getLocalizedFirstName(user, language)}</td>
                       <td>{user.email}</td>
                       <td>
                         <span className={`inscription-role-badge inscription-role-${currentRole}`}>

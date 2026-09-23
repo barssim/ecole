@@ -34,16 +34,16 @@ if (language === "fr") {
 
   // Render legal notice with TAB-Logic as a link
   const renderLegalNotice = () => {
-    const text = content.legal_notice || "© 2026 Company TAB-Logic. All rights reserved.";
-    const parts = text.split("TAB-Logic");
+    const text = content.legal_notice || "© 2026 Company TAB-Muster. All rights reserved.";
+    const parts = text.split("TAB-Muster");
 
     return (
       <>
         {parts[0]}
-        <a href="https://tab-logic.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
+        <a href="https://tab-Muster.ms" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
           TAB-Logic
         </a>
-        {parts.slice(1).join("TAB-Logic")}
+        {parts.slice(1).join("TAB-Muster")}
       </>
     );
   };

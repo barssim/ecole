@@ -34,6 +34,16 @@ public class User {
 
 	String surname;
 	String firstname;
+
+	@Column(name = "firstname_en")
+	String firstnameEn;
+
+	@Column(name = "firstname_fr")
+	String firstnameFr;
+
+	@Column(name = "firstname_ar")
+	String firstnameAr;
+
 	String email;
 	String adresse;
 	String password;

@@ -7,6 +7,7 @@ import { getSchoolId } from '../school';
 import { resolveApiBaseUrl } from '../utils/apiBaseUrl';
 import { readJsonResponse } from '../utils/apiClient';
 import { normalizeRoles, hasAnyRole } from '../utils/roles';
+import { getLocalizedUserName, localizeStoredUserName } from '../utils/localizedUserName';
 
 const ClassesPage = ({ language }) => {
   const content = language === "fr" ? fr : language === "en" ? en : ar;
@@ -351,7 +352,7 @@ const ClassesPage = ({ language }) => {
                                     : (content.classes_selectStudentPlaceholder || 'Sélectionner un élève...')}
                               </option>
                               {unassigned.map((s) => (
-                                <option key={s.id || s.name} value={s.name}>{s.name}</option>
+                                <option key={s.id || s.name} value={s.name}>{getLocalizedUserName(s, language)}</option>
                               ))}
                             </select>
 
@@ -377,7 +378,7 @@ const ClassesPage = ({ language }) => {
                                     background: '#d1fae5', borderRadius: 999,
                                     padding: '2px 10px', fontSize: 12, color: '#065f46',
                                   }}>
-                                    {s}
+                                    {localizeStoredUserName(s, allStudents, language)}
                                   </span>
                                 ))}
                               </div>

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ma.solide.usermanagement.model.LoginRequest;
 import ma.solide.usermanagement.model.User;
 import ma.solide.usermanagement.model.UserDTO;
+import ma.solide.usermanagement.model.UserNames;
 import ma.solide.usermanagement.service.UserService;
 import ma.solide.usermanagement.util.JwtUtil;
 
@@ -109,6 +110,7 @@ public class AuthController {
         private final String username;
         private final String civilite;
         private final String firstname;
+        private final java.util.Map<String, String> firstnames;
         private final String email;
         private final String schoolId;
         private final java.util.List<String> roles;
@@ -121,6 +123,7 @@ public class AuthController {
             this.username = user.getSurname();
             this.civilite = user.getCivilite();
             this.firstname = user.getFirstname();
+            this.firstnames = UserNames.firstnames(user);
             this.email = user.getEmail();
             this.schoolId = user.getSchoolId();
             // Convert single role to list of roles
@@ -146,6 +149,10 @@ public class AuthController {
 
         public String getFirstname() {
             return firstname;
+        }
+
+        public java.util.Map<String, String> getFirstnames() {
+            return firstnames;
         }
 
         public String getEmail() {

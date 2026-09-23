@@ -14,6 +14,9 @@ CREATE TABLE IF NOT EXISTS tb_user (
     civilite VARCHAR(20) COMMENT 'Monsieur / Madame',
     surname VARCHAR(255) NOT NULL,
     firstname VARCHAR(255) NOT NULL,
+    firstname_en VARCHAR(255),
+    firstname_fr VARCHAR(255),
+    firstname_ar VARCHAR(255),
     email VARCHAR(255) NOT NULL,
     adresse VARCHAR(255),
     password VARCHAR(255) NOT NULL,
@@ -27,5 +30,4 @@ CREATE TABLE IF NOT EXISTS tb_school_customization (
     customization_json TEXT NOT NULL,
     CONSTRAINT fk_tb_school_customization_school FOREIGN KEY (school_id) REFERENCES tb_school (school_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 
